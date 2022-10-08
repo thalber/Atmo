@@ -18,11 +18,24 @@ public sealed partial class Atmod : BaseUnityPlugin
             On.OverWorld.WorldLoaded += FetchHappenSet;
             On.Room.Update += RunHappensRealUpd;
             On.AbstractRoom.Update += RunHappensAbstUpd;
+            On.RainWorldGame.Update += DoBodyUpdates;
         }
         finally
         {
             single = this;
         }
+    }
+
+    private void DoBodyUpdates(On.RainWorldGame.orig_Update orig, RainWorldGame self)
+    {
+        orig(self);
+        try
+        {
+            if (!Setups.TryGetValue(self.world.name, out var set)) return;
+            foreach (var ha in set.happens) ha.CoreUpdate(self);
+        }
+        catch { }
+
     }
 
     private void RunHappensAbstUpd(On.AbstractRoom.orig_Update orig, AbstractRoom self, int timePassed)
@@ -34,10 +47,10 @@ public sealed partial class Atmod : BaseUnityPlugin
         {
             try
             {
-                if (ev.is_on(self.world.game))
+                if (ev.IsOn(self.world.game))
                 {
-                    if (!ev.init_ran) { ev.call_init(self.world); ev.init_ran = true; }
-                    ev.call_abst_update(self, timePassed);
+                    if (!ev.init_ran) { ev.Call_Init(self.world); ev.init_ran = true; }
+                    ev.Call_AbstUpdate(self, timePassed);
                 }
             }
             catch (Exception e)
@@ -57,7 +70,7 @@ public sealed partial class Atmod : BaseUnityPlugin
             try
             {
                 if (!ev.init_ran) continue;
-                if (ev.is_on(self.world.game)) ev.call_real_update(self);
+                if (ev.IsOn(self.world.game)) ev.Call_RealUpdate(self);
             }
             catch (Exception e)
             {

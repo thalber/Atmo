@@ -28,26 +28,28 @@ namespace Atmo
         /// <summary>
         /// callback for adding callbacks to happens.
         /// </summary>
-        /// <param name="ev"></param>
-        public delegate void CallbackAdd(Happen ev);
+        /// <param name="ha"></param>
+        public delegate void Create_AddCallbacks(Happen ha);
+        public delegate IEnumerable<HappenTrigger> Create_AddTriggers(Happen ha);
 
 
-        internal static void NewEvent(Happen e)
+        internal static void NewEvent(Happen ha)
         {
-            GetDefaultCallbacks(in e, out var au, out var ru, out var oi);
-            e.on_abst_update += au;
-            e.on_real_update += ru;
-            e.on_init += oi;
-            RegisterNewHappen?.Invoke(e);
+            //add callbacks
+            GetDefaultCallbacks(in ha, out var au, out var ru, out var oi);
+            ha.on_abst_update += au;
+            ha.on_real_update += ru;
+            ha.on_init += oi;
+            RegisterNewHappen?.Invoke(ha);
         }
-        internal static void GetDefaultCallbacks(in Happen e, out AbstractUpdate au, out RealizedUpdate ru, out Init oi)
+        internal static void GetDefaultCallbacks(in Happen ha, out AbstractUpdate au, out RealizedUpdate ru, out Init oi)
         {
             //todo: add default cases
             throw new NotImplementedException();
         }
         /// <summary>
-        /// Subscribe to this to attach your custom callbacks to newly created event objects.
+        /// Subscribe to this to attach your custom callbacks to newly created happen objects.
         /// </summary>
-        public static event CallbackAdd? RegisterNewHappen;
+        public static event Create_AddCallbacks? RegisterNewHappen;
     }
 }

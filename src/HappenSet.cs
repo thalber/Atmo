@@ -10,11 +10,9 @@ namespace Atmo
 {
     internal sealed class HappenSet
     {
-
-        internal static HappenSet? TryCreate(World world, string regioncode)
+        internal static HappenSet? TryCreate(World world)
         {
-            //todo: decide where to load happens from
-
+            //todo: decide where to load happens from. make sure it works with any amount of regpacks intersecting
             //fileinfo of the target file
             FileInfo setup = default;
 
@@ -42,11 +40,11 @@ namespace Atmo
         {
             res = new List<Happen>();
             if (!roomGroups.TryGetValue(absr.name, out var group)) return;
-            foreach (var ev in events ) { if (ev.cfg.groups.Contains(group)) res.Add(ev); }
+            foreach (var ev in happens ) { if (ev.cfg.groups.Contains(group)) res.Add(ev); }
         }
 
         //key: room; value: group
         internal Dictionary<string, string> roomGroups;// = new();
-        internal List<Happen> events;
+        internal List<Happen> happens;
     }
 }

@@ -5,18 +5,18 @@ using System.Text;
 
 namespace Atmo
 {
-    public record struct HappenConfig
+    public struct HappenConfig
     {
         public string name;
         public float chance;
-        public TriggerType when;
+        //public TriggerType when;
         public string[] groups;
-
-        public enum TriggerType
-        {
-            Always,
-            AfterRain,
-            BeforeRain
-        }
+        public HappenTrigger[] when;
+        //public enum TriggerType
+        //{
+        //    Always,
+        //    AfterRain,
+        //    BeforeRain
+        //}
     }
 }
