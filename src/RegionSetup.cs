@@ -8,12 +8,12 @@ using static Atmo.Atmod;
 
 namespace Atmo
 {
-    internal sealed class RegionSetup
+    internal sealed class HappenSet
     {
 
-        internal static RegionSetup? TryCreate(World world, string regioncode)
+        internal static HappenSet? TryCreate(World world, string regioncode)
         {
-            //todo: decide where to load events from
+            //todo: decide where to load happens from
 
             //fileinfo of the target file
             FileInfo setup = default;
@@ -22,7 +22,7 @@ namespace Atmo
 
             try
             {
-                RegionSetup res = new(setup);
+                HappenSet res = new(setup);
                 return res;
             }
             catch (Exception ex)
@@ -32,21 +32,21 @@ namespace Atmo
             }
         }
 
-        private RegionSetup(FileInfo setup)
+        private HappenSet(FileInfo setup)
         {
             //todo: add file parsing
             throw new NotImplementedException();
         }
 
-        internal void TryGetEventsForRoom(AbstractRoom absr, out List<Event> res)
+        internal void TryGetEventsForRoom(AbstractRoom absr, out List<Happen> res)
         {
-            res = new List<Event>();
+            res = new List<Happen>();
             if (!roomGroups.TryGetValue(absr.name, out var group)) return;
             foreach (var ev in events ) { if (ev.cfg.groups.Contains(group)) res.Add(ev); }
         }
 
         //key: room; value: group
         internal Dictionary<string, string> roomGroups;// = new();
-        internal List<Event> events;
+        internal List<Happen> events;
     }
 }

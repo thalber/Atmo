@@ -15,9 +15,9 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         try
         {
-            On.OverWorld.WorldLoaded += FetchWorldSetup;
-            On.Room.Update += RunEventsRealUpdate;
-            On.AbstractRoom.Update += RunEventsAbstractUpdate;
+            On.OverWorld.WorldLoaded += FetchHappenSet;
+            On.Room.Update += RunHappensRealUpd;
+            On.AbstractRoom.Update += RunHappensAbstUpd;
         }
         finally
         {
@@ -25,7 +25,7 @@ public sealed partial class Atmod : BaseUnityPlugin
         }
     }
 
-    private void RunEventsAbstractUpdate(On.AbstractRoom.orig_Update orig, AbstractRoom self, int timePassed)
+    private void RunHappensAbstUpd(On.AbstractRoom.orig_Update orig, AbstractRoom self, int timePassed)
     {
         orig(self, timePassed);
         if (!Setups.TryGetValue(self.world.name, out var reg)) return;
@@ -47,7 +47,7 @@ public sealed partial class Atmod : BaseUnityPlugin
         }
     }
 
-    private void RunEventsRealUpdate(On.Room.orig_Update orig, Room self)
+    private void RunHappensRealUpd(On.Room.orig_Update orig, Room self)
     {
         orig(self);
         if (!Setups.TryGetValue(self.world.name, out var reg)) return;
@@ -56,6 +56,7 @@ public sealed partial class Atmod : BaseUnityPlugin
         {
             try
             {
+                if (!ev.init_ran) continue;
                 if (ev.is_on(self.world.game)) ev.call_real_update(self);
             }
             catch (Exception e)
@@ -66,9 +67,9 @@ public sealed partial class Atmod : BaseUnityPlugin
 
     }
 
-    internal Dictionary<string, RegionSetup> Setups = new();
+    internal Dictionary<string, HappenSet> Setups = new();
 
-    private void FetchWorldSetup(On.OverWorld.orig_WorldLoaded orig, OverWorld self)
+    private void FetchHappenSet(On.OverWorld.orig_WorldLoaded orig, OverWorld self)
     {
         //RegionSetup res = new RegionSetup()
         orig(self);
@@ -83,9 +84,9 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         try
         {
-            On.OverWorld.WorldLoaded += FetchWorldSetup;
-            On.Room.Update += RunEventsRealUpdate;
-            On.AbstractRoom.Update += RunEventsAbstractUpdate;
+            On.OverWorld.WorldLoaded -= FetchHappenSet;
+            On.Room.Update -= RunHappensRealUpd;
+            On.AbstractRoom.Update -= RunHappensAbstUpd;
         }
         finally
         {

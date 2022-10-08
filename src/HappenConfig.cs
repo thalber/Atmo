@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Atmo
 {
-    public record struct EventConfig
+    public record struct HappenConfig
     {
         public string name;
         public float chance;
@@ -15,7 +15,8 @@ namespace Atmo
         public enum TriggerType
         {
             Always,
-            OnRain
+            AfterRain,
+            BeforeRain
         }
     }
 }
