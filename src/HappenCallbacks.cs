@@ -26,6 +26,11 @@ namespace Atmo
         public delegate void Init(World world);
 
         /// <summary>
+        /// Delegate for being called on core update
+        /// </summary>
+        /// <param name="rwg"></param>
+        public delegate void CoreUpdate(RainWorldGame rwg);
+        /// <summary>
         /// callback for adding callbacks to happens.
         /// </summary>
         /// <param name="ha"></param>
@@ -37,9 +42,9 @@ namespace Atmo
         {
             //add callbacks
             GetDefaultCallbacks(in ha, out var au, out var ru, out var oi);
-            ha.On_abst_update += au;
-            ha.On_real_update += ru;
-            ha.On_init += oi;
+            ha.On_AbstUpdate += au;
+            ha.On_RealUpdate += ru;
+            ha.On_Init += oi;
             RegisterNewHappen?.Invoke(ha);
         }
         internal static void GetDefaultCallbacks(in Happen ha, out AbstractUpdate au, out RealizedUpdate ru, out Init oi)

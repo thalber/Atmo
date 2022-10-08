@@ -4,17 +4,30 @@ using System;
 
 namespace Atmo;
 
+/// <summary>
+/// Main plugin class.
+/// </summary>
 [BepInPlugin("thalber.atmod", "atmod", "0.1")]
 public sealed partial class Atmod : BaseUnityPlugin
 {
+    /// <summary>
+    /// Static singleton
+    /// </summary>
     public static Atmod? single;
+    /// <summary>
+    /// omg rain world reference
+    /// </summary>
     public RainWorld? rw;
-    public BepInEx.Logging.ManualLogSource plog => this.Logger;
+    /// <summary>
+    /// publicized logger
+    /// </summary>
+    internal BepInEx.Logging.ManualLogSource plog => this.Logger;
 
     public void OnEnable()
     {
         try
         {
+            //apply hooks
             On.OverWorld.WorldLoaded += FetchHappenSet;
             On.Room.Update += RunHappensRealUpd;
             On.AbstractRoom.Update += RunHappensAbstUpd;
@@ -25,32 +38,45 @@ public sealed partial class Atmod : BaseUnityPlugin
             single = this;
         }
     }
-
+    /// <summary>
+    /// Sends an Update call to all events for loaded world
+    /// </summary>
+    /// <param name="orig"></param>
+    /// <param name="self"></param>
     private void DoBodyUpdates(On.RainWorldGame.orig_Update orig, RainWorldGame self)
     {
         orig(self);
-        try
-        {
-            if (!Setups.TryGetValue(self.world.name, out var set)) return;
-            foreach (var ha in set.happens) ha.CoreUpdate(self);
-        }
-        catch { }
-
-    }
-
-    private void RunHappensAbstUpd(On.AbstractRoom.orig_Update orig, AbstractRoom self, int timePassed)
-    {
-        orig(self, timePassed);
-        if (!Setups.TryGetValue(self.world.name, out var reg)) return;
-        reg.TryGetEventsForRoom(self, out var evs);
-        foreach (var ev in evs)
+        if (!setsByAcro.TryGetValue(self.world.name, out var set)) return;
+        foreach (var ha in set.happens)
         {
             try
             {
-                if (ev.IsOn(self.world.game))
+                ha.CoreUpdate(self);
+            }
+            catch (Exception e) {
+                Logger.LogError($"Error doing body update for {ha.cfg.name}:\n{e}");
+            }
+        }
+    }
+    /// <summary>
+    /// Runs abstract world update for events in a room
+    /// </summary>
+    /// <param name="orig"></param>
+    /// <param name="self"></param>
+    /// <param name="timePassed"></param>
+    private void RunHappensAbstUpd(On.AbstractRoom.orig_Update orig, AbstractRoom self, int timePassed)
+    {
+        orig(self, timePassed);
+        if (!setsByAcro.TryGetValue(self.world.name, out var set)) return;
+        set.TryGetEventsForRoom(self, out var haps);
+        foreach (var ha in haps)
+        {
+            try
+            {
+                if (ha.IsOn(self.world.game))
                 {
-                    if (!ev.init_ran) { ev.Call_Init(self.world); ev.init_ran = true; }
-                    ev.Call_AbstUpdate(self, timePassed);
+                    if (!ha.init_ran) { ha.Call_Init(self.world); ha.init_ran = true; }
+                    ha.Call_AbstUpdate(self, timePassed);
                 }
             }
             catch (Exception e)
@@ -59,18 +85,22 @@ public sealed partial class Atmod : BaseUnityPlugin
             }
         }
     }
-
+    /// <summary>
+    /// Runs realized updates for events in a room
+    /// </summary>
+    /// <param name="orig"></param>
+    /// <param name="self"></param>
     private void RunHappensRealUpd(On.Room.orig_Update orig, Room self)
     {
         orig(self);
-        if (!Setups.TryGetValue(self.world.name, out var reg)) return;
-        reg.TryGetEventsForRoom(self.abstractRoom, out var evs);
-        foreach (var ev in evs)
+        if (!setsByAcro.TryGetValue(self.world.name, out var set)) return;
+        set.TryGetEventsForRoom(self.abstractRoom, out var haps);
+        foreach (var ha in haps)
         {
             try
             {
-                if (!ev.init_ran) continue;
-                if (ev.IsOn(self.world.game)) ev.Call_RealUpdate(self);
+                if (!ha.init_ran) continue;
+                if (ha.IsOn(self.world.game)) ha.Call_RealUpdate(self);
             }
             catch (Exception e)
             {
@@ -80,11 +110,11 @@ public sealed partial class Atmod : BaseUnityPlugin
 
     }
 
-    internal Dictionary<string, HappenSet> Setups = new();
+    internal Dictionary<string, HappenSet> setsByAcro = new();
 
     private void FetchHappenSet(On.OverWorld.orig_WorldLoaded orig, OverWorld self)
     {
-        //RegionSetup res = new RegionSetup()
+        //todo: create a happenset here or elsewhere?
         orig(self);
     }
 
@@ -97,9 +127,11 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         try
         {
+            //undo hooks
             On.OverWorld.WorldLoaded -= FetchHappenSet;
             On.Room.Update -= RunHappensRealUpd;
             On.AbstractRoom.Update -= RunHappensAbstUpd;
+            On.RainWorldGame.Update -= DoBodyUpdates;
         }
         finally
         {

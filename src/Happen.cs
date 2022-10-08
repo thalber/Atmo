@@ -5,6 +5,9 @@ using System.Text;
 
 namespace Atmo
 {
+    /// <summary>
+    /// A "World event": sealed class that carries custom code in form of callbacks
+    /// </summary>
     public sealed class Happen
     {
         public Happen(HappenConfig _cfg)
@@ -13,17 +16,19 @@ namespace Atmo
         }
 
         internal HappenConfig cfg;
-        public void Call_AbstUpdate (AbstractRoom absroom, int time) { On_abst_update?.Invoke(absroom, time); }
-        public event HappenCallbacks.AbstractUpdate? On_abst_update;
-        public void Call_RealUpdate (Room room) { On_real_update?.Invoke(room); }
-        public event HappenCallbacks.RealizedUpdate? On_real_update;
-        public void Call_Init(World world) { On_init?.Invoke(world); }
-        public event HappenCallbacks.Init? On_init;
+        public void Call_AbstUpdate (AbstractRoom absroom, int time) { On_AbstUpdate?.Invoke(absroom, time); }
+        public event HappenCallbacks.AbstractUpdate? On_AbstUpdate;
+        public void Call_RealUpdate (Room room) { On_RealUpdate?.Invoke(room); }
+        public event HappenCallbacks.RealizedUpdate? On_RealUpdate;
+        public void Call_Init(World world) { On_Init?.Invoke(world); }
+        public event HappenCallbacks.Init? On_Init;
 
         public void CoreUpdate(RainWorldGame rwg)
         {
             foreach (var tr in cfg.when) tr.Update(rwg);
+            On_CoreUpdate?.Invoke(rwg);
         }
+        public event HappenCallbacks.CoreUpdate? On_CoreUpdate;
 
         /// <summary>
         /// Checks if happen should be running

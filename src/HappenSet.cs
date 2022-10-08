@@ -16,7 +16,7 @@ namespace Atmo
             //fileinfo of the target file
             FileInfo setup = default;
 
-            if (!setup.Exists) { single?.plog.LogError($"No events setup file for {regioncode}"); return null; }
+            if (!setup.Exists) { single?.plog.LogError($"No events setup file for {world.name}"); return null; }
 
             try
             {
@@ -25,7 +25,7 @@ namespace Atmo
             }
             catch (Exception ex)
             {
-                single?.plog.LogError($"Could not load event setup for {regioncode}:\n{ex}");
+                single?.plog.LogError($"Could not load event setup for {world.name}:\n{ex}");
                 return null;
             }
         }
