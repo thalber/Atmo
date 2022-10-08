@@ -9,16 +9,16 @@ namespace Atmo
     {
         public Happen(HappenConfig _cfg)
         {
-            this.cfg = _cfg;
+            cfg = _cfg;
         }
 
         internal HappenConfig cfg;
-        public void Call_AbstUpdate (AbstractRoom absroom, int time) { on_abst_update?.Invoke(absroom, time); }
-        public event Callbacks.AbstractUpdate? on_abst_update;
-        public void Call_RealUpdate (Room room) { on_real_update?.Invoke(room); }
-        public event Callbacks.RealizedUpdate? on_real_update;
-        public void Call_Init(World world) { on_init?.Invoke(world); }
-        public event Callbacks.Init? on_init;
+        public void Call_AbstUpdate (AbstractRoom absroom, int time) { On_abst_update?.Invoke(absroom, time); }
+        public event HappenCallbacks.AbstractUpdate? On_abst_update;
+        public void Call_RealUpdate (Room room) { On_real_update?.Invoke(room); }
+        public event HappenCallbacks.RealizedUpdate? On_real_update;
+        public void Call_Init(World world) { On_init?.Invoke(world); }
+        public event HappenCallbacks.Init? On_init;
 
         public void CoreUpdate(RainWorldGame rwg)
         {

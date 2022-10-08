@@ -43,8 +43,8 @@ namespace Atmo
             foreach (var ev in happens ) { if (ev.cfg.groups.Contains(group)) res.Add(ev); }
         }
 
-        //key: room; value: group
-        internal Dictionary<string, string> roomGroups;// = new();
-        internal List<Happen> happens;
+        //key: room; value: group. storage inefficient but whatever
+        internal Dictionary<string, string> roomGroups = new();
+        internal List<Happen> happens = new();
     }
 }

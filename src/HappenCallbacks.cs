@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Atmo
 {
-    public static class Callbacks
+    public static class HappenCallbacks
     {
         /// <summary>
         /// delegate for calling by happens on abstract updates
@@ -37,9 +37,9 @@ namespace Atmo
         {
             //add callbacks
             GetDefaultCallbacks(in ha, out var au, out var ru, out var oi);
-            ha.on_abst_update += au;
-            ha.on_real_update += ru;
-            ha.on_init += oi;
+            ha.On_abst_update += au;
+            ha.On_real_update += ru;
+            ha.On_init += oi;
             RegisterNewHappen?.Invoke(ha);
         }
         internal static void GetDefaultCallbacks(in Happen ha, out AbstractUpdate au, out RealizedUpdate ru, out Init oi)
