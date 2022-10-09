@@ -16,18 +16,31 @@ namespace Atmo
         }
 
         internal HappenConfig cfg;
-        public void Call_AbstUpdate (AbstractRoom absroom, int time) { On_AbstUpdate?.Invoke(absroom, time); }
+        internal void Call_AbstUpdate (AbstractRoom absroom, int time) { On_AbstUpdate?.Invoke(absroom, time); }
+        /// <summary>
+        /// Attach to this to receive a call once per abstract update, for every affected room
+        /// </summary>
         public event HappenCallbacks.AbstractUpdate? On_AbstUpdate;
-        public void Call_RealUpdate (Room room) { On_RealUpdate?.Invoke(room); }
+        internal void Call_RealUpdate (Room room) { On_RealUpdate?.Invoke(room); }
+
+        /// <summary>
+        /// Attach to this to receive a call once per realized update, for every affected room
+        /// </summary>
         public event HappenCallbacks.RealizedUpdate? On_RealUpdate;
-        public void Call_Init(World world) { On_Init?.Invoke(world); }
+        internal void Call_Init(World world) { On_Init?.Invoke(world); }
+        /// <summary>
+        /// Subscribe to this to receive one call when abstract update is first ran.
+        /// </summary>
         public event HappenCallbacks.Init? On_Init;
 
-        public void CoreUpdate(RainWorldGame rwg)
+        internal void CoreUpdate(RainWorldGame rwg)
         {
             foreach (var tr in cfg.when) tr.Update(rwg);
             On_CoreUpdate?.Invoke(rwg);
         }
+        /// <summary>
+        /// Subscribe to this to receive an update once per frame
+        /// </summary>
         public event HappenCallbacks.CoreUpdate? On_CoreUpdate;
 
         /// <summary>
