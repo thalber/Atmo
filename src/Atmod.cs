@@ -21,7 +21,7 @@ public sealed partial class Atmod : BaseUnityPlugin
     /// <summary>
     /// publicized logger
     /// </summary>
-    internal BepInEx.Logging.ManualLogSource plog => this.Logger;
+    internal BepInEx.Logging.ManualLogSource Plog => this.Logger;
 
     public void OnEnable()
     {
@@ -47,7 +47,7 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         orig(self);
         if (!setsByAcro.TryGetValue(self.world.name, out var set)) return;
-        foreach (var ha in set.happens)
+        foreach (var ha in set.GroupsToHappens.EnumerateRight())
         {
             try
             {
@@ -68,14 +68,14 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         orig(self, timePassed);
         if (!setsByAcro.TryGetValue(self.world.name, out var set)) return;
-        set.TryGetEventsForRoom(self, out var haps);
+        var haps = set.GetEventsForRoom(self);
         foreach (var ha in haps)
         {
             try
             {
                 if (ha.IsOn(self.world.game))
                 {
-                    if (!ha.init_ran) { ha.Call_Init(self.world); ha.init_ran = true; }
+                    if (!ha.InitRan) { ha.Call_Init(self.world); ha.InitRan = true; }
                     ha.Call_AbstUpdate(self, timePassed);
                 }
             }
@@ -94,12 +94,12 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         orig(self);
         if (!setsByAcro.TryGetValue(self.world.name, out var set)) return;
-        set.TryGetEventsForRoom(self.abstractRoom, out var haps);
+        var haps = set.GetEventsForRoom(self.abstractRoom);
         foreach (var ha in haps)
         {
             try
             {
-                if (!ha.init_ran) continue;
+                if (!ha.InitRan) continue;
                 if (ha.IsOn(self.world.game)) ha.Call_RealUpdate(self);
             }
             catch (Exception e)

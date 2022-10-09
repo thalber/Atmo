@@ -56,7 +56,7 @@ namespace Atmo
         /// <summary>
         /// returns prop backing field name
         /// </summary>
-        public static string pbfiname(string propname) => $"<{propname}>k__BackingField";
+        public static string Pbfiname(string propname) => $"<{propname}>k__BackingField";
         /// <summary>
         /// takes methodinfo from T, defaults to <see cref="allContextsInstance"/>
         /// </summary>
@@ -81,7 +81,7 @@ namespace Atmo
         /// <typeparam name="Tm"></typeparam>
         /// <param name="m"></param>
         /// <returns></returns>
-        public static MethodInfo methodofdel<Tm>(Tm m) where Tm : Delegate => m.Method;
+        public static MethodInfo methodofdel<Tm>(Tm m) where Tm : MulticastDelegate => m.Method;
         /// <summary>
         /// gets constructorinfo from T. no cctors by default.
         /// </summary>
@@ -189,7 +189,7 @@ namespace Atmo
                 var bf = ResourceBytes(resname, casm);
                 return (bf is null) ? null : enc.GetString(bf);
             }
-            catch (Exception ee) { single.plog.LogError($"Error getting ER: {ee}"); return null; }
+            catch (Exception ee) { single.Plog.LogError($"Error getting ER: {ee}"); return null; }
         }
         #endregion
 

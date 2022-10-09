@@ -6,45 +6,54 @@ using System.Text;
 
 using static Atmo.Atmod;
 
-namespace Atmo
+namespace Atmo;
+internal sealed class HappenSet
 {
-    internal sealed class HappenSet
+    private HappenSet()
     {
-        internal static HappenSet? TryCreate(World world)
-        {
-            //todo: decide where to load happens from. make sure it works with any amount of regpacks intersecting
-            //fileinfo of the target file
-            FileInfo setup = default;
-
-            if (!setup.Exists) { single?.plog.LogError($"No events setup file for {world.name}"); return null; }
-
-            try
-            {
-                HappenSet res = new(setup);
-                return res;
-            }
-            catch (Exception ex)
-            {
-                single?.plog.LogError($"Could not load event setup for {world.name}:\n{ex}");
-                return null;
-            }
-        }
-
-        private HappenSet(FileInfo setup)
-        {
-            //todo: add file parsing
-            throw new NotImplementedException();
-        }
-
-        internal void TryGetEventsForRoom(AbstractRoom absr, out List<Happen> res)
-        {
-            res = new List<Happen>();
-            if (!roomGroups.TryGetValue(absr.name, out var group)) return;
-            foreach (var ev in happens ) { if (ev.cfg.groups.Contains(group)) res.Add(ev); }
-        }
-
-        //key: room; value: group. storage inefficient but whatever
-        internal Dictionary<string, string> roomGroups = new();
-        internal List<Happen> happens = new();
+        throw new NotImplementedException("where load");
     }
+    internal static HappenSet? TryCreate(World world)
+    {
+        try
+        {
+            HappenSet res = new();
+            return res;
+        }
+        catch (Exception ex)
+        {
+            single?.Plog.LogError($"Could not load event setup for {world.name}:\n{ex}");
+            return null;
+        }
+    }
+
+    internal IEnumerable<Happen> GetEventsForRoom(AbstractRoom absr)
+    {
+        if (!RoomsToGroups.LeftContains(absr.name)) yield break;
+        foreach (var group in RoomsToGroups.IndexFromLeft(absr.name))
+        {
+            if (!GroupsToHappens.LeftContains(group)) continue;
+            foreach (var ha in GroupsToHappens.IndexFromLeft(group))
+            {
+                yield return ha;
+            }
+        }
+    }
+
+    public static HappenSet operator +(HappenSet l, HappenSet r)
+    {
+        HappenSet res = new()
+        {
+            SpecificRoomsToHappens = TwoPools<string, Happen>.Stitch(l.SpecificRoomsToHappens, r.SpecificRoomsToHappens),
+            RoomsToGroups = TwoPools<string, string>.Stitch(l.RoomsToGroups, r.RoomsToGroups),
+            GroupsToHappens = TwoPools<string, Happen>.Stitch(l.GroupsToHappens, r.GroupsToHappens)
+        };
+        throw new NotImplementedException();
+    }
+
+    #region fields
+    internal TwoPools<string, string> RoomsToGroups = new();
+    internal TwoPools<string, Happen> GroupsToHappens = new();
+    internal TwoPools<string, Happen> SpecificRoomsToHappens = new();
+    #endregion
 }
