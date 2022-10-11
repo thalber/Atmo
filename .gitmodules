@@ -1,0 +1,6 @@
+[submodule "modules/PredicateInlay"]
+	path = modules/PredicateInlay
+	url = https://github.com/thalber/PredicateInlay
+[submodule "modules/TwoPools"]
+	path = modules/TwoPools
+	url = https://github.com/thalber/TwoPools

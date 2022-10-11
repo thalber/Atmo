@@ -9,5 +9,10 @@
 	<ItemGroup>
 		<Reference Include="lib/*.dll"></Reference>
 	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="../modules/TwoPools/src/TwoPools.cs"></Compile>
+		<Compile Include="../modules/PredicateInlay/src/PredicateInlay.cs"></Compile>
+	</ItemGroup>
 	
 </Project>
