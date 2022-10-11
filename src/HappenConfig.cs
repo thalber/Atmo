@@ -10,6 +10,7 @@ public struct HappenConfig
     public float chance;
     //public TriggerType when;
     public string[] groups;
+    public string[] actions;
     public HappenTrigger[] when;
     //public enum TriggerType
     //{
