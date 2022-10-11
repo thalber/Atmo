@@ -34,7 +34,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 
     internal void CoreUpdate(RainWorldGame rwg)
     {
-        foreach (var tr in cfg.when) tr.Update(rwg);
+        foreach (var tr in cfg.when) tr.Update();
         On_CoreUpdate?.Invoke(rwg);
     }
     /// <summary>
@@ -50,7 +50,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     /// <exception cref="ArgumentException"></exception>
     public bool IsOn(RainWorldGame rwg)
     {
-        foreach (var t in cfg.when) { if (!t.ShouldRun(rwg)) return false; }
+        foreach (var t in cfg.when) { if (!t.ShouldRunUpdates()) return false; }
         return true;
     }
 
