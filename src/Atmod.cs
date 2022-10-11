@@ -10,10 +10,11 @@ namespace Atmo;
 [BepInPlugin("thalber.atmod", "atmod", "0.1")]
 public sealed partial class Atmod : BaseUnityPlugin
 {
+    #region fields
     /// <summary>
     /// Static singleton
     /// </summary>
-    public static Atmod? single;
+    public static Atmod single;
     /// <summary>
     /// omg rain world reference
     /// </summary>
@@ -21,14 +22,18 @@ public sealed partial class Atmod : BaseUnityPlugin
     /// <summary>
     /// publicized logger
     /// </summary>
-    internal BepInEx.Logging.ManualLogSource Plog => this.Logger;
+    internal BepInEx.Logging.ManualLogSource Plog => Logger;
+
+    internal static HappenSet? currentSet;
+    #endregion
 
     public void OnEnable()
     {
         try
         {
             //apply hooks
-            On.OverWorld.WorldLoaded += FetchHappenSet;
+            On.World.ctor += FetchHappenSet;
+            //On.OverWorld.WorldLoaded += FetchHappenSet;
             On.Room.Update += RunHappensRealUpd;
             On.AbstractRoom.Update += RunHappensAbstUpd;
             On.RainWorldGame.Update += DoBodyUpdates;
@@ -38,6 +43,7 @@ public sealed partial class Atmod : BaseUnityPlugin
             single = this;
         }
     }
+
     /// <summary>
     /// Sends an Update call to all events for loaded world
     /// </summary>
@@ -46,9 +52,10 @@ public sealed partial class Atmod : BaseUnityPlugin
     private void DoBodyUpdates(On.RainWorldGame.orig_Update orig, RainWorldGame self)
     {
         orig(self);
-        if (!setsByAcro.TryGetValue(self.world.name, out var set)) return;
-        foreach (var ha in set.GroupsToHappens.EnumerateRight())
+        if (currentSet is null) return;
+        foreach (var ha in currentSet.GroupsToHappens.EnumerateRight())
         {
+            if (ha is null) continue;
             try
             {
                 ha.CoreUpdate(self);
@@ -67,10 +74,11 @@ public sealed partial class Atmod : BaseUnityPlugin
     private void RunHappensAbstUpd(On.AbstractRoom.orig_Update orig, AbstractRoom self, int timePassed)
     {
         orig(self, timePassed);
-        if (!setsByAcro.TryGetValue(self.world.name, out var set)) return;
-        var haps = set.GetEventsForRoom(self);
+        if (currentSet is null) return;
+        var haps = currentSet.GetEventsForRoom(self);
         foreach (var ha in haps)
         {
+            if (ha is null) continue;
             try
             {
                 if (ha.IsOn(self.world.game))
@@ -93,8 +101,8 @@ public sealed partial class Atmod : BaseUnityPlugin
     private void RunHappensRealUpd(On.Room.orig_Update orig, Room self)
     {
         orig(self);
-        if (!setsByAcro.TryGetValue(self.world.name, out var set)) return;
-        var haps = set.GetEventsForRoom(self.abstractRoom);
+        if (currentSet is null) return;
+        var haps = currentSet.GetEventsForRoom(self.abstractRoom);
         foreach (var ha in haps)
         {
             try
@@ -110,13 +118,27 @@ public sealed partial class Atmod : BaseUnityPlugin
 
     }
 
-    internal Dictionary<string, HappenSet> setsByAcro = new();
-
-    private void FetchHappenSet(On.OverWorld.orig_WorldLoaded orig, OverWorld self)
+    private void FetchHappenSet(On.World.orig_ctor orig, World self, RainWorldGame game, Region region, string name, bool singleRoomWorld)
     {
-        //todo: create a happenset here or elsewhere?
-        orig(self);
+        orig(self, game, region, name, singleRoomWorld);
+        if (singleRoomWorld) return;
+
+        Logger.LogError("Fetching hapset!");
+        try
+        {
+            currentSet = HappenSet.TryCreate(self);
+        }
+        catch (Exception e)
+        {
+            Logger.LogError($"Could not create a happenset: {e}");
+        }
     }
+
+    //private void FetchHappenSet(On.OverWorld.orig_WorldLoaded orig, OverWorld self)
+    //{
+    //    orig(self);
+        
+    //}
 
     public void Update()
     {
@@ -128,7 +150,8 @@ public sealed partial class Atmod : BaseUnityPlugin
         try
         {
             //undo hooks
-            On.OverWorld.WorldLoaded -= FetchHappenSet;
+            //On.OverWorld.WorldLoaded -= FetchHappenSet;
+            On.World.ctor -= FetchHappenSet;
             On.Room.Update -= RunHappensRealUpd;
             On.AbstractRoom.Update -= RunHappensAbstUpd;
             On.RainWorldGame.Update -= DoBodyUpdates;

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using static Atmo.Atmod;
+
 namespace Atmo;
 public static class HappenCallbacks
 {
@@ -23,7 +25,6 @@ public static class HappenCallbacks
     /// </summary>
     /// <param name="world"></param>
     public delegate void Init(World world);
-
     /// <summary>
     /// Delegate for being called on core update
     /// </summary>
@@ -36,7 +37,6 @@ public static class HappenCallbacks
     public delegate void Create_AddCallbacks(Happen ha);
     public delegate IEnumerable<HappenTrigger> Create_AddTriggers(Happen ha);
 
-
     internal static void NewEvent(Happen ha)
     {
         //add callbacks
@@ -48,8 +48,25 @@ public static class HappenCallbacks
     }
     internal static void GetDefaultCallbacks(in Happen ha, out AbstractUpdate au, out RealizedUpdate ru, out Init oi)
     {
+#warning test
+        au = (absr, t) =>
+        {
+            single.Plog.LogWarning($"Test absup! time passed: {t}");
+        };
+        ru = (rm) =>
+        {
+            if (!rm.BeingViewed) return;
+            Player? p = rm.updateList.FirstOrDefault(x => x is Player) as Player;
+            if (p is null) return;
+            p.gravity = 0.5f;
+        };
+        oi = (w) =>
+        {
+            single.Plog.LogWarning("Init!");
+        };
+
         //todo: add default cases
-        throw new NotImplementedException();
+        //throw new NotImplementedException();
     }
     /// <summary>
     /// Subscribe to this to attach your custom callbacks to newly created happen objects.

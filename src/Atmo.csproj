@@ -7,12 +7,39 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Reference Include="lib/*.dll"></Reference>
+		<Reference Include="lib/BepInEx.dll">
+		  <Private>False</Private>
+		</Reference>
+		<Reference Include="lib/CustomRegions.dll">
+		  <Private>False</Private>
+		</Reference>
+		<Reference Include="lib/UnityEngine.dll">
+		  <Private>False</Private>
+		</Reference>
+		<Reference Include="lib/Assembly-CSharp.dll">
+		  <Private>False</Private>
+		</Reference>
+		<Reference Include="lib/HOOKS-Assembly-CSharp.dll">
+		  <Private>False</Private>
+		</Reference>
+		<Reference Include="lib/Mono.Cecil.dll">
+		  <Private>False</Private>
+		</Reference>
+		<Reference Include="lib/MonoMod.RuntimeDetour.dll">
+		  <Private>False</Private>
+		</Reference>
+		<Reference Include="lib/MonoMod.Utils.dll">
+		  <Private>False</Private>
+		</Reference>
 	</ItemGroup>
 
 	<ItemGroup>
 		<Compile Include="../modules/TwoPools/src/TwoPools.cs"></Compile>
 		<Compile Include="../modules/PredicateInlay/src/PredicateInlay.cs"></Compile>
 	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="if defined RWMods (copy /Y &quot;$(TargetPath)&quot; &quot;%25RWMods%25&quot;)" />
+	</Target>
 	
 </Project>
