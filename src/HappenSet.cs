@@ -21,8 +21,10 @@ internal sealed class HappenSet
         SpecificRoomsToHappens.InsertRangeRight(happens);
         SpecificRoomsToHappens.InsertLeft("SU_S04");
         SpecificRoomsToHappens.AddLink("SU_S04", happens[0]);
-        single.Plog.LogWarning("Blank happenset created");
+        single.Plog.LogWarning("sample happenset created");
         //throw new NotImplementedException("where load");
+
+        single.Plog.LogWarning($"{SpecificRoomsToHappens}, {RoomsToGroups}, {GroupsToHappens}");
     }
     internal static HappenSet? TryCreate(World world)
     {
@@ -38,10 +40,11 @@ internal sealed class HappenSet
         }
     }
 
-    internal IEnumerable<Happen> GetEventsForRoom(AbstractRoom absr)
+    internal IEnumerable<Happen> GetEventsForRoom(string roomname)
     {
-        if (!RoomsToGroups.LeftContains(absr.name)) goto _specific;
-        foreach (var group in RoomsToGroups.IndexFromLeft(absr.name))
+        //single.Plog.LogWarning($"testing room: {roomname}");
+        if (!RoomsToGroups.LeftContains(roomname)) goto _specific;
+        foreach (var group in RoomsToGroups.IndexFromLeft(roomname))
         {
             if (!GroupsToHappens.LeftContains(group)) continue;
             foreach (var ha in GroupsToHappens.IndexFromLeft(group))
@@ -50,8 +53,8 @@ internal sealed class HappenSet
             }
         }
     _specific:
-        if (!SpecificRoomsToHappens.LeftContains(absr.name)) yield break;
-        foreach (var ha in SpecificRoomsToHappens.IndexFromLeft(absr.name))
+        if (!SpecificRoomsToHappens.LeftContains(roomname)) yield break;
+        foreach (var ha in SpecificRoomsToHappens.IndexFromLeft(roomname))
         {
             yield return ha;
         }

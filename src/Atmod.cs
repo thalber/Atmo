@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using System.Linq;
 using System.Collections.Generic;
 using System;
 
@@ -32,8 +33,8 @@ public sealed partial class Atmod : BaseUnityPlugin
         try
         {
             //apply hooks
-            On.World.ctor += FetchHappenSet;
             //On.OverWorld.WorldLoaded += FetchHappenSet;
+            On.World.ctor += FetchHappenSet;
             On.Room.Update += RunHappensRealUpd;
             On.AbstractRoom.Update += RunHappensAbstUpd;
             On.RainWorldGame.Update += DoBodyUpdates;
@@ -75,12 +76,13 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         orig(self, timePassed);
         if (currentSet is null) return;
-        var haps = currentSet.GetEventsForRoom(self);
+        var haps = currentSet.GetEventsForRoom(self.name);
         foreach (var ha in haps)
         {
             if (ha is null) continue;
             try
             {
+                //Logger.LogWarning($"abs:{ha.IsOn(self.world.game)}");
                 if (ha.IsOn(self.world.game))
                 {
                     if (!ha.InitRan) { ha.Call_Init(self.world); ha.InitRan = true; }
@@ -100,15 +102,21 @@ public sealed partial class Atmod : BaseUnityPlugin
     /// <param name="self"></param>
     private void RunHappensRealUpd(On.Room.orig_Update orig, Room self)
     {
+#warning issue: for some reason geteventsforroom always returns none on real update
         orig(self);
         if (currentSet is null) return;
-        var haps = currentSet.GetEventsForRoom(self.abstractRoom);
+        var haps = currentSet.GetEventsForRoom(self.abstractRoom.name);
+        
         foreach (var ha in haps)
         {
             try
             {
-                if (!ha.InitRan) continue;
-                if (ha.IsOn(self.world.game)) ha.Call_RealUpdate(self);
+                //Logger.LogWarning($"real:{ha.IsOn(self.world.game)}");
+                if (ha.IsOn(self.world.game)) {
+                    if (!ha.InitRan) { ha.Call_Init(self.world); ha.InitRan = true; }
+                    ha.Call_RealUpdate(self);
+                }
+                
             }
             catch (Exception e)
             {

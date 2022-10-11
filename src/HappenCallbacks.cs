@@ -51,14 +51,20 @@ public static class HappenCallbacks
 #warning test
         au = (absr, t) =>
         {
-            single.Plog.LogWarning($"Test absup! time passed: {t}");
+            single.Plog.LogWarning($"Test absup in {absr.name}! time passed: {t}");
         };
         ru = (rm) =>
         {
-            if (!rm.BeingViewed) return;
-            Player? p = rm.updateList.FirstOrDefault(x => x is Player) as Player;
-            if (p is null) return;
-            p.gravity = 0.5f;
+            counter--;
+            if (counter < 0)
+            {
+                counter = cycle;
+                single.Plog.LogWarning($"wawa {rm.abstractRoom.name}");
+            }
+            //if (!rm.BeingViewed) return;
+            //Player? p = rm.updateList.FirstOrDefault(x => x is Player) as Player;
+            //if (p is null) return;
+            //p.mainBodyChunk.vel.y += 5f;
         };
         oi = (w) =>
         {
@@ -68,6 +74,8 @@ public static class HappenCallbacks
         //todo: add default cases
         //throw new NotImplementedException();
     }
+    private static int cycle = 45;
+    private static int counter = 0;
     /// <summary>
     /// Subscribe to this to attach your custom callbacks to newly created happen objects.
     /// </summary>
