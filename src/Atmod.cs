@@ -15,7 +15,7 @@ public sealed partial class Atmod : BaseUnityPlugin
     /// <summary>
     /// Static singleton
     /// </summary>
-    public static Atmod single;
+    public static Atmod inst;
     /// <summary>
     /// omg rain world reference
     /// </summary>
@@ -24,6 +24,7 @@ public sealed partial class Atmod : BaseUnityPlugin
     /// publicized logger
     /// </summary>
     internal BepInEx.Logging.ManualLogSource Plog => Logger;
+    private bool setupRan = false;
 
     internal static HappenSet? currentSet;
     #endregion
@@ -32,6 +33,7 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         try
         {
+            //Logger.LogError("boo!");
             //apply hooks
             //On.OverWorld.WorldLoaded += FetchHappenSet;
             On.World.ctor += FetchHappenSet;
@@ -41,9 +43,10 @@ public sealed partial class Atmod : BaseUnityPlugin
         }
         finally
         {
-            single = this;
+            inst = this;
         }
     }
+
 
     /// <summary>
     /// Sends an Update call to all events for loaded world
@@ -82,7 +85,6 @@ public sealed partial class Atmod : BaseUnityPlugin
             if (ha is null) continue;
             try
             {
-                //Logger.LogWarning($"abs:{ha.IsOn(self.world.game)}");
                 if (ha.IsOn(self.world.game))
                 {
                     if (!ha.InitRan) { ha.Call_Init(self.world); ha.InitRan = true; }
@@ -102,21 +104,19 @@ public sealed partial class Atmod : BaseUnityPlugin
     /// <param name="self"></param>
     private void RunHappensRealUpd(On.Room.orig_Update orig, Room self)
     {
-#warning issue: for some reason geteventsforroom always returns none on real update
+        //#warning issue: for some reason geteventsforroom always returns none on real update
+        //in my infinite wisdom i set SU_S04 as test room instead of SU_C04. everything worked as intended except for my brain
         orig(self);
         if (currentSet is null) return;
         var haps = currentSet.GetEventsForRoom(self.abstractRoom.name);
-        
         foreach (var ha in haps)
         {
             try
             {
-                //Logger.LogWarning($"real:{ha.IsOn(self.world.game)}");
                 if (ha.IsOn(self.world.game)) {
                     if (!ha.InitRan) { ha.Call_Init(self.world); ha.InitRan = true; }
                     ha.Call_RealUpdate(self);
-                }
-                
+                }   
             }
             catch (Exception e)
             {
@@ -125,7 +125,6 @@ public sealed partial class Atmod : BaseUnityPlugin
         }
 
     }
-
     private void FetchHappenSet(On.World.orig_ctor orig, World self, RainWorldGame game, Region region, string name, bool singleRoomWorld)
     {
         orig(self, game, region, name, singleRoomWorld);
@@ -141,18 +140,15 @@ public sealed partial class Atmod : BaseUnityPlugin
             Logger.LogError($"Could not create a happenset: {e}");
         }
     }
-
-    //private void FetchHappenSet(On.OverWorld.orig_WorldLoaded orig, OverWorld self)
-    //{
-    //    orig(self);
-        
-    //}
-
     public void Update()
     {
         rw ??= FindObjectOfType<RainWorld>();
+        if (!setupRan && rw is not null)
+        {
+            //maybe put something here
+            setupRan = true;
+        }
     }
-
     public void OnDisable()
     {
         try
@@ -166,7 +162,7 @@ public sealed partial class Atmod : BaseUnityPlugin
         }
         finally
         {
-            single = null;
+            inst = null;
         }
         
     }

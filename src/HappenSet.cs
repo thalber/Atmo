@@ -17,14 +17,17 @@ internal sealed class HappenSet
                 new string[0],
                 new[] { new HappenTrigger.Always() })
             )};
-        HappenCallbacks.NewEvent(happens[0]);
-        SpecificRoomsToHappens.InsertRangeRight(happens);
-        SpecificRoomsToHappens.InsertLeft("SU_S04");
-        SpecificRoomsToHappens.AddLink("SU_S04", happens[0]);
-        single.Plog.LogWarning("sample happenset created");
+        var th = happens[0];
+        HappenCallbacks.NewEvent(th);
+        SpecificRoomsToHappens.InsertRight(th);
+        SpecificRoomsToHappens.InsertLeft("SU_C04");
+        SpecificRoomsToHappens.AddLink("SU_C04", th);
+        //RoomsToGroups.InsertLeft()
+
+        //inst.Plog.LogWarning("sample happenset created");
         //throw new NotImplementedException("where load");
 
-        single.Plog.LogWarning($"{SpecificRoomsToHappens}, {RoomsToGroups}, {GroupsToHappens}");
+        //inst.Plog.LogWarning($"{SpecificRoomsToHappens}, {RoomsToGroups}, {GroupsToHappens}");
     }
     internal static HappenSet? TryCreate(World world)
     {
@@ -35,20 +38,22 @@ internal sealed class HappenSet
         }
         catch (Exception ex)
         {
-            single?.Plog.LogError($"Could not load event setup for {world.name}:\n{ex}");
+            inst?.Plog.LogError($"Could not load event setup for {world.name}:\n{ex}");
             return null;
         }
     }
 
     internal IEnumerable<Happen> GetEventsForRoom(string roomname)
     {
-        //single.Plog.LogWarning($"testing room: {roomname}");
+        List<Happen> returned = new();
+        goto _specific;
         if (!RoomsToGroups.LeftContains(roomname)) goto _specific;
         foreach (var group in RoomsToGroups.IndexFromLeft(roomname))
         {
             if (!GroupsToHappens.LeftContains(group)) continue;
             foreach (var ha in GroupsToHappens.IndexFromLeft(group))
             {
+                returned.Add(ha);
                 yield return ha;
             }
         }
@@ -56,7 +61,7 @@ internal sealed class HappenSet
         if (!SpecificRoomsToHappens.LeftContains(roomname)) yield break;
         foreach (var ha in SpecificRoomsToHappens.IndexFromLeft(roomname))
         {
-            yield return ha;
+            if (!returned.Contains(ha)) yield return ha;
         }
     }
 

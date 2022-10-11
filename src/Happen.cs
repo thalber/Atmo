@@ -64,5 +64,10 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         return guid.Equals(other.guid);
     }
 
+    public override string ToString()
+    {
+        return $"Happen: {cfg.name} ({cfg.when.Length} triggers, {guid})";
+    }
+
     public bool InitRan { get; internal set; }
 }
