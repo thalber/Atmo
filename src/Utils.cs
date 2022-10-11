@@ -29,21 +29,17 @@ namespace Atmo
         {
             return IntClamp(URand.Range(start - mDev, start + mDev), minRes, maxRes);
         }
-
         public static float ClampedFloatDeviation(float start, float mDev, float minRes = float.MinValue, float maxRes = float.MaxValue)
         {
             return Clamp(Lerp(start - mDev, start + mDev, URand.value), minRes, maxRes);
         }
-
         public static IntRect ConstructIR(IntVector2 p1, IntVector2 p2) => new(Min(p1.x, p2.x), Min(p1.y, p2.y), Max(p1.x, p2.x), Max(p1.y, p2.y));
-
         #region refl flag templates
         public const BindingFlags allContexts = BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic;
         public const BindingFlags allContextsInstance = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic;
         public const BindingFlags allContextsStatic = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
         public const BindingFlags allContextsCtor = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.CreateInstance;
         #endregion
-
         #region refl helpers
         public static MethodInfo GetMethodAllContexts(this Type self, string name)
         {
@@ -138,8 +134,6 @@ namespace Atmo
             }
         }
         #endregion
-
-
         #region randomization extensions
         public static float RandSign() => URand.value > 0.5f ? -1f : 1f;
         public static Vector2 V2RandLerp(Vector2 a, Vector2 b) => Vector2.Lerp(a, b, URand.value);
@@ -152,7 +146,6 @@ namespace Atmo
             return clamped ? res.Clamped() : res;
         }
         #endregion
-
         #region misc bs
         public static string combinePath(params string[] parts) => parts.Aggregate(Path.Combine);
         public static RainWorld CRW => UnityEngine.Object.FindObjectOfType<RainWorld>();
@@ -189,10 +182,9 @@ namespace Atmo
                 var bf = ResourceBytes(resname, casm);
                 return (bf is null) ? null : enc.GetString(bf);
             }
-            catch (Exception ee) { single.Plog.LogError($"Error getting ER: {ee}"); return null; }
+            catch (Exception ee) { inst.Plog.LogError($"Error getting ER: {ee}"); return null; }
         }
         #endregion
-
         #region weakdicts
         //moved from M4rbleL1ne's ConditionalEffects
         public static void RemoveWeak<T>(Dictionary<WeakReference, T> dict, RoomSettings.RoomEffect key)
@@ -236,7 +228,6 @@ namespace Atmo
             dict[new WeakReference(key)] = value;
         }
         #endregion
-
     }
 }
 #nullable restore
