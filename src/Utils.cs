@@ -25,15 +25,13 @@ namespace Atmo
     /// </summary>
     public static class Utils
     {
-        public static int ClampedIntDeviation(int start, int mDev, int minRes = int.MinValue, int maxRes = int.MaxValue)
+        #region collections
+        public static T AtOr<T>(this IList<T> arr, int index, T def)
         {
-            return IntClamp(URand.Range(start - mDev, start + mDev), minRes, maxRes);
+            if (index >= arr.Count || index < 0) return def;
+            return arr[index];
         }
-        public static float ClampedFloatDeviation(float start, float mDev, float minRes = float.MinValue, float maxRes = float.MaxValue)
-        {
-            return Clamp(Lerp(start - mDev, start + mDev, URand.value), minRes, maxRes);
-        }
-        public static IntRect ConstructIR(IntVector2 p1, IntVector2 p2) => new(Min(p1.x, p2.x), Min(p1.y, p2.y), Max(p1.x, p2.x), Max(p1.y, p2.y));
+        #endregion collections
         #region refl flag templates
         public const BindingFlags allContexts = BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic;
         public const BindingFlags allContextsInstance = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic;
@@ -135,6 +133,14 @@ namespace Atmo
         }
         #endregion
         #region randomization extensions
+        public static int ClampedIntDeviation(int start, int mDev, int minRes = int.MinValue, int maxRes = int.MaxValue)
+        {
+            return IntClamp(URand.Range(start - mDev, start + mDev), minRes, maxRes);
+        }
+        public static float ClampedFloatDeviation(float start, float mDev, float minRes = float.MinValue, float maxRes = float.MaxValue)
+        {
+            return Clamp(Lerp(start - mDev, start + mDev, URand.value), minRes, maxRes);
+        }
         public static float RandSign() => URand.value > 0.5f ? -1f : 1f;
         public static Vector2 V2RandLerp(Vector2 a, Vector2 b) => Vector2.Lerp(a, b, URand.value);
         public static float NextFloat01(this System.Random r) => (float)(r.NextDouble() / double.MaxValue);
@@ -147,6 +153,7 @@ namespace Atmo
         }
         #endregion
         #region misc bs
+        public static IntRect ConstructIR(IntVector2 p1, IntVector2 p2) => new(Min(p1.x, p2.x), Min(p1.y, p2.y), Max(p1.x, p2.x), Max(p1.y, p2.y));
         public static string combinePath(params string[] parts) => parts.Aggregate(Path.Combine);
         public static RainWorld CRW => UnityEngine.Object.FindObjectOfType<RainWorld>();
         public static CreatureTemplate GetCreatureTemplate(CreatureTemplate.Type t) => StaticWorld.creatureTemplates[(int)t];
