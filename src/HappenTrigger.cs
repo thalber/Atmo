@@ -6,6 +6,7 @@ using RWCustom;
 
 using static Atmo.Utils;
 using URand = UnityEngine.Random;
+using TXT = System.Text.RegularExpressions;
 
 namespace Atmo;
 /// <summary>
@@ -16,57 +17,6 @@ public abstract class HappenTrigger
     #region fields
     public static readonly string[] trueStrings = new[] { "true", "1", "yes", };
     #endregion
-    public static HappenTrigger CreateTrigger(string id, string[] args, RainWorldGame rwg)
-    {
-        HappenTrigger res = null;
-        switch (id)
-        {
-            case "untilrain":
-            case "beforerain":
-                {
-                    int.TryParse(args.AtOr(0, "0"), out var delay);
-                    res = new BeforeRain(rwg, delay);
-                }
-                break;
-            case "afterrain":
-                {
-                    int.TryParse(args.AtOr(0, "0"), out var delay);
-                    res = new AfterRain(rwg, delay);
-                }
-                break;
-            case "everyx":
-            case "every":
-                {
-                    var def = "40";
-                    int.TryParse(args.AtOr(0, "40"), out var period);
-                    res = new EveryX(period);
-                }
-                break;
-            case "maybe":
-            case "chance":
-                {
-                    float.TryParse(args.AtOr(0, "0.5"), out var ch);
-                    res = new Maybe(ch);
-                }
-                break;
-            case "flicker":
-                {
-                    int[] argsp = new int[4];
-                    for (int i = 0; i < 4; i++)
-                    {
-                        int.TryParse(args.AtOr(i, "300"), out argsp[i]);
-                    }
-                    bool startOn = trueStrings.Contains(args.AtOr(4, "1").ToLower());
-                    res = new Flicker(argsp[0], argsp[1], argsp[2], argsp[3], startOn);
-                }
-                break;
-            default:
-                //res = new Always();
-                break;
-        }
-        res ??= new Always();
-        return res;
-    }
     /// <summary>
     /// Answers if a trigger is currently ready.
     /// </summary>
@@ -150,7 +100,9 @@ public abstract class HappenTrigger
         private bool yes;
         public override bool ShouldRunUpdates() => yes;
     }
-
+    /// <summary>
+    /// Turns on and off periodically.
+    /// </summary>
     public sealed class Flicker : HappenTrigger
     {
         private readonly int minOn;
@@ -180,5 +132,29 @@ public abstract class HappenTrigger
         }
         public override bool ShouldRunUpdates() => on;
         public override void Update() { if (counter-- < 0) ResetCounter(!on); }
+    }
+    /// <summary>
+    /// Requires specific karma levels
+    /// </summary>
+    public sealed class OnKarma : NeedsRWG
+    {
+        private readonly List<int> levels = new();
+        //private readonly List<>;
+        public OnKarma(RainWorldGame rwg, string[] options) : base(rwg)
+        {
+            foreach (var op in options)
+            {
+                if (int.TryParse(op, out int r)) levels.Add(r);
+                var spl = TXT.Regex.Split(op, "\\s*-\\s*");
+                if (spl.Length == 2)
+                {
+                    int.TryParse(spl[0], out var min);
+                    int.TryParse(spl[1], out var max);
+                    for (int i = min; i <= max; i++) if (!levels.Contains(i)) levels.Add(i); 
+                }
+            }
+        }
+        public override bool ShouldRunUpdates()
+            => levels.Contains((rwg.Players[0].realizedCreature as Player)?.Karma ?? 0);
     }
 }

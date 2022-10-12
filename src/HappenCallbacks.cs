@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 
 using static Atmo.Atmod;
+using static Atmo.HappenTrigger;
 
 namespace Atmo;
 public static class HappenCallbacks
 {
+    #region dels
     /// <summary>
     /// delegate for calling by happens on abstract updates
     /// </summary>
@@ -35,7 +37,16 @@ public static class HappenCallbacks
     /// </summary>
     /// <param name="ha"></param>
     public delegate void Create_AddCallbacks(Happen ha);
-    public delegate IEnumerable<HappenTrigger> Create_AddTriggers(Happen ha);
+    /// <summary>
+    /// Callback for adding triggers to happens.
+    /// </summary>
+    /// <param name="name">Trigger name (id)</param>
+    /// <param name="args">optional arguments.</param>
+    /// <param name="rwg">Game instance.</param>
+    /// <returns></returns>
+    public delegate HappenTrigger Create_MakeTrigger(string name, string[] args, RainWorldGame rwg);
+    //public delegate IEnumerable<HappenTrigger> Create_AddTriggers(Happen ha);
+    #endregion
 
     internal static void NewEvent(Happen ha)
     {
@@ -48,7 +59,6 @@ public static class HappenCallbacks
     }
     internal static void GetDefaultCallbacks(in Happen ha, out AbstractUpdate au, out RealizedUpdate ru, out Init oi)
     {
-#warning test
         au = (absr, t) =>
         {
             inst.Plog.LogWarning($"Test absup in {absr.name}! time passed: {t}");
@@ -67,7 +77,77 @@ public static class HappenCallbacks
         //todo: add default cases
     }
     /// <summary>
+    /// Creates a new trigger with given ID, arguments using provided <see cref="RainWorldGame"/>.
+    /// </summary>
+    /// <param name="id">Name or ID</param>
+    /// <param name="args">Optional arguments</param>
+    /// <param name="rwg">game instance</param>
+    /// <returns>Resulting trigger; an <see cref="Always"/> if something went wrong.</returns>
+    internal static HappenTrigger CreateTrigger(string id, string[] args, RainWorldGame rwg)
+    {
+#warning untested
+        HappenTrigger res = null;
+        switch (id)
+        {
+            case "untilrain":
+            case "beforerain":
+                {
+                    int.TryParse(args.AtOr(0, "0"), out var delay);
+                    res = new BeforeRain(rwg, delay);
+                }
+                break;
+            case "afterrain":
+                {
+                    int.TryParse(args.AtOr(0, "0"), out var delay);
+                    res = new AfterRain(rwg, delay);
+                }
+                break;
+            case "everyx":
+            case "every":
+                {
+                    var def = "40";
+                    int.TryParse(args.AtOr(0, "40"), out var period);
+                    res = new EveryX(period);
+                }
+                break;
+            case "maybe":
+            case "chance":
+                {
+                    float.TryParse(args.AtOr(0, "0.5"), out var ch);
+                    res = new Maybe(ch);
+                }
+                break;
+            case "flicker":
+                {
+                    int[] argsp = new int[4];
+                    for (int i = 0; i < 4; i++)
+                    {
+                        int.TryParse(args.AtOr(i, "300"), out argsp[i]);
+                    }
+                    bool startOn = trueStrings.Contains(args.AtOr(4, "1").ToLower());
+                    res = new Flicker(argsp[0], argsp[1], argsp[2], argsp[3], startOn);
+                }
+                break;
+            case "karma":
+                res = new OnKarma(rwg, args);
+                break;
+        }
+        //if (RegisterMakeTrigger is null) goto finish;
+        foreach (Create_MakeTrigger inv in RegisterMakeTrigger?.GetInvocationList() ?? new Create_MakeTrigger[0])
+        {
+            if (res is not null) break;
+            res ??= inv(id, args, rwg);
+        }
+        //finish:
+        res ??= new Always();
+        return res;
+    }
+    /// <summary>
     /// Subscribe to this to attach your custom callbacks to newly created happen objects.
     /// </summary>
     public static event Create_AddCallbacks? RegisterNewHappen;
+    /// <summary>
+    /// Subscribe to this to dispense your custom triggers.
+    /// </summary>
+    public static event Create_MakeTrigger? RegisterMakeTrigger;
 }
