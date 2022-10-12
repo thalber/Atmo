@@ -33,13 +33,14 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         try
         {
-            //Logger.LogError("boo!");
-            //apply hooks
-            //On.OverWorld.WorldLoaded += FetchHappenSet;
             On.World.ctor += FetchHappenSet;
             On.Room.Update += RunHappensRealUpd;
             On.AbstractRoom.Update += RunHappensAbstUpd;
             On.RainWorldGame.Update += DoBodyUpdates;
+        }
+        catch ( Exception ex)
+        {
+            Logger.LogError("Error on enable!\n" + ex);
         }
         finally
         {
@@ -153,12 +154,14 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         try
         {
-            //undo hooks
-            //On.OverWorld.WorldLoaded -= FetchHappenSet;
             On.World.ctor -= FetchHappenSet;
             On.Room.Update -= RunHappensRealUpd;
             On.AbstractRoom.Update -= RunHappensAbstUpd;
             On.RainWorldGame.Update -= DoBodyUpdates;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Error on disable!\n" + ex);
         }
         finally
         {
