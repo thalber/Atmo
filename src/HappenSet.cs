@@ -15,7 +15,8 @@ internal sealed class HappenSet
     #region fields
     internal TwoPools<string, string> RoomsToGroups = new();
     internal TwoPools<string, Happen> GroupsToHappens = new();
-    internal TwoPools<string, Happen> SpecificRoomsToHappens = new();
+    internal TwoPools<string, Happen> SpecificIncludeToHappens = new();
+    internal TwoPools<string, Happen> SpecificExcludeToHappens = new();
     #endregion
     private HappenSet(IO.FileInfo? file = null)
     {
@@ -60,20 +61,22 @@ internal sealed class HappenSet
     internal IEnumerable<Happen> GetEventsForRoom(string roomname)
     {
         List<Happen> returned = new();
-        goto _specific;
+        //goto _specific;
         if (!RoomsToGroups.LeftContains(roomname)) goto _specific;
         foreach (var group in RoomsToGroups.IndexFromLeft(roomname))
         {
             if (!GroupsToHappens.LeftContains(group)) continue;
             foreach (var ha in GroupsToHappens.IndexFromLeft(group))
             {
+                //exclude the minused
+                if (SpecificExcludeToHappens.RightContains(ha) && SpecificExcludeToHappens.IndexFromRight(ha).Contains(roomname)) continue;
                 returned.Add(ha);
                 yield return ha;
             }
         }
     _specific:
-        if (!SpecificRoomsToHappens.LeftContains(roomname)) yield break;
-        foreach (var ha in SpecificRoomsToHappens.IndexFromLeft(roomname))
+        if (!SpecificIncludeToHappens.LeftContains(roomname)) yield break;
+        foreach (var ha in SpecificIncludeToHappens.IndexFromLeft(roomname))
         {
             if (!returned.Contains(ha)) yield return ha;
         }
@@ -82,9 +85,10 @@ internal sealed class HappenSet
     {
         HappenSet res = new()
         {
-            SpecificRoomsToHappens = TwoPools<string, Happen>.Stitch(l.SpecificRoomsToHappens, r.SpecificRoomsToHappens),
+            SpecificIncludeToHappens = TwoPools<string, Happen>.Stitch(l.SpecificIncludeToHappens, r.SpecificIncludeToHappens),
             RoomsToGroups = TwoPools<string, string>.Stitch(l.RoomsToGroups, r.RoomsToGroups),
-            GroupsToHappens = TwoPools<string, Happen>.Stitch(l.GroupsToHappens, r.GroupsToHappens)
+            GroupsToHappens = TwoPools<string, Happen>.Stitch(l.GroupsToHappens, r.GroupsToHappens),
+            SpecificExcludeToHappens = TwoPools<string, Happen>.Stitch(l.SpecificExcludeToHappens, r.SpecificExcludeToHappens),
         };
         throw new NotImplementedException();
     }
