@@ -5,6 +5,7 @@ using System.Text;
 
 using static Atmo.Atmod;
 using static Atmo.HappenTrigger;
+using static Atmo.HappenBuilding;
 
 namespace Atmo;
 public static class API
@@ -56,89 +57,25 @@ public static class API
     /// <param name="rwg"></param>
     public delegate HappenTrigger? Create_SafeTriggerFactory(string[] args, RainWorldGame rwg);
     #endregion
-
-    internal static void NewEvent(Happen ha)
-    {
-        //add callbacks
-        AddDefaultCallbacks(ha);
-        //ha.On_AbstUpdate += au;
-        //ha.On_RealUpdate += ru;
-        //ha.On_Init += oi;
-        API_MakeNewHappen?.Invoke(ha);
-    }
-    internal static void AddDefaultCallbacks(Happen ha)
-    {
-        //todo: add default cases
-    }
+    #region API proper
+    //todo: make safe callbacks undoable
     /// <summary>
-    /// Creates a new trigger with given ID, arguments using provided <see cref="RainWorldGame"/>.
+    /// Tries to register callbacks to be added to happens that have a specified actions, up to one per lifecycle event.
     /// </summary>
-    /// <param name="id">Name or ID</param>
-    /// <param name="args">Optional arguments</param>
-    /// <param name="rwg">game instance</param>
-    /// <returns>Resulting trigger; an <see cref="Always"/> if something went wrong.</returns>
-    internal static HappenTrigger CreateTrigger(string id, string[] args, RainWorldGame rwg)
+    /// <param name="action">Action name. Case insensitive.</param>
+    /// <param name="au">Abstract update callback.</param>
+    /// <param name="ru">Realized update callback.</param>
+    /// <param name="oi">Init callback.</param>
+    /// <param name="cu">Init callback.</param>
+    /// <returns>True if successfully added; false if name already taken.</returns>
+    public static bool AddCallbacksOnAction(
+        string action,
+        lc_AbstractUpdate? au = null,
+        lc_RealizedUpdate? ru = null,
+        lc_Init? oi = null,
+        lc_CoreUpdate? cu = null)
     {
-#warning untested
-        HappenTrigger res = null;
-        switch (id)
-        {
-            case "untilrain":
-            case "beforerain":
-                {
-                    int.TryParse(args.AtOr(0, "0"), out var delay);
-                    res = new BeforeRain(rwg, delay);
-                }
-                break;
-            case "afterrain":
-                {
-                    int.TryParse(args.AtOr(0, "0"), out var delay);
-                    res = new AfterRain(rwg, delay);
-                }
-                break;
-            case "everyx":
-            case "every":
-                {
-                    var def = "40";
-                    int.TryParse(args.AtOr(0, "40"), out var period);
-                    res = new EveryX(period);
-                }
-                break;
-            case "maybe":
-            case "chance":
-                {
-                    float.TryParse(args.AtOr(0, "0.5"), out var ch);
-                    res = new Maybe(ch);
-                }
-                break;
-            case "flicker":
-                {
-                    int[] argsp = new int[4];
-                    for (int i = 0; i < 4; i++)
-                    {
-                        int.TryParse(args.AtOr(i, "300"), out argsp[i]);
-                    }
-                    bool startOn = trueStrings.Contains(args.AtOr(4, "1").ToLower());
-                    res = new Flicker(argsp[0], argsp[1], argsp[2], argsp[3], startOn);
-                }
-                break;
-            case "karma":
-                res = new OnKarma(rwg, args);
-                break;
-        }
-        //if (RegisterMakeTrigger is null) goto finish;
-        foreach (Create_RawTriggerFactory inv in API_MakeNewTrigger?.GetInvocationList() ?? new Create_RawTriggerFactory[0])
-        {
-            if (res is not null) break;
-            res ??= inv(id, args, rwg);
-        }
-        //finish:
-        res ??= new Always();
-        return res;
-    }
-    #region API
-    public static bool API_AddCallbacksOnAction(string action, lc_AbstractUpdate? au = null, lc_RealizedUpdate? ru = null, lc_Init? oi = null, lc_CoreUpdate? cu = null)
-    {
+        action = action.ToLower();
         if (takenActionNames.Contains(action)) return false;
         API_MakeNewHappen += (ha) =>
         {
@@ -153,8 +90,33 @@ public static class API
         takenActionNames.Add(action);
         return true;
     }
-    public static bool API_MakeTriggerOnName(string name, Create_SafeTriggerFactory fac)
+    /// <summary>
+    /// Registers a <see cref="Create_HappenBuilder"/> for actions with a specific name.
+    /// </summary>
+    /// <param name="action">Action name. Case insensitive.</param>
+    /// <param name="builder">User builder callback.</param>
+    /// <returns>true if successfully attached, false if name already taken.</returns>
+    public static bool AddCallbacksOnAction(
+        string action,
+        Create_HappenBuilder builder)
     {
+        action = action.ToLower();
+        if (takenActionNames.Contains(action)) return false;
+        API_MakeNewHappen += (ha) => { if (ha.cfg.actions.Contains(action)) builder?.Invoke(ha); };
+        takenActionNames.Add(action);
+        return true;
+    }
+    /// <summary>
+    /// Registers a trigger factory for a specific name.
+    /// </summary>
+    /// <param name="name">Trigger name.</param>
+    /// <param name="fac">User trigger factory callback.</param>
+    /// <returns>true if successfully attached, false if name already taken.</returns>
+    public static bool MakeTriggerOnName(
+        string name,
+        Create_SafeTriggerFactory fac)
+    {
+        name = name.ToLower();
         if (takenTriggerNames.Contains(name)) return false;
         API_MakeNewTrigger += (n, args, rwg) =>
         {
@@ -167,10 +129,13 @@ public static class API
     /// Subscribe to this to attach your custom callbacks to newly created happen objects.
     /// </summary>
     public static event Create_HappenBuilder? API_MakeNewHappen;
+    internal static IEnumerable<Create_HappenBuilder?>? MNH_invl
+        => API_MakeNewHappen?.GetInvocationList().Cast<Create_HappenBuilder?>();//.ToArray();
     /// <summary>
     /// Subscribe to this to dispense your custom triggers.
     /// </summary>
     public static event Create_RawTriggerFactory? API_MakeNewTrigger;
-    //todo: move to Atmod, add convenience shorthands
+    internal static IEnumerable<Create_RawTriggerFactory?>? MNT_invl
+        => API_MakeNewTrigger?.GetInvocationList()?.Cast<Create_RawTriggerFactory?>();//.ToArray();
     #endregion
 }
