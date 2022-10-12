@@ -2,6 +2,10 @@
 using System.Linq;
 using System.Collections.Generic;
 using System;
+using System.Text;
+
+using static Atmo.API;
+using static Atmo.HappenTrigger;
 
 namespace Atmo;
 
@@ -168,6 +172,5 @@ public sealed partial class Atmod : BaseUnityPlugin
         {
             inst = null;
         }
-        
     }
 }

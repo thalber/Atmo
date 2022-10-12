@@ -20,18 +20,18 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     /// <summary>
     /// Attach to this to receive a call once per abstract update, for every affected room
     /// </summary>
-    public event HappenCallbacks.AbstractUpdate? On_AbstUpdate;
+    public event API.lc_AbstractUpdate? On_AbstUpdate;
     internal void Call_RealUpdate (Room room) { On_RealUpdate?.Invoke(room); }
 
     /// <summary>
     /// Attach to this to receive a call once per realized update, for every affected room
     /// </summary>
-    public event HappenCallbacks.RealizedUpdate? On_RealUpdate;
+    public event API.lc_RealizedUpdate? On_RealUpdate;
     internal void Call_Init(World world) { On_Init?.Invoke(world); }
     /// <summary>
     /// Subscribe to this to receive one call when abstract update is first ran.
     /// </summary>
-    public event HappenCallbacks.Init? On_Init;
+    public event API.lc_Init? On_Init;
     internal void CoreUpdate(RainWorldGame rwg)
     {
         foreach (var tr in cfg.when) tr.Update();
@@ -40,7 +40,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     /// <summary>
     /// Subscribe to this to receive an update once per frame
     /// </summary>
-    public event HappenCallbacks.CoreUpdate? On_CoreUpdate;
+    public event API.lc_CoreUpdate? On_CoreUpdate;
     #endregion
 
     /// <summary>

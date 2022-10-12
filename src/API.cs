@@ -7,73 +7,67 @@ using static Atmo.Atmod;
 using static Atmo.HappenTrigger;
 
 namespace Atmo;
-public static class HappenCallbacks
+public static class API
 {
+    #region fields
+    internal readonly static List<string> takenActionNames = new();
+    internal readonly static List<string> takenTriggerNames = new();
+    #endregion
     #region dels
     /// <summary>
     /// delegate for calling by happens on abstract updates
     /// </summary>
     /// <param name="absroom">absroom</param>
     /// <param name="time">absupdate step</param>
-    public delegate void AbstractUpdate(AbstractRoom absroom, int time);
+    public delegate void lc_AbstractUpdate(AbstractRoom absroom, int time);
     /// <summary>
     /// delegate for being called by happens on realized updates
     /// </summary>
     /// <param name="room">room</param>
     /// <param name="eu"></param>
-    public delegate void RealizedUpdate(Room room);
+    public delegate void lc_RealizedUpdate(Room room);
     /// <summary>
     /// Delegate for being called on first abstract update
     /// </summary>
     /// <param name="world"></param>
-    public delegate void Init(World world);
+    public delegate void lc_Init(World world);
     /// <summary>
     /// Delegate for being called on core update
     /// </summary>
     /// <param name="rwg"></param>
-    public delegate void CoreUpdate(RainWorldGame rwg);
+    public delegate void lc_CoreUpdate(RainWorldGame rwg);
     /// <summary>
-    /// callback for adding callbacks to happens.
+    /// callback for attaching custom behaviour to happens.
     /// </summary>
     /// <param name="ha"></param>
-    public delegate void Create_AddCallbacks(Happen ha);
+    public delegate void Create_HappenBuilder(Happen ha);
     /// <summary>
-    /// Callback for adding triggers to happens.
+    /// Delegate for including custom triggers.
     /// </summary>
     /// <param name="name">Trigger name (id)</param>
     /// <param name="args">optional arguments.</param>
     /// <param name="rwg">Game instance.</param>
-    /// <returns></returns>
-    public delegate HappenTrigger Create_MakeTrigger(string name, string[] args, RainWorldGame rwg);
-    //public delegate IEnumerable<HappenTrigger> Create_AddTriggers(Happen ha);
+    /// <returns>Your child of <see cref="HappenTrigger"/> if the name is yours; null if not.</returns>
+    public delegate HappenTrigger? Create_RawTriggerFactory(string name, string[] args, RainWorldGame rwg);
+    /// <summary>
+    /// Delegate for registering new triggers.
+    /// </summary>
+    /// <param name="args"></param>
+    /// <param name="rwg"></param>
+    public delegate HappenTrigger? Create_SafeTriggerFactory(string[] args, RainWorldGame rwg);
     #endregion
 
     internal static void NewEvent(Happen ha)
     {
         //add callbacks
-        GetDefaultCallbacks(in ha, out var au, out var ru, out var oi);
-        ha.On_AbstUpdate += au;
-        ha.On_RealUpdate += ru;
-        ha.On_Init += oi;
-        RegisterNewHappen?.Invoke(ha);
+        AddDefaultCallbacks(ha);
+        //ha.On_AbstUpdate += au;
+        //ha.On_RealUpdate += ru;
+        //ha.On_Init += oi;
+        API_MakeNewHappen?.Invoke(ha);
     }
-    internal static void GetDefaultCallbacks(in Happen ha, out AbstractUpdate au, out RealizedUpdate ru, out Init oi)
+    internal static void AddDefaultCallbacks(Happen ha)
     {
-        au = (absr, t) =>
-        {
-            inst.Plog.LogWarning($"Test absup in {absr.name}! time passed: {t}");
-        };
-        ru = (rm) =>
-        {
-            if (!rm.BeingViewed) return;
-            Player? p = rm.updateList.FirstOrDefault(x => x is Player) as Player;
-            if (p is null) return;
-            p.gravity = 0.5f;
-        };
-        oi = (w) =>
-        {
-            inst.Plog.LogWarning("Init!");
-        };
         //todo: add default cases
     }
     /// <summary>
@@ -133,7 +127,7 @@ public static class HappenCallbacks
                 break;
         }
         //if (RegisterMakeTrigger is null) goto finish;
-        foreach (Create_MakeTrigger inv in RegisterMakeTrigger?.GetInvocationList() ?? new Create_MakeTrigger[0])
+        foreach (Create_RawTriggerFactory inv in API_MakeNewTrigger?.GetInvocationList() ?? new Create_RawTriggerFactory[0])
         {
             if (res is not null) break;
             res ??= inv(id, args, rwg);
@@ -142,13 +136,41 @@ public static class HappenCallbacks
         res ??= new Always();
         return res;
     }
+    #region API
+    public static bool API_AddCallbacksOnAction(string action, lc_AbstractUpdate? au = null, lc_RealizedUpdate? ru = null, lc_Init? oi = null, lc_CoreUpdate? cu = null)
+    {
+        if (takenActionNames.Contains(action)) return false;
+        API_MakeNewHappen += (ha) =>
+        {
+            if (ha.cfg.actions.Contains(action))
+            {
+                ha.On_AbstUpdate += au;
+                ha.On_RealUpdate += ru;
+                ha.On_Init += oi;
+                ha.On_CoreUpdate += cu;
+            }
+        };
+        takenActionNames.Add(action);
+        return true;
+    }
+    public static bool API_MakeTriggerOnName(string name, Create_SafeTriggerFactory fac)
+    {
+        if (takenTriggerNames.Contains(name)) return false;
+        API_MakeNewTrigger += (n, args, rwg) =>
+        {
+            if (n == name) return fac(args, rwg);
+            return null;
+        };
+        return true;
+    }
     /// <summary>
     /// Subscribe to this to attach your custom callbacks to newly created happen objects.
     /// </summary>
-    public static event Create_AddCallbacks? RegisterNewHappen;
+    public static event Create_HappenBuilder? API_MakeNewHappen;
     /// <summary>
     /// Subscribe to this to dispense your custom triggers.
     /// </summary>
-    public static event Create_MakeTrigger? RegisterMakeTrigger;
+    public static event Create_RawTriggerFactory? API_MakeNewTrigger;
     //todo: move to Atmod, add convenience shorthands
+    #endregion
 }
