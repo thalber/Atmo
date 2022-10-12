@@ -15,6 +15,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     }
     private Guid guid = Guid.NewGuid();
     internal HappenConfig cfg;
+    #region lifecycle cbs
     internal void Call_AbstUpdate (AbstractRoom absroom, int time) { On_AbstUpdate?.Invoke(absroom, time); }
     /// <summary>
     /// Attach to this to receive a call once per abstract update, for every affected room
@@ -31,7 +32,6 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     /// Subscribe to this to receive one call when abstract update is first ran.
     /// </summary>
     public event HappenCallbacks.Init? On_Init;
-
     internal void CoreUpdate(RainWorldGame rwg)
     {
         foreach (var tr in cfg.when) tr.Update();
@@ -41,6 +41,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     /// Subscribe to this to receive an update once per frame
     /// </summary>
     public event HappenCallbacks.CoreUpdate? On_CoreUpdate;
+    #endregion
 
     /// <summary>
     /// Checks if happen should be running
@@ -50,6 +51,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     /// <exception cref="ArgumentException"></exception>
     public bool IsOn(RainWorldGame rwg)
     {
+        //todo: don't forget to cache when adding trees
         foreach (var t in cfg.when) { if (!t.ShouldRunUpdates()) return false; }
         return true;
     }
@@ -58,16 +60,14 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     {
         return guid.CompareTo(other.guid);
     }
-
     public bool Equals(Happen other)
     {
         return guid.Equals(other.guid);
     }
-
     public override string ToString()
     {
         return $"Happen: {cfg.name} ({cfg.when.Length} triggers, {guid})";
     }
-
     public bool InitRan { get; internal set; }
+    private bool active;
 }

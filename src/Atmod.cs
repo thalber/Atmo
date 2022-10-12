@@ -143,6 +143,7 @@ public sealed partial class Atmod : BaseUnityPlugin
     }
     public void Update()
     {
+        //todo: clear hapset when possible
         rw ??= FindObjectOfType<RainWorld>();
         if (!setupRan && rw is not null)
         {

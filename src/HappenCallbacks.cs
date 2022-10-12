@@ -150,4 +150,5 @@ public static class HappenCallbacks
     /// Subscribe to this to dispense your custom triggers.
     /// </summary>
     public static event Create_MakeTrigger? RegisterMakeTrigger;
+    //todo: move to Atmod, add convenience shorthands
 }
