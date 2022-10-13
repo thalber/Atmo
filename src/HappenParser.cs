@@ -61,9 +61,9 @@ internal class HappenParser
         }
         foreach (KeyValuePair<string, List<string>> gc in p.allGroupContents)
         {
-            set.RoomsToGroups.InsertLeft(gc.Key);
-            set.RoomsToGroups.InsertRangeRight(gc.Value);
-            foreach (var r in gc.Value) set.RoomsToGroups.AddLink(gc.Key, r);
+            set.RoomsToGroups.InsertRight(gc.Key);
+            set.RoomsToGroups.InsertRangeLeft(gc.Value);
+            foreach (string rm in gc.Value) set.RoomsToGroups.AddLink(rm, gc.Key);
             set.GroupsToHappens.InsertLeft(gc.Key);
         }
         foreach (HappenConfig hac in p.retrievedHappens)
@@ -86,6 +86,10 @@ internal class HappenParser
                 set.SpecificExcludeToHappens.InsertRight(ha);
                 foreach (var incl in hac.include) set.SpecificExcludeToHappens.AddLink(incl, ha);
             }
+        }
+        foreach (var room in set.RoomsToGroups.EnumerateLeft())
+        {
+            inst.Plog.LogWarning($"{room}, {set.GetEventsForRoom(room).Select(x => x.ToString()).Aggregate(Utils.JoinWithComma)}, {room == "SU_C04"}");
         }
         //inst.Plog.LogWarning($"{set.RoomsToGroups}, {set.GroupsToHappens}");
         //while (p.cl )

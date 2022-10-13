@@ -121,7 +121,7 @@ public sealed partial class Atmod : BaseUnityPlugin
         var haps = currentSet.GetEventsForRoom(self.abstractRoom.name);
         foreach (var ha in haps)
         {
-            Logger.LogDebug($"update {ha} ({haps.Count()})");
+            //Logger.LogDebug($"update {ha} ({haps.Count()})");
             try
             {
                 if (ha.IsOn(self.world.game)) {
