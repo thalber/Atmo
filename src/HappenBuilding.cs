@@ -8,6 +8,7 @@ using static Atmo.HappenTrigger;
 using static Atmo.HappenBuilding;
 using static Atmo.API;
 
+
 namespace Atmo;
 /// <summary>
 /// Manages happens' initialization and builtin behaviours.
@@ -26,7 +27,10 @@ internal static class HappenBuilding
             }
             catch (Exception ex)
             {
-                inst.Plog.LogError($"Error invoking event factory {cb} for {ha}:\n{ex}");
+                inst.Plog.LogError(
+                    $"Happenbuild: NewEvent:" +
+                    $"Error invoking event factory {cb}//{cb?.Method.Name} for {ha}:" +
+                    $"\n{ex}");
             }
         }
         //API_MakeNewHappen?.Invoke(ha);
@@ -48,6 +52,32 @@ internal static class HappenBuilding
         RainWorldGame rwg)
     {
 #warning untested
+        HappenTrigger? res = null;
+        res = DefaultTrigger(id, args, rwg);
+
+        if (MNT_invl is null) goto finish;
+        foreach (Create_RawTriggerFactory? cb in MNT_invl)
+        {
+            if (res is not null) break;
+            try
+            {
+                res ??= cb?.Invoke(id, args, rwg);
+            }
+            catch (Exception ex)
+            {
+                inst.Plog.LogError(
+                    $"Happenbuild: CreateTrigger: Error invoking trigger factory " +
+                    $"{cb}//{cb?.Method.Name} for {id}({args.Aggregate(Utils.JoinWithComma)}):" +
+                    $"\n{ex}");
+            }
+        }
+    finish:
+        res ??= new Always();
+        return res;
+    }
+
+    private static HappenTrigger? DefaultTrigger(string id, string[] args, RainWorldGame rwg)
+    {
         HappenTrigger? res = null;
         switch (id)
         {
@@ -94,15 +124,7 @@ internal static class HappenBuilding
                 res = new OnKarma(rwg, args);
                 break;
         }
-        
-        if (MNT_invl is null) goto finish;
-        foreach (Create_RawTriggerFactory? inv in MNT_invl)
-        {
-            if (res is not null) break;
-            res ??= inv?.Invoke(id, args, rwg);
-        }
-        finish:
-        res ??= new Always();
+
         return res;
     }
 }

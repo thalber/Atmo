@@ -7,22 +7,21 @@ namespace Atmo;
 public struct HappenConfig
 {
     public string name;
-    //public float chance;
-    //public TriggerType when;
-    //public string[] groups;
-    public string[] actions;
-    public HappenTrigger[] when;
+    public List<string> groups;
+    public List<string> include;
+    public List<string> exclude;
+    public Dictionary<string, string[]> actions;
+    public List<string> when;
+    public PredicateInlay? conditions;
 
-    public HappenConfig(string name, string[] actions, HappenTrigger[] when)
+    public HappenConfig(string name)
     {
         this.name = name;
-        this.actions = actions;
-        this.when = when;
+        groups = new();
+        actions = new();
+        when = new();
+        include = new();
+        exclude = new();
+        conditions = null;
     }
-    //public enum TriggerType
-    //{
-    //    Always,
-    //    AfterRain,
-    //    BeforeRain
-    //}
 }

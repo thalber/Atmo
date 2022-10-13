@@ -153,8 +153,9 @@ namespace Atmo
         }
         #endregion
         #region misc bs
+        public static string JoinWithComma(string x, string y) => $"{x}, y";
         public static IntRect ConstructIR(IntVector2 p1, IntVector2 p2) => new(Min(p1.x, p2.x), Min(p1.y, p2.y), Max(p1.x, p2.x), Max(p1.y, p2.y));
-        public static string combinePath(params string[] parts) => parts.Aggregate(Path.Combine);
+        public static string CombinePath(params string[] parts) => parts.Aggregate(Path.Combine);
         public static RainWorld CRW => UnityEngine.Object.FindObjectOfType<RainWorld>();
         public static CreatureTemplate GetCreatureTemplate(CreatureTemplate.Type t) => StaticWorld.creatureTemplates[(int)t];
         public static Vector2 MiddleOfRoom(this Room rm) => new((float)rm.PixelWidth * 0.5f, (float)rm.PixelHeight * 0.5f);

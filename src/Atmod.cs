@@ -92,8 +92,8 @@ public sealed partial class Atmod : BaseUnityPlugin
             {
                 if (ha.IsOn(self.world.game))
                 {
-                    if (!ha.InitRan) { ha.Call_Init(self.world); ha.InitRan = true; }
-                    ha.Call_AbstUpdate(self, timePassed);
+                    if (!ha.initRan) { ha.Init(self.world); ha.initRan = true; }
+                    ha.AbstUpdate(self, timePassed);
                 }
             }
             catch (Exception e)
@@ -119,8 +119,8 @@ public sealed partial class Atmod : BaseUnityPlugin
             try
             {
                 if (ha.IsOn(self.world.game)) {
-                    if (!ha.InitRan) { ha.Call_Init(self.world); ha.InitRan = true; }
-                    ha.Call_RealUpdate(self);
+                    if (!ha.initRan) { ha.Init(self.world); ha.initRan = true; }
+                    ha.RealUpdate(self);
                 }   
             }
             catch (Exception e)
@@ -147,13 +147,15 @@ public sealed partial class Atmod : BaseUnityPlugin
     }
     public void Update()
     {
-        //todo: clear hapset when possible
         rw ??= FindObjectOfType<RainWorld>();
         if (!setupRan && rw is not null)
         {
             //maybe put something here
             setupRan = true;
         }
+        if (rw is not null 
+            && rw.processManager.sideProcesses.Any(x => x is RainWorldGame)) 
+            currentSet = null;
     }
     public void OnDisable()
     {
