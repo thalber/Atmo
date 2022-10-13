@@ -15,9 +15,9 @@ namespace Atmo;
 public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 {
     //todo: add frame time profiling
-    internal const int PROFILER_CYCLE_COREUP = 400;
-    internal const int PROFILER_CYCLE_REALUP = 800;
-    internal const int STORE_CYCLES = 6;
+    internal const int PROFILER_CYCLE_COREUP = 200;
+    internal const int PROFILER_CYCLE_REALUP = 400;
+    internal const int STORE_CYCLES = 12;
     #region fields
     #region perfrec
     internal readonly LinkedList<double> realup_readings = new();
