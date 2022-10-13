@@ -80,7 +80,11 @@ internal static class HappenBuilding
             }
         }
     finish:
-        res ??= new Always();
+        if (res is null)
+        {
+            inst.Plog.LogWarning($"Failed to create a trigger! {id}, args: {args.Aggregate(Utils.JoinWithComma)}. Replacing with a stub");
+            res = new Always();
+        }
         return res;
     }
 
