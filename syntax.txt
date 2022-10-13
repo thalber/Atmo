@@ -15,7 +15,7 @@ room6
 END
 
 // Define an event
-EVENT: AlarmShake
+HAPPEN: AlarmShake
 //groups + include rooms - exclude rooms
 WHERE: Inside + room3 - room4
 // Actions. Each action is a word, followed by optional literals that act as parameters for the action / word.
