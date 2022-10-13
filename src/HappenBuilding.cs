@@ -40,8 +40,14 @@ internal static class HappenBuilding
     {
         //todo: add default cases
         //inst.Plog.LogWarning("preblam");
-        ha.On_Init += (w) => { inst.Plog.LogWarning($"Init! {ha}"); };
-        ha.On_AbstUpdate += (absr, t) => { inst.Plog.LogWarning($"absup {absr.name}, {t} ticks"); };
+        ha.On_Init += (w) =>
+        {
+            inst.Plog.LogWarning($"Init! {ha}");
+        };
+        ha.On_AbstUpdate += (absr, t) =>
+        {
+            //inst.Plog.LogWarning($"absup {absr.name}, {t} ticks");
+        };
         ha.On_RealUpdate += (rm) =>
         {
             if (URand.value < 0.03f) throw new Exception("Fuck you");
@@ -69,20 +75,20 @@ internal static class HappenBuilding
             if (res is not null) break;
             try
             {
-                res ??= cb?.Invoke(id, args, rwg);
+                res ??= cb.Invoke(id, args, rwg);
             }
             catch (Exception ex)
             {
                 inst.Plog.LogError(
                     $"Happenbuild: CreateTrigger: Error invoking trigger factory " +
-                    $"{cb}//{cb?.Method.Name} for {id}({args.Aggregate(Utils.JoinWithComma)}):" +
+                    $"{cb}//{cb?.Method.Name} for {id}({(args.Length == 0 ? string.Empty : args.Aggregate(Utils.JoinWithComma))}):" +
                     $"\n{ex}");
             }
         }
     finish:
         if (res is null)
         {
-            inst.Plog.LogWarning($"Failed to create a trigger! {id}, args: {args.Aggregate(Utils.JoinWithComma)}. Replacing with a stub");
+            inst.Plog.LogWarning($"Failed to create a trigger! {id}, args: {(args.Length == 0 ? string.Empty : args.Aggregate(Utils.JoinWithComma))}. Replacing with a stub");
             res = new Always();
         }
         return res;
@@ -91,8 +97,11 @@ internal static class HappenBuilding
     private static HappenTrigger? DefaultTrigger(string id, string[] args, RainWorldGame rwg)
     {
         HappenTrigger? res = null;
-        switch (id)
+        switch (id.ToLower())
         {
+            case "always":
+                res = new Always();
+                break;
             case "untilrain":
             case "beforerain":
                 {

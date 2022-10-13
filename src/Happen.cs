@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 
 using static Atmo.Atmod;
+using static Atmo.Utils;
+
+using DBG = System.Diagnostics;
 
 namespace Atmo;
 /// <summary>
@@ -12,11 +15,21 @@ namespace Atmo;
 public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 {
     //todo: add frame time profiling
+    internal const int PROFILER_CYCLE_COREUP = 400;
+    internal const int PROFILER_CYCLE_REALUP = 800;
+    internal const int STORE_CYCLES = 6;
     #region fields
+    #region perfrec
+    internal readonly LinkedList<double> realup_readings = new();
+    internal readonly List<TimeSpan> realup_times = new(PROFILER_CYCLE_REALUP);
+    internal readonly LinkedList<double> haeval_readings = new();
+    internal readonly List<TimeSpan> haeval_times = new(PROFILER_CYCLE_COREUP);
+    #endregion perfrec
     private readonly Guid guid = Guid.NewGuid();
     internal PredicateInlay? conditions;
     public bool initRan;
     private bool active;
+    private DBG.Stopwatch sw = new();
     #region fromcfg
     public readonly HappenTrigger[] triggers;
     public readonly string name;
@@ -65,6 +78,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     /// </summary>
     public event API.lc_AbstractUpdate? On_AbstUpdate;
     internal void RealUpdate (Room room) {
+        sw.Start();
         if (On_RealUpdate is null) return;
         foreach (API.lc_RealizedUpdate cb in On_RealUpdate.GetInvocationList())
         {
@@ -78,6 +92,8 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
                 On_RealUpdate -= cb;
             }
         }
+        LogFrameTime(realup_times, sw.Elapsed, realup_readings, STORE_CYCLES);
+        sw.Reset();
     }
 
     /// <summary>
@@ -106,6 +122,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     public event API.lc_Init? On_Init;
     internal void CoreUpdate(RainWorldGame rwg)
     {
+        sw.Start();
         foreach (var tr in triggers) tr.Update();
         active = conditions?.Eval() ?? true;
         if (On_CoreUpdate is null) return;
@@ -121,7 +138,8 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
                 On_CoreUpdate -= cb;
             }
         }
-        //foreach (API.lc_CoreUpdate bcb in broken) On_CoreUpdate -= bcb;
+        LogFrameTime(haeval_times, sw.Elapsed, haeval_readings, STORE_CYCLES);
+        sw.Reset();
     }
 
     /// <summary>
@@ -151,6 +169,15 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         return $"{name}-{guid}[{actions.Aggregate(Utils.JoinWithComma)}]({triggers.Length} triggers)";
     }
 
+    #region nested
+    public struct Perf
+    {
+        public string name;
+        public double avg_realup;
+        public int samples_realup;
+        public double avg_eval;
+        public int samples_eval;
+    }
     private enum LCE
     {
         abstup,
@@ -158,6 +185,25 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         coreup,
         init,
     }
+    #endregion
+
+    #region statics
+    public Perf PerfRecord()
+    {
+        var perf = new Perf();
+        perf.name = name;
+        double 
+            realuptotal = 0d,
+            evaltotal = 0d;
+        foreach (double rec in realup_readings) realuptotal += rec;
+        foreach (double rec in haeval_readings) evaltotal += rec;
+        perf.avg_eval = evaltotal / (double)haeval_readings.Count;
+        perf.samples_eval = haeval_readings.Count;
+        perf.avg_realup = realuptotal / (double)realup_readings.Count;
+        perf.samples_realup = realup_readings.Count;
+        return perf;
+    }
+    #endregion
     private string ErrorMessage(LCE where, Delegate cb, Exception ex, bool removing = true)
         => $"Happen {this}: {where}: " +
         $"Error on callback {cb}//{cb.Method}:" +

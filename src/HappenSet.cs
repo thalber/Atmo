@@ -10,14 +10,16 @@ using CRS = CustomRegions.Mod;
 using TXT = System.Text.RegularExpressions;
 
 namespace Atmo;
-internal sealed class HappenSet
+public sealed class HappenSet
 {
+    //todo: unify adding items to multiple pools
     #region fields
     private RainWorldGame rwg;
     internal TwoPools<string, string> RoomsToGroups = new();
     internal TwoPools<string, Happen> GroupsToHappens = new();
     internal TwoPools<string, Happen> SpecificIncludeToHappens = new();
     internal TwoPools<string, Happen> SpecificExcludeToHappens = new();
+    internal readonly List<Happen> AllHappens = new();
     #endregion
     private HappenSet(RainWorldGame rwg, IO.FileInfo? file = null)
     {
@@ -25,6 +27,37 @@ internal sealed class HappenSet
         if (file is null) return;
         HappenParser.Parse(file, this, rwg);
     }
+    public IEnumerable<Happen> GetEventsForRoom(string roomname)
+    {
+        List<Happen> returned = new();
+        //goto _specific;
+        if (!RoomsToGroups.LeftContains(roomname)) goto _specific;
+        foreach (var group in RoomsToGroups.IndexFromLeft(roomname))
+        {
+            if (!GroupsToHappens.LeftContains(group)) continue;
+            foreach (var ha in GroupsToHappens.IndexFromLeft(group))
+            {
+                //exclude the minused
+                if (SpecificExcludeToHappens.RightContains(ha) && SpecificExcludeToHappens.IndexFromRight(ha).Contains(roomname)) continue;
+                returned.Add(ha);
+                yield return ha;
+            }
+        }
+    _specific:
+        if (!SpecificIncludeToHappens.LeftContains(roomname)) yield break;
+        foreach (var ha in SpecificIncludeToHappens.IndexFromLeft(roomname))
+        {
+            if (!returned.Contains(ha)) yield return ha;
+        }
+    }
+    public IEnumerable<Happen.Perf> GetPerfRecords()
+    {
+        foreach (var ha in AllHappens)
+        {
+            yield return ha.PerfRecord();
+        }
+    }
+    #region statics
     internal static HappenSet? TryCreate(World world)
     {
         HappenSet? res = null;
@@ -33,7 +66,6 @@ internal sealed class HappenSet
         #else 
         try
         {
-#warning weird crs interaction, recheck
             //todo: make sure disabled regpacks are ignored
             var pl = inst.Plog;
             var packs = CRS.API.InstalledPacks;
@@ -77,34 +109,6 @@ internal sealed class HappenSet
         }
         #endif
     }
-    internal IEnumerable<Happen> GetEventsForRoom(string roomname)
-    {
-        List<Happen> returned = new();
-        //goto _specific;
-        if (!RoomsToGroups.LeftContains(roomname)) goto _specific;
-        foreach (var group in RoomsToGroups.IndexFromLeft(roomname))
-        {
-            if (!GroupsToHappens.LeftContains(group)) continue;
-            foreach (var ha in GroupsToHappens.IndexFromLeft(group))
-            {
-                //exclude the minused
-                if (SpecificExcludeToHappens.RightContains(ha) && SpecificExcludeToHappens.IndexFromRight(ha).Contains(roomname)) continue;
-                returned.Add(ha);
-                yield return ha;
-            }
-        }
-    _specific:
-        if (!SpecificIncludeToHappens.LeftContains(roomname)) yield break;
-        foreach (var ha in SpecificIncludeToHappens.IndexFromLeft(roomname))
-        {
-            if (!returned.Contains(ha)) yield return ha;
-        }
-    }
-
-    internal void InsertHappens(IEnumerable<Happen> collection)
-    {
-        SpecificIncludeToHappens.InsertRangeRight(collection);
-    }
     public static HappenSet operator +(HappenSet l, HappenSet r)
     {
         HappenSet res = new(l.rwg ?? r.rwg)
@@ -116,4 +120,6 @@ internal sealed class HappenSet
         };
         throw new NotImplementedException();
     }
+
+    #endregion statics
 }

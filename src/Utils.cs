@@ -153,6 +153,26 @@ namespace Atmo
         }
         #endregion
         #region misc bs
+
+        public static void LogFrameTime(
+            List<TimeSpan> realup_times,
+            TimeSpan frame,
+            LinkedList<double> realup_readings,
+            int storeCap)
+        {
+            realup_times.Add(frame);
+            if (realup_times.Count == realup_times.Capacity)
+            {
+                TimeSpan total = new(0);
+                for (int i = 0; i < realup_times.Count; i++)
+                {
+                    total += realup_times[i];
+                }
+                realup_readings.AddLast(total.TotalMilliseconds / (double)realup_times.Capacity);
+                if (realup_readings.Count > storeCap) realup_readings.RemoveFirst();
+                realup_times.Clear();
+            }
+        }
         public static void AddOrUpdate<Tk, Tv>(this Dictionary<Tk, Tv> dict, Tk key, Tv val)
         {
             if (dict.ContainsKey(key)) dict[key] = val;

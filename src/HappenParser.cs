@@ -71,6 +71,7 @@ internal class HappenParser
         foreach (HappenConfig hac in p.retrievedHappens)
         {
             Happen ha = new(hac, set, rwg);
+            set.AllHappens.Add(ha);
             set.GroupsToHappens.InsertRight(ha);
             foreach (string g in hac.groups)
             {
