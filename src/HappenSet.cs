@@ -33,18 +33,20 @@ internal sealed class HappenSet
         #else 
         try
         {
-#warning unchecked crs interaction
+#warning weird crs interaction, recheck
+            //todo: make sure disabled regpacks are ignored
             var pl = inst.Plog;
             var packs = CRS.API.InstalledPacks;
-            pl.LogError(packs.Count);
+            var active = CRS.API.ActivatedPacks;
+            //pl.LogError(packs.Count);
             foreach (KeyValuePair<string, CRS.CustomWorldStructs.RegionPack> kvp in packs)
             {
-                pl.LogError("!!!");
+
                 var name = kvp.Key;
                 var data = kvp.Value;
-                
-                //if (!data.activated) continue;
-                //if (!data.regions.Contains(world.region.name)) continue;
+                //skip inactive
+                if (!active.ContainsKey(name)) continue;
+
                 var tarpath = CRS.API.BuildPath(
                     regionPackFolder: name,
                     folderName: "World",
@@ -52,15 +54,14 @@ internal sealed class HappenSet
                     file: $"{world.name}.atmo",
                     folder: IO.Path.Combine("Regions", world.name),
                     includeRoot: true);
-                pl.LogError($"Checking pack {name}. path: {tarpath}");
                 var tarfile = new IO.FileInfo(tarpath);
                 if (tarfile.Exists)
                 {
-                    pl.LogError("File found! adding");
+                    //pl.LogError("File found! adding");
                     HappenSet gathered = new(world.game, tarfile);
                     if (res is null) res = gathered;
                     else res += gathered;
-                    pl.LogWarning(gathered);
+                    //pl.LogWarning(gathered);
                 }
                 else
                 {
@@ -78,7 +79,6 @@ internal sealed class HappenSet
     }
     internal IEnumerable<Happen> GetEventsForRoom(string roomname)
     {
-#warning lc events broken again
         List<Happen> returned = new();
         //goto _specific;
         if (!RoomsToGroups.LeftContains(roomname)) goto _specific;

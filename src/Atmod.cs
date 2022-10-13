@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System;
 using System.Text;
 
+
+using DBG = System.Diagnostics;
+
 using static Atmo.API;
 using static Atmo.HappenTrigger;
 
@@ -15,6 +18,8 @@ namespace Atmo;
 [BepInPlugin("thalber.atmod", "atmod", "0.2")]
 public sealed partial class Atmod : BaseUnityPlugin
 {
+    internal const int PROFILER_CYCLE = 400;
+
     #region fields
     /// <summary>
     /// Static singleton
@@ -29,8 +34,11 @@ public sealed partial class Atmod : BaseUnityPlugin
     /// </summary>
     internal BepInEx.Logging.ManualLogSource Plog => Logger;
     private bool setupRan = false;
+    internal HappenSet? currentSet;
 
-    internal static HappenSet? currentSet;
+
+    internal readonly List<TimeSpan> realup_times = new(PROFILER_CYCLE);
+    //internal readonly List<TimeSpan> haeval_times = new(PROFILER_CYCLE);
     #endregion
 
     public void OnEnable()
@@ -116,7 +124,9 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         //#warning issue: for some reason geteventsforroom always returns none on real update
         //in my infinite wisdom i set SU_S04 as test room instead of SU_C04. everything worked as intended except for my brain
+        
         orig(self);
+        DBG.Stopwatch sw = DBG.Stopwatch.StartNew();
         if (currentSet is null) return;
         var haps = currentSet.GetEventsForRoom(self.abstractRoom.name);
         foreach (var ha in haps)
@@ -134,8 +144,20 @@ public sealed partial class Atmod : BaseUnityPlugin
                 Logger.LogError($"Error running event realupdate for room {self.abstractRoom.name}:\n{e}");
             }
         }
-
+        realup_times.Add(sw.Elapsed);
+        if (realup_times.Count == realup_times.Capacity)
+        {
+            TimeSpan total = new(0);
+            for (int i = 0; i < realup_times.Count; i++)
+            {
+                total += realup_times[i];
+            }
+            Logger.LogDebug($"Average total frame time in the last {PROFILER_CYCLE} frames was: " +
+                $"{total.TotalMilliseconds / (double)PROFILER_CYCLE}ms");
+            realup_times.Clear();
+        }
     }
+    //todo: make sure everything works with region switching
     private void FetchHappenSet(On.World.orig_ctor orig, World self, RainWorldGame game, Region region, string name, bool singleRoomWorld)
     {
         orig(self, game, region, name, singleRoomWorld);

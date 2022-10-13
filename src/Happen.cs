@@ -14,7 +14,6 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     //todo: add frame time profiling
     #region fields
     private readonly Guid guid = Guid.NewGuid();
-    //internal HappenConfig cfg;
     internal PredicateInlay? conditions;
     public bool initRan;
     private bool active;

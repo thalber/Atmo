@@ -11,8 +11,8 @@ namespace Atmo;
 public static class API
 {
     #region fields
-    internal readonly static List<string> takenActionNames = new();
-    internal readonly static List<string> takenTriggerNames = new();
+    internal readonly static Dictionary<string, Create_HappenBuilder> namedActions = new();
+    internal readonly static Dictionary<string, Create_RawTriggerFactory> namedTriggers = new();
     #endregion
     #region dels
     /// <summary>
@@ -58,9 +58,8 @@ public static class API
     public delegate HappenTrigger? Create_SafeTriggerFactory(string[] args, RainWorldGame rwg);
     #endregion
     #region API proper
-    //todo: make safe callbacks undoable
     /// <summary>
-    /// Tries to register callbacks to be added to happens that have a specified actions, up to one per lifecycle event.
+    /// Registers a named action. Up to one callback for every lifecycle event.
     /// </summary>
     /// <param name="action">Action name. Case insensitive.</param>
     /// <param name="au">Abstract update callback.</param>
@@ -68,7 +67,7 @@ public static class API
     /// <param name="oi">Init callback.</param>
     /// <param name="cu">Init callback.</param>
     /// <returns>True if successfully added; false if name already taken.</returns>
-    public static bool AddCallbacksOnAction(
+    public static bool AddNamedAction(
         string action,
         lc_AbstractUpdate? au = null,
         lc_RealizedUpdate? ru = null,
@@ -76,8 +75,9 @@ public static class API
         lc_CoreUpdate? cu = null)
     {
         action = action.ToLower();
-        if (takenActionNames.Contains(action)) return false;
-        API_MakeNewHappen += (ha) =>
+        if (namedActions.ContainsKey(action)) return false;
+        //API_MakeNewHappen += 
+        Create_HappenBuilder newCb = (ha) =>
         {
             if (ha.actions.Contains(action))
             {
@@ -87,43 +87,65 @@ public static class API
                 ha.On_CoreUpdate += cu;
             }
         };
-        takenActionNames.Add(action);
+        namedActions.Add(action, newCb);
+        API_MakeNewHappen += newCb;
         return true;
     }
     /// <summary>
-    /// Registers a <see cref="Create_HappenBuilder"/> for actions with a specific name.
+    /// Registers a named action. Uses a <see cref="Create_HappenBuilder"/> to add any amount of callbacks to events. 
     /// </summary>
     /// <param name="action">Action name. Case insensitive.</param>
     /// <param name="builder">User builder callback.</param>
     /// <returns>true if successfully attached, false if name already taken.</returns>
-    public static bool AddCallbacksOnAction(
+    public static bool AddNamedAction(
         string action,
         Create_HappenBuilder builder)
     {
         action = action.ToLower();
-        if (takenActionNames.Contains(action)) return false;
-        API_MakeNewHappen += (ha) => { if (ha.actions.Contains(action)) builder?.Invoke(ha); };
-        takenActionNames.Add(action);
+        if (namedTriggers.ContainsKey(action)) return false;
+        Create_HappenBuilder newCb =
+            (ha) => { if (ha.actions.Contains(action)) builder?.Invoke(ha); };
+        namedActions.Add(action, newCb);
+        API_MakeNewHappen += newCb;
         return true;
     }
     /// <summary>
-    /// Registers a trigger factory for a specific name.
+    /// Removes a named callback.
+    /// </summary>
+    /// <param name="action"></param>
+    public static void RemoveNamedAction(string action)
+    {
+        if (!namedActions.ContainsKey(action)) return;
+        API_MakeNewHappen -= namedActions[action];
+        namedActions.Remove(action);
+    }
+    /// <summary>
+    /// Registers a named trigger.
     /// </summary>
     /// <param name="name">Trigger name.</param>
     /// <param name="fac">User trigger factory callback.</param>
     /// <returns>true if successfully attached, false if name already taken.</returns>
-    public static bool MakeTriggerOnName(
+    public static bool AddNamedTrigger(
         string name,
         Create_SafeTriggerFactory fac)
     {
         name = name.ToLower();
-        if (takenTriggerNames.Contains(name)) return false;
-        API_MakeNewTrigger += (n, args, rwg) =>
+        if (namedTriggers.ContainsKey(name)) return false;
+        Create_RawTriggerFactory newCb = (n, args, rwg) =>
         {
             if (n == name) return fac(args, rwg);
             return null;
         };
+        namedTriggers.Add(name, newCb);
+        API_MakeNewTrigger += newCb;
         return true;
+    }
+
+    public static void RemoveNamedCallback(string name)
+    {
+        if (!namedTriggers.ContainsKey(name)) return;
+        API_MakeNewTrigger -= namedTriggers[name];
+        namedTriggers.Remove(name);
     }
     /// <summary>
     /// Subscribe to this to attach your custom callbacks to newly created happen objects.

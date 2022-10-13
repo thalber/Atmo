@@ -13,6 +13,7 @@ namespace Atmo;
 internal class HappenParser
 {
     //god this is a mess
+    //todo: find a way to make the parser less painful
 
     #region fields
     #region statfields
@@ -31,7 +32,7 @@ internal class HappenParser
     private IO.FileInfo file;
     private HappenSet set;
     private RainWorldGame rwg;
-    private IO.StreamReader lines;
+    //private IO.StreamReader lines;
     private string cline;
     private ParsePhase phase = ParsePhase.None;
     private string? cGroup = null;
@@ -43,15 +44,16 @@ internal class HappenParser
     {
         allLines = IO.File.ReadAllLines(file.FullName);
         this.file = file;
+        this.set = set;
+        this.rwg = rwg;
     }
 
     ~HappenParser()
     {
-        lines.Dispose();
+        //lines.Dispose();
     }
     internal static void Parse(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
     {
-#warning test this fucking mess for god's sake
         //inst.Plog.LogDebug("Beginning parse");
         HappenParser p = new(file, set, rwg);
         //inst.Plog.LogDebug(p.allLines.Aggregate(Utils.JoinWithComma));
@@ -87,12 +89,6 @@ internal class HappenParser
                 foreach (var incl in hac.include) set.SpecificExcludeToHappens.AddLink(incl, ha);
             }
         }
-        foreach (var room in set.RoomsToGroups.EnumerateLeft())
-        {
-            //inst.Plog.LogWarning($"{room}, {set.GetEventsForRoom(room).Select(x => x.ToString()).Aggregate(Utils.JoinWithComma)}, {room == "SU_C04"}");
-        }
-        //inst.Plog.LogWarning($"{set.RoomsToGroups}, {set.GroupsToHappens}");
-        //while (p.cl )
     }
 
     internal void Advance()
@@ -211,8 +207,7 @@ internal class HappenParser
                     case LineKind.HappenWhen:
                         try
                         {
-#warning edit predinlay to handle null exchanger
-                            cHapp.conditions = new PredicateInlay(payload, (x, args) => null);
+                            cHapp.conditions = new PredicateInlay(payload, null);
                         }
                         catch (Exception ex)
                         {
