@@ -37,10 +37,10 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         {
             var nt = HappenBuilding.CreateTrigger(id, args, rwg);
             list_triggers.Add(nt);
-            inst.Plog.LogWarning($"running pop!!! {nt}, {nt.ShouldRunUpdates()}");
+            //inst.Plog.LogWarning($"running pop!!! {nt}, {nt.ShouldRunUpdates()}");
             return nt.ShouldRunUpdates;
         });
-        inst.Plog.LogWarning( conditions?.Eval());
+        //inst.Plog.LogWarning( conditions?.Eval());
         triggers = list_triggers.ToArray();
         HappenBuilding.NewEvent(this);
     }
@@ -76,6 +76,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
             catch (Exception ex)
             {
                 inst.Plog.LogError(ErrorMessage(LCE.realup, cb, ex));
+                On_RealUpdate -= cb;
             }
         }
     }
@@ -95,8 +96,8 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
             }
             catch (Exception ex)
             {
-                inst.Plog.LogError(ErrorMessage(LCE.init, cb, ex));
-                On_Init -= cb;
+                inst.Plog.LogError(ErrorMessage(LCE.init, cb, ex, false));
+                //On_Init -= cb;
             }
         }
     }
@@ -106,8 +107,6 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     public event API.lc_Init? On_Init;
     internal void CoreUpdate(RainWorldGame rwg)
     {
-        //broken.Clear();
-        //inst.Plog.LogDebug("update");
         foreach (var tr in triggers) tr.Update();
         active = conditions?.Eval() ?? true;
         if (On_CoreUpdate is null) return;
@@ -120,9 +119,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
             catch (Exception ex)
             {
                 inst.Plog.LogError(ErrorMessage(LCE.coreup, cb, ex));
-                //inst.Plog.LogWarning("Removing problematic callback.");
                 On_CoreUpdate -= cb;
-                //broken.Add(cb);
             }
         }
         //foreach (API.lc_CoreUpdate bcb in broken) On_CoreUpdate -= bcb;

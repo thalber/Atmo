@@ -8,6 +8,7 @@ using static Atmo.HappenTrigger;
 using static Atmo.HappenBuilding;
 using static Atmo.API;
 
+using URand = UnityEngine.Random;
 
 namespace Atmo;
 /// <summary>
@@ -41,6 +42,10 @@ internal static class HappenBuilding
         //inst.Plog.LogWarning("preblam");
         ha.On_Init += (w) => { inst.Plog.LogWarning($"Init! {ha}"); };
         ha.On_AbstUpdate += (absr, t) => { inst.Plog.LogWarning($"absup {absr.name}, {t} ticks"); };
+        ha.On_RealUpdate += (rm) =>
+        {
+            if (URand.value < 0.03f) throw new Exception("Fuck you");
+        };
     }
     /// <summary>
     /// Creates a new trigger with given ID, arguments using provided <see cref="RainWorldGame"/>.

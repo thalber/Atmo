@@ -57,7 +57,7 @@ public sealed partial class Atmod : BaseUnityPlugin
         }
     }
 
-
+    #region lifecycle
     /// <summary>
     /// Sends an Update call to all events for loaded world
     /// </summary>
@@ -151,6 +151,7 @@ public sealed partial class Atmod : BaseUnityPlugin
             Logger.LogError($"Could not create a happenset: {e}");
         }
     }
+    #endregion lifecycle
     public void Update()
     {
         rw ??= FindObjectOfType<RainWorld>();
@@ -159,9 +160,10 @@ public sealed partial class Atmod : BaseUnityPlugin
             //maybe put something here
             setupRan = true;
         }
-        if (rw is null) return;
+        if (rw is null || currentSet is null) return;
         if (rw.processManager.currentMainLoop is RainWorldGame) return;
         foreach (var proc in rw.processManager.sideProcesses) if (proc is RainWorldGame) return;
+        Logger.LogDebug("No RainWorldGame in processmanager, erasing currentset");
         currentSet = null;
     }
     public void OnDisable()

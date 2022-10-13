@@ -89,7 +89,7 @@ internal class HappenParser
         }
         foreach (var room in set.RoomsToGroups.EnumerateLeft())
         {
-            inst.Plog.LogWarning($"{room}, {set.GetEventsForRoom(room).Select(x => x.ToString()).Aggregate(Utils.JoinWithComma)}, {room == "SU_C04"}");
+            //inst.Plog.LogWarning($"{room}, {set.GetEventsForRoom(room).Select(x => x.ToString()).Aggregate(Utils.JoinWithComma)}, {room == "SU_C04"}");
         }
         //inst.Plog.LogWarning($"{set.RoomsToGroups}, {set.GroupsToHappens}");
         //while (p.cl )
