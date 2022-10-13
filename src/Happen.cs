@@ -19,13 +19,15 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     public bool initRan;
     private bool active;
     #region fromcfg
-    private HappenTrigger[] triggers;
+    public readonly HappenTrigger[] triggers;
     public readonly string name;
-    private string[] actions;
+    public readonly string[] actions;
+    //public readonly string[] exclude;
     #endregion fromcfg
     #endregion fields
     internal Happen(HappenConfig cfg, HappenSet owner, RainWorldGame rwg)
     {
+        //exclude = cfg.exclude.ToArray();
         name = cfg.name;
         actions = cfg.actions.Select(x => x.Key).ToArray();
         conditions = cfg.conditions;
@@ -35,8 +37,10 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         {
             var nt = HappenBuilding.CreateTrigger(id, args, rwg);
             list_triggers.Add(nt);
+            inst.Plog.LogWarning($"running pop!!! {nt}, {nt.ShouldRunUpdates()}");
             return nt.ShouldRunUpdates;
         });
+        inst.Plog.LogWarning( conditions?.Eval());
         triggers = list_triggers.ToArray();
         HappenBuilding.NewEvent(this);
     }
@@ -103,6 +107,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     internal void CoreUpdate(RainWorldGame rwg)
     {
         //broken.Clear();
+        //inst.Plog.LogDebug("update");
         foreach (var tr in triggers) tr.Update();
         active = conditions?.Eval() ?? true;
         if (On_CoreUpdate is null) return;

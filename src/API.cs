@@ -79,7 +79,7 @@ public static class API
         if (takenActionNames.Contains(action)) return false;
         API_MakeNewHappen += (ha) =>
         {
-            if (ha.cfg.actions.Contains(action))
+            if (ha.actions.Contains(action))
             {
                 ha.On_AbstUpdate += au;
                 ha.On_RealUpdate += ru;
@@ -102,7 +102,7 @@ public static class API
     {
         action = action.ToLower();
         if (takenActionNames.Contains(action)) return false;
-        API_MakeNewHappen += (ha) => { if (ha.cfg.actions.Contains(action)) builder?.Invoke(ha); };
+        API_MakeNewHappen += (ha) => { if (ha.actions.Contains(action)) builder?.Invoke(ha); };
         takenActionNames.Add(action);
         return true;
     }

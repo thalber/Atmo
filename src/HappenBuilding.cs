@@ -38,6 +38,9 @@ internal static class HappenBuilding
     internal static void AddDefaultCallbacks(Happen ha)
     {
         //todo: add default cases
+        //inst.Plog.LogWarning("preblam");
+        ha.On_Init += (w) => { inst.Plog.LogWarning($"Blam! {ha}"); };
+        ha.On_AbstUpdate += (absr, t) => { inst.Plog.LogWarning(t); };
     }
     /// <summary>
     /// Creates a new trigger with given ID, arguments using provided <see cref="RainWorldGame"/>.

@@ -12,7 +12,7 @@ namespace Atmo;
 /// <summary>
 /// Main plugin class.
 /// </summary>
-[BepInPlugin("thalber.atmod", "atmod", "0.1")]
+[BepInPlugin("thalber.atmod", "atmod", "0.2")]
 public sealed partial class Atmod : BaseUnityPlugin
 {
     #region fields
@@ -37,6 +37,11 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         try
         {
+            //PredicateInlay.compiled = System.Text.RegularExpressions.RegexOptions.None;
+            string thing = """
+                C:\Program Files (x86)\Steam\steamapps\common\Rain World - Dev\Mods\CustomResources\Better Shelters\World\Regions\SU\SU.atmo
+                """;
+            
             On.World.ctor += FetchHappenSet;
             On.Room.Update += RunHappensRealUpd;
             On.AbstractRoom.Update += RunHappensAbstUpd;
@@ -70,7 +75,7 @@ public sealed partial class Atmod : BaseUnityPlugin
                 ha.CoreUpdate(self);
             }
             catch (Exception e) {
-                Logger.LogError($"Error doing body update for {ha.cfg.name}:\n{e}");
+                Logger.LogError($"Error doing body update for {ha.name}:\n{e}");
             }
         }
     }
@@ -116,6 +121,7 @@ public sealed partial class Atmod : BaseUnityPlugin
         var haps = currentSet.GetEventsForRoom(self.abstractRoom.name);
         foreach (var ha in haps)
         {
+            Logger.LogDebug($"update {ha} ({haps.Count()})");
             try
             {
                 if (ha.IsOn(self.world.game)) {
@@ -153,9 +159,10 @@ public sealed partial class Atmod : BaseUnityPlugin
             //maybe put something here
             setupRan = true;
         }
-        if (rw is not null 
-            && rw.processManager.sideProcesses.Any(x => x is RainWorldGame)) 
-            currentSet = null;
+        if (rw is null) return;
+        if (rw.processManager.currentMainLoop is RainWorldGame) return;
+        foreach (var proc in rw.processManager.sideProcesses) if (proc is RainWorldGame) return;
+        currentSet = null;
     }
     public void OnDisable()
     {

@@ -153,7 +153,12 @@ namespace Atmo
         }
         #endregion
         #region misc bs
-        public static string JoinWithComma(string x, string y) => $"{x}, y";
+        public static void AddOrUpdate<Tk, Tv>(this Dictionary<Tk, Tv> dict, Tk key, Tv val)
+        {
+            if (dict.ContainsKey(key)) dict[key] = val;
+            else dict.Add(key, val);
+        }
+        public static string JoinWithComma(string x, string y) => $"{x}, {y}";
         public static IntRect ConstructIR(IntVector2 p1, IntVector2 p2) => new(Min(p1.x, p2.x), Min(p1.y, p2.y), Max(p1.x, p2.x), Max(p1.y, p2.y));
         public static string CombinePath(params string[] parts) => parts.Aggregate(Path.Combine);
         public static RainWorld CRW => UnityEngine.Object.FindObjectOfType<RainWorld>();
