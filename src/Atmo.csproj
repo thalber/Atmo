@@ -1,10 +1,31 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net35</TargetFramework>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>preview</LangVersion>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<ProduceReferenceAssembly>True</ProduceReferenceAssembly>
+		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+		<SignAssembly>False</SignAssembly>
+		<Authors>thalber</Authors>
+		<Version></Version>
+		<Description>Rain World mod that acts as a regpack-centric scripting addon for RegionKit.</Description>
+		<Copyright>The Unlicense</Copyright>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl></RepositoryUrl>
+		<AssemblyVersion>0.3</AssemblyVersion>
+		<FileVersion>0.3</FileVersion>
+		<PackageLicenseFile>..\LICENSE</PackageLicenseFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <DebugType>embedded</DebugType>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <DebugType>embedded</DebugType>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -37,6 +58,13 @@
 	<ItemGroup>
 		<Compile Include="../modules/TwoPools/src/TwoPools.cs"></Compile>
 		<Compile Include="../modules/PredicateInlay/src/PredicateInlay.cs"></Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\README.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
