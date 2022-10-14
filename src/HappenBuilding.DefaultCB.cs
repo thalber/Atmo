@@ -45,13 +45,8 @@ internal static partial class HappenBuilding
                 case "sound":
                 case "playsound":
                     {
-                        inst.Plog.LogWarning("making sound!!!");
-                        SoundID soundid = RWCustom.Custom.ParseEnum<SoundID>(args[0]);
-                        //var me = Guid.NewGuid();
-                        //if (!TryParseEnum(args.AtOr(0, nameof(SoundID.HUD_Karma_Reinforce_Bump)),
-                            //out SoundID soundid)) break;
-                        //SoundID sid = Enum.Parse(typeof(SoundID), )
-                        //int.TryParse(args.AtOr(1, "-1"), out var cooldown);
+                        if (!TryParseEnum(args[0],
+                            out SoundID soundid)) break;
                         int cooldown = -1;
                         float
                             vol = 1f,
@@ -79,31 +74,53 @@ internal static partial class HappenBuilding
                                     break;
                             }
                         }
-                        int ctr = 0;
-                        //Box<int> ctr = new(0);
-                        //Dictionary<string, int> counters = new();
+                        int counter = 0;
                         ha.On_RealUpdate += (room) =>
                         {
-                            //inst.Plog.LogWarning($"$Boing {ctr.val}");
+                            if (counter != 0) return;
                             for (int i = 0; i < room.updateList.Count; i++)
                             {
-                                
-                                if (room.updateList[i] is Player p && ctr == 0)
+                                if (room.updateList[i] is Player p)
                                 {
                                     var em = room.PlaySound(soundid, p.firstChunk, false, vol, pitch);
-                                    ctr = cooldown;
+                                    counter = cooldown;
                                     return;
                                 }
                             }
                         };
                         ha.On_CoreUpdate += (rwg) =>
                         {
-                            if (ctr > 0) ctr--;
-                            //if (ctr.val == 0) inst.Plog.LogWarning("Boing");
+                            if (counter > 0) counter--;
                         };
 
                     }
-                    //case "playsoundnative":
+                    break;
+                case "rumble":
+                case "screenshake":
+                    {
+                        int.TryParse(args.AtOr(0, "200"), out int cooldown);
+                        int.TryParse(args.AtOr(1, "20"), out var duration);
+                        float.TryParse(args.AtOr(2, "1.0"), out var intensity);
+                        float.TryParse(args.AtOr(3, "0.5f"), out var shake);
+
+                        int counter = 0;
+                        bool active = false;
+
+                        ha.On_CoreUpdate += (rwg) =>
+                        {
+                            if (counter > 0) counter--;
+                            if (counter == 0)
+                            {
+                                active = !active;
+                                counter = active ? duration : cooldown;
+                            }
+                            
+                        };
+                        ha.On_RealUpdate += (room) =>
+                        {
+                            if (active) room.ScreenMovement(null, URand.insideUnitCircle * intensity, shake);
+                        };
+                    }
                     break;
             }
         }

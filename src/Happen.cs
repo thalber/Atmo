@@ -166,7 +166,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     }
     public override string ToString()
     {
-        return $"{name}-{guid}[{actions.Select(x => $"{x.Key}").Aggregate(Utils.JoinWithComma)}]({triggers.Length} triggers)";
+        return $"{name}-{guid}[{(actions.Count == 0 ? string.Empty : actions.Select(x => $"{x.Key}").Aggregate(Utils.JoinWithComma))}]({triggers.Length} triggers)";
     }
 
     #region nested

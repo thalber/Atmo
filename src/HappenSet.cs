@@ -27,6 +27,7 @@ public sealed class HappenSet
         if (file is null) return;
         HappenParser.Parse(file, this, rwg);
     }
+
     public IEnumerable<Happen> GetEventsForRoom(string roomname)
     {
         List<Happen> returned = new();
@@ -66,11 +67,9 @@ public sealed class HappenSet
         #else 
         try
         {
-            //todo: make sure disabled regpacks are ignored
             var pl = inst.Plog;
             var packs = CRS.API.InstalledPacks;
             var active = CRS.API.ActivatedPacks;
-            //pl.LogError(packs.Count);
             foreach (KeyValuePair<string, CRS.CustomWorldStructs.RegionPack> kvp in packs)
             {
 

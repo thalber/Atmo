@@ -18,7 +18,16 @@ internal static partial class HappenBuilding
 {
     internal static void NewEvent(Happen ha)
     {
-        AddDefaultCallbacks(ha);
+        try
+        {
+            AddDefaultCallbacks(ha);
+        }
+        catch (Exception ex)
+        {
+            inst.Plog.LogError($"HappenBuild: NewEvent:" +
+                $"Error adding default callbacks to {ha}:" +
+                $"\n{ex}");
+        }
         if (MNH_invl is null) return;
         foreach (var cb in MNH_invl)
         {
@@ -126,6 +135,10 @@ internal static partial class HappenBuilding
                 break;
             case "karma":
                 res = new OnKarma(rwg, args);
+                break;
+            case "visited":
+            case "playervisited":
+                res = new AfterVisit(rwg, args);
                 break;
         }
 

@@ -157,4 +157,23 @@ public abstract class HappenTrigger
         public override bool ShouldRunUpdates()
             => levels.Contains((rwg.Players[0].realizedCreature as Player)?.Karma ?? 0);
     }
+    /// <summary>
+    /// Activates after any player visits a specific set of rooms.
+    /// </summary>
+    public sealed class AfterVisit : NeedsRWG
+    {
+        private string[] rooms;
+        private bool visit = false;
+        public AfterVisit(RainWorldGame rwg, string[] roomnames) : base(rwg)
+        {
+            rooms = roomnames;
+        }
+        public override void Update()
+        {
+            if (visit) return;
+            foreach (var player in rwg.Players) if (rooms.Contains(player.Room.name)) visit = true;
+        }
+        public override bool ShouldRunUpdates()
+            => visit;
+    }
 }

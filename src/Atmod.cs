@@ -35,12 +35,7 @@ public sealed partial class Atmod : BaseUnityPlugin
     public void OnEnable()
     {
         try
-        {
-            //PredicateInlay.compiled = System.Text.RegularExpressions.RegexOptions.None;
-            string thing = """
-                C:\Program Files (x86)\Steam\steamapps\common\Rain World - Dev\Mods\CustomResources\Better Shelters\World\Regions\SU\SU.atmo
-                """;
-            
+        {   
             On.World.ctor += FetchHappenSet;
             On.Room.Update += RunHappensRealUpd;
             On.AbstractRoom.Update += RunHappensAbstUpd;
@@ -48,7 +43,7 @@ public sealed partial class Atmod : BaseUnityPlugin
         }
         catch ( Exception ex)
         {
-            Logger.LogError("Error on enable!\n" + ex);
+            Logger.LogFatal($"Error on enable!\n{ex}");
         }
         finally
         {
@@ -178,7 +173,7 @@ public sealed partial class Atmod : BaseUnityPlugin
         }
         catch (Exception ex)
         {
-            Logger.LogError("Error on disable!\n" + ex);
+            Logger.LogError($"Error on disable!\n{ex}");
         }
         finally
         {
