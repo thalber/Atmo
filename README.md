@@ -1,11 +1,10 @@
 # Atmo
  
-Atmo is a regpack-centric scripting addon for [RegionKit](https://github.com/DryCryCrystal/Region-Kit). It allows a region maker to add world events, easily bundling behaviour with custom trigger conditions.
+Atmo is a Rain World mod that acts as a regpack-centric scripting addon for [RegionKit](https://github.com/DryCryCrystal/Region-Kit). It allows a region maker to add world events, easily bundling behaviour with custom trigger conditions.
 
-## Requirements
+## Dependencies
 
 - Custom Regions Support.
-- RegionKit is not strictly required, but realistically you will be using them together.
 
 ## Usage
 
