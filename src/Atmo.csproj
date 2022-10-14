@@ -6,7 +6,7 @@
 		<LangVersion>preview</LangVersion>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
-		<ProduceReferenceAssembly>True</ProduceReferenceAssembly>
+		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<SignAssembly>False</SignAssembly>
 		<Authors>thalber</Authors>
