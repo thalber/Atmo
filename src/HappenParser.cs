@@ -42,7 +42,7 @@ internal class HappenParser
 
     internal HappenParser(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
     {
-        allLines = IO.File.ReadAllLines(file.FullName);
+        allLines = IO.File.ReadAllLines(file.FullName, Encoding.UTF8);
         this.file = file;
         this.set = set;
         this.rwg = rwg;
@@ -85,9 +85,9 @@ internal class HappenParser
             }
             if ((hac.exclude?.Count ?? 0) > 0)
             {
-                set.SpecificExcludeToHappens.InsertRangeLeft(hac.include);
+                set.SpecificExcludeToHappens.InsertRangeLeft(hac.exclude);
                 set.SpecificExcludeToHappens.InsertRight(ha);
-                foreach (var incl in hac.include) set.SpecificExcludeToHappens.AddLink(incl, ha);
+                foreach (var excl in hac.exclude) set.SpecificExcludeToHappens.AddLink(excl, ha);
             }
         }
     }
@@ -98,19 +98,21 @@ internal class HappenParser
         //if (cline is null) return;
         TXT.Match
                 group_que = LineMatchers[LineKind.GroupBegin].Match(cline),
-                comm_que = LineMatchers[LineKind.Comment].Match(cline),
+                //comm_que = LineMatchers[LineKind.Comment].Match(cline),
                 happn_que = LineMatchers[LineKind.HappenBegin].Match(cline);
-        if (comm_que.Success && comm_que.Success) return;
+        //if (comm_que.Success && comm_que.Success) return;
+
+        if (cline.StartsWith("//")) goto stop;
         switch (phase)
         {
             case ParsePhase.None:
                 {
-                    if (group_que.Success && group_que.Success)
+                    if (group_que.Success)
                     {
                         cGroup = cline.Substring(group_que.Length);
                         phase = ParsePhase.Group;
                     }
-                    else if (happn_que.Success && happn_que.Success)
+                    else if (happn_que.Success)
                     {
                         cHapp = new(cline.Substring(happn_que.Length));
                         phase = ParsePhase.Happen;
@@ -131,7 +133,7 @@ internal class HappenParser
             default:
                 break;
         }
-        //inst.Plog.LogDebug($"line {cline}, phase {phase}, cgroup {cGroup}");
+        stop:
         index++;
     }
 
@@ -164,8 +166,11 @@ internal class HappenParser
                     case LineKind.HappenWhere:
                         {
                             WhereOps c = WhereOps.Group;
-                            string[] items = TXT.Regex.Split(payload, "\\s");
-                            foreach (string i in items) switch (i)
+                            string[] items = TXT.Regex.Split(payload, "\\s+");
+                            foreach (string i in items)
+                            {
+                                if (i.Length == 0) continue;
+                                switch (i)
                                 {
                                     case "+":
                                         c = WhereOps.Include; break;
@@ -183,11 +188,12 @@ internal class HappenParser
                                                 cHapp.include.Add(i);
                                                 break;
                                             case WhereOps.Exclude:
-                                                cHapp.include.Add(i);
+                                                cHapp.exclude.Add(i);
                                                 break;
                                         }
                                         break;
                                 }
+                            }
                         }
                         break;
                     case LineKind.HappenWhat:

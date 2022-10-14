@@ -39,8 +39,11 @@ public sealed class HappenSet
             foreach (var ha in GroupsToHappens.IndexFromLeft(group))
             {
                 //exclude the minused
-                if (SpecificExcludeToHappens.RightContains(ha) && SpecificExcludeToHappens.IndexFromRight(ha).Contains(roomname)) continue;
+                if (SpecificExcludeToHappens.RightContains(ha) 
+                    && SpecificExcludeToHappens.IndexFromRight(ha)
+                    .Contains(roomname)) continue;
                 returned.Add(ha);
+                
                 yield return ha;
             }
         }
