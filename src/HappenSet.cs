@@ -108,6 +108,7 @@ public sealed class HappenSet
         }
         #endif
     }
+    //todo: make sure plus works 
     public static HappenSet operator +(HappenSet l, HappenSet r)
     {
         HappenSet res = new(l.rwg ?? r.rwg)

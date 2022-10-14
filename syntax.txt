@@ -6,13 +6,13 @@ GROUP:Outside
 room1, room2
 room3
 room6
-END
+END GROUP
 
 GROUP:Inside
 room4
 room5
 room6
-END
+END GROUP
 
 // Define an event
 HAPPEN: AlarmShake
@@ -24,4 +24,4 @@ WHAT: PlaySound 'Alarm1' Shake 0.5
 // Activation conditions. You can connect them with () parens,
 // !&^| boolean math operators or NOT AND XOR OR word equivalents
 WHEN: AfterRain -80 AND ( Karma 0 '3-9' OR Maybe 0.7)
-END
+END HAPPEN

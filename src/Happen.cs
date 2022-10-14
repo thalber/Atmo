@@ -156,6 +156,40 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     /// <exception cref="ArgumentException"></exception>
     public bool IsOn(RainWorldGame rwg)
         => active;
+    /// <summary>
+    /// Returns a performance report.
+    /// </summary>
+    /// <returns></returns>
+    public Perf PerfRecord()
+    {
+        var perf = new Perf();
+        perf.name = name;
+        perf.samples_eval = haeval_readings.Count;
+        perf.samples_realup = realup_readings.Count;
+        
+        double 
+            realuptotal = 0d,
+            evaltotal = 0d;
+        if (perf.samples_realup is not 0)
+        {
+            foreach (double rec in realup_readings) realuptotal += rec;
+            perf.avg_realup = realuptotal / (double)realup_readings.Count;
+        }
+        else
+        {
+            perf.avg_realup = float.NaN;
+        }
+        if (perf.samples_eval is not 0)
+        {
+            foreach (double rec in haeval_readings) evaltotal += rec;
+            perf.avg_eval = evaltotal / (double)haeval_readings.Count;
+        }
+        else
+        {
+            perf.avg_eval= float.NaN;
+        }
+        return perf;
+    }
     public int CompareTo(Happen other)
     {
         return guid.CompareTo(other.guid);
@@ -187,23 +221,6 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     }
     #endregion
 
-    #region statics
-    public Perf PerfRecord()
-    {
-        var perf = new Perf();
-        perf.name = name;
-        double 
-            realuptotal = 0d,
-            evaltotal = 0d;
-        foreach (double rec in realup_readings) realuptotal += rec;
-        foreach (double rec in haeval_readings) evaltotal += rec;
-        perf.avg_eval = evaltotal / (double)haeval_readings.Count;
-        perf.samples_eval = haeval_readings.Count;
-        perf.avg_realup = realuptotal / (double)realup_readings.Count;
-        perf.samples_realup = realup_readings.Count;
-        return perf;
-    }
-    #endregion
     private string ErrorMessage(LCE where, Delegate cb, Exception ex, bool removing = true)
         => $"Happen {this}: {where}: " +
         $"Error on callback {cb}//{cb.Method}:" +
