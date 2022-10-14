@@ -44,12 +44,11 @@ A happen block can have multiple `WHAT:` and `WHERE:` clauses, but *only one* `W
 Inside a happen block, the `WHEN:` clause should always be the last.
 Inside each `WHERE:` clause line, parsing starts with reading *group names*. After you've switched to included or excluded rooms by using a `+`/`-` separator, you can switch back to groups by using a `=` separator.
 
-## Builtins
-### Actions
+## Actions
 
-Builtin action names are case insensitive. Actions can receive parameters. 
+Default action names are case insensitive. Actions can receive parameters. 
 
-<details><summary>Action list</summary>
+<details><summary>Builtin action list</summary>
 <p>
 
 - `playergrav`/`playergravity`: applies a custom gravity multiplier to players in the room.
@@ -72,13 +71,13 @@ Builtin action names are case insensitive. Actions can receive parameters.
 </p>
 </details>
     
-### Trigger conditions
+## Trigger conditions
 
-Default triggers ase case insensitive. Triggers can receive parameters. Trigger conditions are checked *every frame*.
+Default trigger names ase case insensitive. Triggers can receive parameters. Trigger conditions are checked *every frame*.
 
 There is no built-in functionality for triggers that carry data between world loads. The possibility is delegated to custom triggers (see bottom of the document for API doc link).
 
-<details><summary>Trigger list</summary>
+<details><summary>Builtin trigger list</summary>
 <p>
 
 - `always`: Always active. No arguments.
@@ -104,6 +103,10 @@ There is no built-in functionality for triggers that carry data between world lo
 </p>
 </details>
 
-## Custom triggers and actions.
+## Custom behaviours
 
 You can register your own triggers and behaviour from your code mod via Atmo's [API](src/API.cs). API documentation can be found [here](API.md).
+
+<!--## Thanks to
+- @DryCryCrystal - commissioning the project.
+- @Slime_Cubed - advice and code reviews.-->
