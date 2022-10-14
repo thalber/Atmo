@@ -107,6 +107,6 @@ There is no built-in functionality for triggers that carry data between world lo
 
 You can register your own triggers and behaviour from your code mod via Atmo's [API](src/API.cs). API documentation can be found [here](API.md).
 
-<!--## Thanks to
+## Thanks to
 - @DryCryCrystal - commissioning the project.
-- @Slime_Cubed - advice and code reviews.-->
+- @Slime_Cubed - advice and code reviews.

@@ -58,3 +58,27 @@ Relevant members:
 
 ### [Atmod](src/Atmod.cs)
 Main plugin class for Atmo. You can access its static singlet, as well as some other members.
+
+## Usage tips
+
+For simple behaviours, you can use lambdas/closures for easily sharing data. In the following example, two closures in the same scope capture two local variables (`counter` and `cd`) and freely use them both later.
+
+```cs
+API.AddNamedAction("stun", (Happen ha, string[] args) =>
+{
+    int.TryParse(args.AtOr(0, "200"), out var cd);
+    int counter = 0;
+    ha.On_CoreUpdate += (RainWorldGame rwg) =>
+    {
+        if (counter < 0) counter = cd; else counter--;
+    };
+    ha.On_RealUpdate += (Room rm) =>
+    {
+        if (counter != 0) return;
+        foreach (var uad in rm.updateList) 
+            if (uad is Creature c) 
+                c.Stun(10);
+    };
+});
+```
+If lambdas sound unfamiliar or confusing to you, see [C# docs on them](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-expressions#capture-of-outer-variables-and-variable-scope-in-lambda-expressions).
