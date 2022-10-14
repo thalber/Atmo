@@ -11,7 +11,7 @@ namespace Atmo;
 public static class API
 {
     #region fields
-    internal readonly static Dictionary<string, Create_HappenBuilder> namedActions = new();
+    internal readonly static Dictionary<string, Create_RawHappenBuilder> namedActions = new();
     internal readonly static Dictionary<string, Create_RawTriggerFactory> namedTriggers = new();
     #endregion
     #region dels
@@ -38,24 +38,31 @@ public static class API
     /// <param name="rwg"></param>
     public delegate void lc_CoreUpdate(RainWorldGame rwg);
     /// <summary>
-    /// callback for attaching custom behaviour to happens.
+    /// callback for attaching custom behaviour to happens. Can be directly attached to <see cref="EV_MakeNewHappen"/>
     /// </summary>
     /// <param name="ha"></param>
-    public delegate void Create_HappenBuilder(Happen ha);
+    public delegate void Create_RawHappenBuilder(Happen ha);
     /// <summary>
-    /// Delegate for including custom triggers.
+    /// Delegate for registering named callbacks.
+    /// Used by <see cref="AddNamedAction(string, Create_NamedHappenBuilder)"/>.
+    /// </summary>
+    /// <param name="ha"></param>
+    /// <param name="args"></param>
+    public delegate void Create_NamedHappenBuilder(Happen ha, string[] args);
+    /// <summary>
+    /// Delegate for including custom triggers. Can be directly attached to <see cref="EV_MakeNewTrigger"/>.
     /// </summary>
     /// <param name="name">Trigger name (id)</param>
     /// <param name="args">optional arguments.</param>
     /// <param name="rwg">Game instance.</param>
-    /// <returns>Your child of <see cref="HappenTrigger"/> if the name is yours; null if not.</returns>
+    /// <returns>Child of <see cref="HappenTrigger"/> if subscriber wishes to claim the trigger; null if not.</returns>
     public delegate HappenTrigger? Create_RawTriggerFactory(string name, string[] args, RainWorldGame rwg);
     /// <summary>
-    /// Delegate for registering new triggers.
+    /// Delegate for registering named triggers.
     /// </summary>
     /// <param name="args"></param>
     /// <param name="rwg"></param>
-    public delegate HappenTrigger? Create_SafeTriggerFactory(string[] args, RainWorldGame rwg);
+    public delegate HappenTrigger? Create_NamedTriggerFactory(string[] args, RainWorldGame rwg);
     #endregion
     #region API proper
     /// <summary>
@@ -77,9 +84,9 @@ public static class API
         action = action.ToLower();
         if (namedActions.ContainsKey(action)) return false;
         //API_MakeNewHappen += 
-        Create_HappenBuilder newCb = (ha) =>
+        Create_RawHappenBuilder newCb = (ha) =>
         {
-            if (ha.actions.Contains(action))
+            if (ha.actions.ContainsKey(action))
             {
                 ha.On_AbstUpdate += au;
                 ha.On_RealUpdate += ru;
@@ -88,25 +95,25 @@ public static class API
             }
         };
         namedActions.Add(action, newCb);
-        API_MakeNewHappen += newCb;
+        EV_MakeNewHappen += newCb;
         return true;
     }
     /// <summary>
-    /// Registers a named action. Uses a <see cref="Create_HappenBuilder"/> to add any amount of callbacks to events. 
+    /// Registers a named action. Uses a <see cref="Create_RawHappenBuilder"/> to add any amount of callbacks to events. 
     /// </summary>
     /// <param name="action">Action name. Case insensitive.</param>
     /// <param name="builder">User builder callback.</param>
     /// <returns>true if successfully attached, false if name already taken.</returns>
     public static bool AddNamedAction(
         string action,
-        Create_HappenBuilder builder)
+        Create_NamedHappenBuilder builder)
     {
         action = action.ToLower();
         if (namedTriggers.ContainsKey(action)) return false;
-        Create_HappenBuilder newCb =
-            (ha) => { if (ha.actions.Contains(action)) builder?.Invoke(ha); };
+        Create_RawHappenBuilder newCb =
+            (ha) => { if (ha.actions.ContainsKey(action)) builder?.Invoke(ha, ha.actions[action]); };
         namedActions.Add(action, newCb);
-        API_MakeNewHappen += newCb;
+        EV_MakeNewHappen += newCb;
         return true;
     }
     /// <summary>
@@ -116,7 +123,7 @@ public static class API
     public static void RemoveNamedAction(string action)
     {
         if (!namedActions.ContainsKey(action)) return;
-        API_MakeNewHappen -= namedActions[action];
+        EV_MakeNewHappen -= namedActions[action];
         namedActions.Remove(action);
     }
     /// <summary>
@@ -127,7 +134,7 @@ public static class API
     /// <returns>true if successfully attached, false if name already taken.</returns>
     public static bool AddNamedTrigger(
         string name,
-        Create_SafeTriggerFactory fac)
+        Create_NamedTriggerFactory fac)
     {
         name = name.ToLower();
         if (namedTriggers.ContainsKey(name)) return false;
@@ -137,27 +144,27 @@ public static class API
             return null;
         };
         namedTriggers.Add(name, newCb);
-        API_MakeNewTrigger += newCb;
+        EV_MakeNewTrigger += newCb;
         return true;
     }
 
     public static void RemoveNamedCallback(string name)
     {
         if (!namedTriggers.ContainsKey(name)) return;
-        API_MakeNewTrigger -= namedTriggers[name];
+        EV_MakeNewTrigger -= namedTriggers[name];
         namedTriggers.Remove(name);
     }
     /// <summary>
-    /// Subscribe to this to attach your custom callbacks to newly created happen objects.
+    /// Subscribe to this to attach your custom callbacks to newly created happen objects. You can also use <see cref="AddNamedAction(string, Create_NamedHappenBuilder)"/> and <see cref="AddNamedAction(string, lc_AbstractUpdate?, lc_RealizedUpdate?, lc_Init?, lc_CoreUpdate?)"/> as name-safe shorthands.
     /// </summary>
-    public static event Create_HappenBuilder? API_MakeNewHappen;
-    internal static IEnumerable<Create_HappenBuilder?>? MNH_invl
-        => API_MakeNewHappen?.GetInvocationList().Cast<Create_HappenBuilder?>();//.ToArray();
+    public static event Create_RawHappenBuilder? EV_MakeNewHappen;
+    internal static IEnumerable<Create_RawHappenBuilder?>? MNH_invl
+        => EV_MakeNewHappen?.GetInvocationList().Cast<Create_RawHappenBuilder?>();//.ToArray();
     /// <summary>
-    /// Subscribe to this to dispense your custom triggers.
+    /// Subscribe to this to dispense your custom triggers. You can also use <see cref="AddNamedTrigger(string, Create_NamedTriggerFactory)"/> as a name-safe shorthand.
     /// </summary>
-    public static event Create_RawTriggerFactory? API_MakeNewTrigger;
+    public static event Create_RawTriggerFactory? EV_MakeNewTrigger;
     internal static IEnumerable<Create_RawTriggerFactory?>? MNT_invl
-        => API_MakeNewTrigger?.GetInvocationList()?.Cast<Create_RawTriggerFactory?>();//.ToArray();
+        => EV_MakeNewTrigger?.GetInvocationList()?.Cast<Create_RawTriggerFactory?>();//.ToArray();
     #endregion
 }
