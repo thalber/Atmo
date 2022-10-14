@@ -41,7 +41,7 @@ public sealed partial class Atmod : BaseUnityPlugin
             On.AbstractRoom.Update += RunHappensAbstUpd;
             On.RainWorldGame.Update += DoBodyUpdates;
         }
-        catch ( Exception ex)
+        catch (Exception ex)
         {
             Logger.LogFatal($"Error on enable!\n{ex}");
         }
@@ -68,7 +68,8 @@ public sealed partial class Atmod : BaseUnityPlugin
             {
                 ha.CoreUpdate(self);
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 Logger.LogError($"Error doing body update for {ha.name}:\n{e}");
             }
         }
@@ -110,7 +111,7 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         //#warning issue: for some reason geteventsforroom always returns none on real update
         //in my infinite wisdom i set SU_S04 as test room instead of SU_C04. everything worked as intended except for my brain
-        
+
         orig(self);
         //DBG.Stopwatch sw = DBG.Stopwatch.StartNew();
         if (currentSet is null) return;
@@ -120,10 +121,11 @@ public sealed partial class Atmod : BaseUnityPlugin
             //Logger.LogDebug($"update {ha} ({haps.Count()})");
             try
             {
-                if (ha.IsOn(self.world.game)) {
+                if (ha.IsOn(self.world.game))
+                {
                     if (!ha.initRan) { ha.Init(self.world); ha.initRan = true; }
                     ha.RealUpdate(self);
-                }   
+                }
             }
             catch (Exception e)
             {
