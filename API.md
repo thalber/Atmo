@@ -4,7 +4,7 @@ This file contains instructions on how to interface with Atmo API from other cod
 
 ## Naming
 
-"Happens" are like *world events*. This name was picked to avoid confusion with vanilla's Triggers.
+"Happens" are like *world events*. This name was picked to avoid confusion with vanilla's Events/Triggers.
 
 ## Classes
 ### [API](src/API.cs)
