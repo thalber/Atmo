@@ -1,10 +1,11 @@
 # Atmo
  
-Atmo is a regpack-centric extension API for Rain World. It uses plaintext config files for easily coupling together composable conditions and custom code.
+Atmo is a regpack-centric scripting addon for [RegionKit](https://github.com/DryCryCrystal/Region-Kit). It allows a region maker to add world events, easily bundling behaviour with custom trigger conditions.
 
 ## Requirements
 
-- Custom Regions Support
+- Custom Regions Support.
+- RegionKit is not strictly required, but realistically you will be using them together.
 
 ## Usage
 
@@ -27,7 +28,7 @@ SU_S04
 END GROUP
 
 // Define an event
-HAPPEN: AlarmShake
+HAPPEN: testevent
 //groups + include rooms - exclude rooms
 WHERE: first + SU_A41 - SU_S03
 // Actions. Each action is a word, followed by optional literals that act as parameters for the action / word.
@@ -41,7 +42,11 @@ END HAPPEN
 
 ## Builtins
 ### Actions
-Action names case insensitive.
+
+Builtin action names are case insensitive. Actions can receive parameters. 
+
+<details><summary>Action list</summary>
+<p>
 
 - `playergrav`/`playergravity`: applies a custom gravity multiplier to players in the room.
   - First parameter sets the multiplier (default 0.5).
@@ -59,9 +64,17 @@ Action names case insensitive.
     - `duration`: duration of a shake. Set to negative to make it shake forever after being triggered.
     - `shake`: shake intensity. default 0.5
   - Example: `rumble 'cooldown=200' 'duration=100' 'intensity=0' 'shake=0.8'`
+
+</p>
+</details>
     
 ### Trigger conditions
-Case insensitive.
+
+Default triggers ase case insensitive. Triggers can receive parameters. Trigger conditions are checked *every frame*
+
+<details><summary>Trigger list</summary>
+<p>
+
 - `always`: Always active. No arguments.
 - `untilrain`/`beforerain`: Active until rain starts.
   - Optional parameter sets an additional delay (in frames), which can be negative.
@@ -81,3 +94,10 @@ Case insensitive.
   - receives any number of integer parameters (`karma 1 5 9`) for individual levels, can also receive ranges in string parameters (`karma '1-3'`)
 - `visited`/`playervisited`: each cycle, activates *after* the player visits one of the rooms provided as parameters and stays on.
   - string parameters contain room names.
+
+</p>
+</details>
+
+## Custom triggers and actions.
+
+You can register your own triggers and behaviour from your code mod via Atmo's [API](src/API.cs). API documentation can be found [here](API.md).
