@@ -33,7 +33,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     #region fromcfg
     public readonly HappenTrigger[] triggers;
     public readonly string name;
-    public readonly string[] actions;
+    public readonly Dictionary<string, string[]> actions;
     //public readonly string[] exclude;
     #endregion fromcfg
     #endregion fields
@@ -41,7 +41,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     {
         //exclude = cfg.exclude.ToArray();
         name = cfg.name;
-        actions = cfg.actions.Select(x => x.Key).ToArray();
+        actions = cfg.actions;//.Select(x => x.Key).ToArray();
         conditions = cfg.conditions;
 
         List<HappenTrigger> list_triggers = new();
@@ -166,7 +166,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     }
     public override string ToString()
     {
-        return $"{name}-{guid}[{actions.Aggregate(Utils.JoinWithComma)}]({triggers.Length} triggers)";
+        return $"{name}-{guid}[{actions.Select(x => $"{x.Key}").Aggregate(Utils.JoinWithComma)}]({triggers.Length} triggers)";
     }
 
     #region nested

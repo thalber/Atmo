@@ -14,7 +14,7 @@ namespace Atmo;
 /// <summary>
 /// Manages happens' initialization and builtin behaviours.
 /// </summary>
-internal static class HappenBuilding
+internal static partial class HappenBuilding
 {
     internal static void NewEvent(Happen ha)
     {
@@ -35,23 +35,6 @@ internal static class HappenBuilding
             }
         }
         //API_MakeNewHappen?.Invoke(ha);
-    }
-    internal static void AddDefaultCallbacks(Happen ha)
-    {
-        //todo: add default cases
-        //inst.Plog.LogWarning("preblam");
-        ha.On_Init += (w) =>
-        {
-            inst.Plog.LogWarning($"Init! {ha}");
-        };
-        ha.On_AbstUpdate += (absr, t) =>
-        {
-            //inst.Plog.LogWarning($"absup {absr.name}, {t} ticks");
-        };
-        ha.On_RealUpdate += (rm) =>
-        {
-            if (URand.value < 0.03f) throw new Exception("Fuck you");
-        };
     }
     /// <summary>
     /// Creates a new trigger with given ID, arguments using provided <see cref="RainWorldGame"/>.
