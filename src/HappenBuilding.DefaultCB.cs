@@ -98,10 +98,32 @@ internal static partial class HappenBuilding
                 case "rumble":
                 case "screenshake":
                     {
-                        int.TryParse(args.AtOr(0, "200"), out int cooldown);
-                        int.TryParse(args.AtOr(1, "20"), out var duration);
-                        float.TryParse(args.AtOr(2, "1.0"), out var intensity);
-                        float.TryParse(args.AtOr(3, "0.5f"), out var shake);
+                        int cooldown = 200,
+                            duration = 80;
+                        float intensity = 1f,
+                            shake = 0.5f;
+
+                        for (int i = 0; i < args.Length; i++)
+                        {
+                            var spl = TXT.Regex.Split(args[i], "=");
+                            if (spl.Length != 2) continue;
+                            switch (spl[0].ToLower())
+                            {
+                                case "cooldown":
+                                case "cd":
+                                    int.TryParse(spl[1], out cooldown);
+                                    break;
+                                case "duration":
+                                    int.TryParse(spl[1], out duration);
+                                    break;
+                                case "intensity":
+                                    float.TryParse(spl[1], out intensity);
+                                    break;
+                                case "shake":
+                                    float.TryParse(spl[1], out shake);
+                                    break;
+                            }
+                        }
 
                         int counter = 0;
                         bool active = false;
@@ -122,6 +144,22 @@ internal static partial class HappenBuilding
                         };
                     }
                     break;
+                //case "palette":
+                //case "palettefade":
+                //    {
+                //        int.TryParse(args.AtOr(0, "15"), out var palNum);
+                //        for (int i = 1; i < args.Length; i++)
+                //        {
+
+                //        }
+                //        ha.On_RealUpdate += (room) =>
+                //        {
+
+                //        };
+                //    }
+                //    break;
+                //case "":
+                //    break;
             }
         }
     }
