@@ -141,7 +141,7 @@ internal static partial class HappenBuilding
                         };
                         ha.On_RealUpdate += (room) =>
                         {
-                            if (active > 0) room.ScreenMovement(null, URand.insideUnitCircle * intensity, shake);
+                            if (active != 0) room.ScreenMovement(null, URand.insideUnitCircle * intensity, shake);
                         };
                     }
                     break;
