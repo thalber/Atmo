@@ -39,6 +39,11 @@ WHEN: AfterRain -80 AND ( Karma 0 '3-9' OR Maybe 0.7)
 END HAPPEN
 ```
 
+Groups must be defined before Happens that use them.
+A happen block can have multiple `WHAT:` and `WHERE:` clauses, but *only one* `WHEN:` clause.
+Inside a happen block, the `WHEN:` clause should always be the last.
+Inside each `WHERE:` clause line, parsing starts with reading *group names*. After you've switched to included or excluded rooms by using a `+`/`-` separator, you can switch back to groups by using a `=` separator.
+
 ## Builtins
 ### Actions
 
@@ -69,7 +74,9 @@ Builtin action names are case insensitive. Actions can receive parameters.
     
 ### Trigger conditions
 
-Default triggers ase case insensitive. Triggers can receive parameters. Trigger conditions are checked *every frame*
+Default triggers ase case insensitive. Triggers can receive parameters. Trigger conditions are checked *every frame*.
+
+There is no built-in functionality for triggers that carry data between world loads. The possibility is delegated to custom triggers (see bottom of the document for API doc link).
 
 <details><summary>Trigger list</summary>
 <p>
