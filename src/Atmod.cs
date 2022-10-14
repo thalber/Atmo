@@ -29,13 +29,13 @@ public sealed partial class Atmod : BaseUnityPlugin
     /// </summary>
     internal BepInEx.Logging.ManualLogSource Plog => Logger;
     private bool setupRan = false;
-    internal HappenSet? currentSet;
+    public HappenSet? currentSet { get; private set; }
     #endregion
 
     public void OnEnable()
     {
         try
-        {   
+        {
             On.World.ctor += FetchHappenSet;
             On.Room.Update += RunHappensRealUpd;
             On.AbstractRoom.Update += RunHappensAbstUpd;

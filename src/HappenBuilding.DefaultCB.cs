@@ -126,21 +126,22 @@ internal static partial class HappenBuilding
                         }
 
                         int counter = 0;
-                        bool active = false;
+                        int active = duration;
 
                         ha.On_CoreUpdate += (rwg) =>
                         {
+                            if (active > 0) active--;
                             if (counter > 0) counter--;
                             if (counter == 0)
                             {
-                                active = !active;
-                                counter = active ? duration : cooldown;
+                                active = duration;
+                                counter = cooldown;
                             }
                             
                         };
                         ha.On_RealUpdate += (room) =>
                         {
-                            if (active) room.ScreenMovement(null, URand.insideUnitCircle * intensity, shake);
+                            if (active > 0) room.ScreenMovement(null, URand.insideUnitCircle * intensity, shake);
                         };
                     }
                     break;
