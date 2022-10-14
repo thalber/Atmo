@@ -12,7 +12,7 @@ namespace Atmo;
 /// <summary>
 /// Main plugin class.
 /// </summary>
-[BepInPlugin("thalber.atmod", "atmod", "0.2")]
+[BepInPlugin("thalber.atmod", "Atmo", "0.3")]
 public sealed partial class Atmod : BaseUnityPlugin
 {
     #region fields
@@ -66,7 +66,7 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         orig(self);
         if (currentSet is null) return;
-        foreach (var ha in currentSet.GroupsToHappens.EnumerateRight())
+        foreach (var ha in currentSet.AllHappens)
         {
             if (ha is null) continue;
             try
