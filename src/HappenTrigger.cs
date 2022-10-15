@@ -15,8 +15,17 @@ namespace Atmo;
 public abstract class HappenTrigger
 {
     #region fields
+    /// <summary>
+    /// Strings that evaluate to bool.true
+    /// </summary>
     public static readonly string[] trueStrings = new[] { "true", "1", "yes", };
+    /// <summary>
+    /// Happen that owns this instance.
+    /// </summary>
+    protected Happen? owner;
     #endregion
+    public HappenTrigger(Happen? ow = null) { owner = ow; }
+
     /// <summary>
     /// Answers if a trigger is currently ready.
     /// </summary>
@@ -26,18 +35,29 @@ public abstract class HappenTrigger
     /// <summary>
     /// called every <see cref="Happen.CoreUpdate(RainWorldGame)"/>, *once* every frame
     /// </summary>
-    /// <param name="rwg"></param>
     public virtual void Update() { }
-
+    /// <summary>
+    /// Called after every eval to signal expression's final result for current frame.
+    /// </summary>
+    /// <param name="res"></param>
+    public virtual void EvalResults(bool res) { }
+    /// <summary>
+    /// Intermediary abstract class for triggers that require RainWorldGame state access.
+    /// </summary>
     public abstract class NeedsRWG : HappenTrigger
     {
-        public NeedsRWG(RainWorldGame rwg) { this.rwg = rwg; }
+        public NeedsRWG(RainWorldGame rwg, Happen? ow = null) : base (ow) { this.rwg = rwg; }
         protected RainWorldGame rwg;
     }
     /// <summary>
     /// Sample trigger, Always true.
     /// </summary>
-    public sealed class Always : HappenTrigger {
+    public sealed class Always : HappenTrigger
+    {
+        public Always(Happen ow) : base(ow)
+        {
+        }
+
         public override bool ShouldRunUpdates() => true;
     }
     /// <summary>
@@ -45,7 +65,7 @@ public abstract class HappenTrigger
     /// </summary>
     public sealed class AfterRain : NeedsRWG
     {
-        public AfterRain(RainWorldGame rwg, int delay = 0) : base (rwg)
+        public AfterRain(RainWorldGame rwg, Happen ow, int delay = 0) : base(rwg, ow)
         {
             this.delay = delay;
         }
@@ -60,7 +80,7 @@ public abstract class HappenTrigger
     /// </summary>
     public sealed class BeforeRain : NeedsRWG
     {
-        public BeforeRain(RainWorldGame rwg, int delay = 0) : base (rwg)
+        public BeforeRain(RainWorldGame rwg, Happen ow, int delay = 0) : base(rwg, ow)
         {
             this.delay = delay;
         }
@@ -75,7 +95,7 @@ public abstract class HappenTrigger
     /// </summary>
     public sealed class EveryX : HappenTrigger
     {
-        public EveryX(int x) { period = x; }
+        public EveryX(int x, Happen ow) : base (ow) { period = x; }
 
         private readonly int period;
         private int counter;
@@ -93,7 +113,7 @@ public abstract class HappenTrigger
     /// </summary>
     public sealed class Maybe : HappenTrigger
     {
-        public Maybe(float chance)
+        public Maybe(float chance, Happen owner)
         {
             yes = UnityEngine.Random.value < chance;
         }
@@ -112,7 +132,7 @@ public abstract class HappenTrigger
         private bool on;
         private int counter;
 
-        public Flicker(int minOn, int maxOn, int minOff, int maxOff , bool startOn = true)
+        public Flicker(int minOn, int maxOn, int minOff, int maxOff, bool startOn = true)
         {
             this.minOn = minOn;
             this.maxOn = maxOn;
@@ -140,7 +160,7 @@ public abstract class HappenTrigger
     {
         private readonly List<int> levels = new();
         //private readonly List<>;
-        public OnKarma(RainWorldGame rwg, string[] options) : base(rwg)
+        public OnKarma(RainWorldGame rwg, string[] options, Happen? ow = null) : base(rwg, ow)
         {
             foreach (var op in options)
             {
@@ -150,7 +170,7 @@ public abstract class HappenTrigger
                 {
                     int.TryParse(spl[0], out var min);
                     int.TryParse(spl[1], out var max);
-                    for (int i = min; i <= max; i++) if (!levels.Contains(i)) levels.Add(i); 
+                    for (int i = min; i <= max; i++) if (!levels.Contains(i)) levels.Add(i);
                 }
             }
         }
@@ -175,5 +195,74 @@ public abstract class HappenTrigger
         }
         public override bool ShouldRunUpdates()
             => visit;
+    }
+
+    /// <summary>
+    /// Fries and goes inactive for a duration if the happen stays on for too long.
+    /// </summary>
+    public sealed class Fry : HappenTrigger
+    {
+        private readonly int limit;
+        private readonly int cd;
+        private int counter;
+        private bool active;
+        public Fry(int limit, int cd)
+        {
+            this.limit = limit;
+            this.cd = cd;
+            counter = 0;
+            active = true;
+        }
+        public override bool ShouldRunUpdates()
+            => active;
+        public override void EvalResults(bool res)
+        {
+            if (active)
+            {
+                if (res) counter++; else { counter = 0; }
+                if (counter > limit) { active = false; counter = cd; }
+            }
+            else
+            {
+                counter--;
+                if (counter == 0) { active = true; counter = 0; }
+            }
+        }
+    }
+    /// <summary>
+    /// Activates after another event is tripped, with a customizeable spinup/spindown delay.
+    /// </summary>
+    public sealed class AfterOther : HappenTrigger
+    {
+        private readonly string tarname;
+        private readonly int delay;
+
+        private bool gain;
+        private int inertia;
+        //private int counter;
+        public AfterOther(Happen owner, string tarname, int delay) : base (owner)
+        {
+            this.tarname = tarname;
+            this.delay = delay;
+            //this.cd = cd;
+        }
+
+        public override void Update()
+        {
+            foreach (var tar in owner.set.AllHappens)
+            {
+                if (tar.name == tarname &&  tar.active)
+                {
+                    gain = true;
+                    inertia = Math.Min(delay, inertia + 1);
+                    return;
+                }
+            }
+            gain = false;
+            inertia = Math.Max(0, inertia - 1);
+
+        }
+        public override bool ShouldRunUpdates()
+            => gain ? inertia == delay : inertia > 0;
     }
 }

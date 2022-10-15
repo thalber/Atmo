@@ -27,18 +27,32 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     #endregion perfrec
     private readonly Guid guid = Guid.NewGuid();
     internal PredicateInlay? conditions;
-    public bool initRan;
-    private bool active;
+    public bool active { get; private set; }
     private DBG.Stopwatch sw = new();
+    /// <summary>
+    /// Whether the init callbacks have been invoked or not.
+    /// </summary>
+    public bool initRan;
     #region fromcfg
+    /// <summary>
+    /// All triggers associated with the happen.
+    /// </summary>
     public readonly HappenTrigger[] triggers;
+    /// <summary>
+    /// name of the happen.
+    /// </summary>
     public readonly string name;
+    /// <summary>
+    /// A set of actions with their parameters.
+    /// </summary>
     public readonly Dictionary<string, string[]> actions;
+    internal HappenSet set;
     //public readonly string[] exclude;
     #endregion fromcfg
     #endregion fields
     internal Happen(HappenConfig cfg, HappenSet owner, RainWorldGame rwg)
     {
+        set = owner;
         //exclude = cfg.exclude.ToArray();
         name = cfg.name;
         actions = cfg.actions;//.Select(x => x.Key).ToArray();
@@ -47,7 +61,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         List<HappenTrigger> list_triggers = new();
         conditions?.Populate((id, args) =>
         {
-            var nt = HappenBuilding.CreateTrigger(id, args, rwg);
+            var nt = HappenBuilding.CreateTrigger(id, args, rwg, this);
             list_triggers.Add(nt);
             //inst.Plog.LogWarning($"running pop!!! {nt}, {nt.ShouldRunUpdates()}");
             return nt.ShouldRunUpdates;
@@ -125,6 +139,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         sw.Start();
         foreach (var tr in triggers) tr.Update();
         active = conditions?.Eval() ?? true;
+        foreach (var t in triggers) t.EvalResults(active);
         if (On_CoreUpdate is null) return;
         foreach (API.lc_CoreUpdate cb in On_CoreUpdate.GetInvocationList())
         {
@@ -190,26 +205,58 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         }
         return perf;
     }
+    /// <summary>
+    /// Compares to another happen using GUIDs.
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns></returns>
     public int CompareTo(Happen other)
     {
         return guid.CompareTo(other.guid);
     }
+    /// <summary>
+    /// Compares to another happen using GUIDs.
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns></returns>
     public bool Equals(Happen other)
     {
         return guid.Equals(other.guid);
     }
+    /// <summary>
+    /// Returns a string representation of the happen.
+    /// </summary>
+    /// <returns></returns>
     public override string ToString()
     {
         return $"{name}-{guid}[{(actions.Count == 0 ? string.Empty : actions.Select(x => $"{x.Key}").Aggregate(Utils.JoinWithComma))}]({triggers.Length} triggers)";
     }
 
     #region nested
+    /// <summary>
+    /// Carries performance report from the happen.
+    /// </summary>
     public struct Perf
     {
+        /// <summary>
+        /// Happen name
+        /// </summary>
         public string name;
+        /// <summary>
+        /// Average real update frame time
+        /// </summary>
         public double avg_realup;
+        /// <summary>
+        /// Number of recorded real update frame time samples
+        /// </summary>
         public int samples_realup;
+        /// <summary>
+        /// Average eval invocation time
+        /// </summary>
         public double avg_eval;
+        /// <summary>
+        /// Number of recorded eval frame time samples
+        /// </summary>
         public int samples_eval;
     }
     private enum LCE

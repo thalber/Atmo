@@ -55,11 +55,12 @@ internal static partial class HappenBuilding
     internal static HappenTrigger CreateTrigger(
         string id,
         string[] args,
-        RainWorldGame rwg)
+        RainWorldGame rwg,
+        Happen owner)
     {
 #warning untested
         HappenTrigger? res = null;
-        res = DefaultTrigger(id, args, rwg);
+        res = DefaultTrigger(id, args, rwg, owner);
 
         if (MNT_invl is null) goto finish;
         foreach (Create_RawTriggerFactory? cb in MNT_invl)
@@ -67,7 +68,7 @@ internal static partial class HappenBuilding
             if (res is not null) break;
             try
             {
-                res ??= cb.Invoke(id, args, rwg);
+                res ??= cb?.Invoke(id, args, rwg, owner);
             }
             catch (Exception ex)
             {
@@ -81,45 +82,44 @@ internal static partial class HappenBuilding
         if (res is null)
         {
             inst.Plog.LogWarning($"Failed to create a trigger! {id}, args: {(args.Length == 0 ? string.Empty : args.Aggregate(Utils.JoinWithComma))}. Replacing with a stub");
-            res = new Always();
+            res = new Always(owner);
         }
         return res;
     }
 
-    private static HappenTrigger? DefaultTrigger(string id, string[] args, RainWorldGame rwg)
+    private static HappenTrigger? DefaultTrigger(string id, string[] args, RainWorldGame rwg, Happen ha)
     {
         HappenTrigger? res = null;
         switch (id.ToLower())
         {
             case "always":
-                res = new Always();
+                res = new Always(ha);
                 break;
             case "untilrain":
             case "beforerain":
                 {
-                    int.TryParse(args.AtOr(0, "0"), out var delay);
-                    res = new BeforeRain(rwg, delay);
+                    float.TryParse(args.AtOr(0, "0"), out var delay);
+                    res = new BeforeRain(rwg, ha, (int)(delay * 40f));
                 }
                 break;
             case "afterrain":
                 {
-                    int.TryParse(args.AtOr(0, "0"), out var delay);
-                    res = new AfterRain(rwg, delay);
+                    float.TryParse(args.AtOr(0, "0"), out var delay);
+                    res = new AfterRain(rwg, ha, (int)(delay * 40f));
                 }
                 break;
             case "everyx":
             case "every":
                 {
-                    var def = "40";
-                    int.TryParse(args.AtOr(0, "40"), out var period);
-                    res = new EveryX(period);
+                    float.TryParse(args.AtOr(0, "4"), out var period);
+                    res = new EveryX((int)(period * 40f), ha);
                 }
                 break;
             case "maybe":
             case "chance":
                 {
                     float.TryParse(args.AtOr(0, "0.5"), out var ch);
-                    res = new Maybe(ch);
+                    res = new Maybe(ch, ha);
                 }
                 break;
             case "flicker":
@@ -127,7 +127,8 @@ internal static partial class HappenBuilding
                     int[] argsp = new int[4];
                     for (int i = 0; i < 4; i++)
                     {
-                        int.TryParse(args.AtOr(i, "300"), out argsp[i]);
+                        float.TryParse(args.AtOr(i, "5"), out var pres);
+                        argsp[i] = (int)(pres * 40f);
                     }
                     bool startOn = trueStrings.Contains(args.AtOr(4, "1").ToLower());
                     res = new Flicker(argsp[0], argsp[1], argsp[2], argsp[3], startOn);
@@ -140,6 +141,22 @@ internal static partial class HappenBuilding
             case "playervisited":
                 res = new AfterVisit(rwg, args);
                 break;
+            case "fry":
+                {
+                    float.TryParse(args.AtOr(0, "5"), out var lim);
+                    float.TryParse(args.AtOr(1, "10"), out var cd);
+                    res = new Fry((int)(lim * 40f), (int)(cd * 40f));
+                }
+                break;
+            case "after":
+                {
+                    if (args.Length < 2) break;
+                    string other = args[0];
+                    int.TryParse(args[1], out var delay);
+                    res = new AfterOther(ha, other, delay);
+                }
+                break;
+
         }
 
         return res;

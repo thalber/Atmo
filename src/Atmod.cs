@@ -29,7 +29,7 @@ public sealed partial class Atmod : BaseUnityPlugin
     /// </summary>
     internal BepInEx.Logging.ManualLogSource Plog => Logger;
     private bool setupRan = false;
-    public HappenSet? currentSet { get; private set; }
+    public HappenSet? CurrentSet { get; private set; }
     #endregion
 
     public void OnEnable()
@@ -60,8 +60,8 @@ public sealed partial class Atmod : BaseUnityPlugin
     private void DoBodyUpdates(On.RainWorldGame.orig_Update orig, RainWorldGame self)
     {
         orig(self);
-        if (currentSet is null) return;
-        foreach (var ha in currentSet.AllHappens)
+        if (CurrentSet is null) return;
+        foreach (var ha in CurrentSet.AllHappens)
         {
             if (ha is null) continue;
             try
@@ -83,8 +83,8 @@ public sealed partial class Atmod : BaseUnityPlugin
     private void RunHappensAbstUpd(On.AbstractRoom.orig_Update orig, AbstractRoom self, int timePassed)
     {
         orig(self, timePassed);
-        if (currentSet is null) return;
-        var haps = currentSet.GetEventsForRoom(self.name);
+        if (CurrentSet is null) return;
+        var haps = CurrentSet.GetEventsForRoom(self.name);
         foreach (var ha in haps)
         {
             if (ha is null) continue;
@@ -114,8 +114,8 @@ public sealed partial class Atmod : BaseUnityPlugin
 
         orig(self);
         //DBG.Stopwatch sw = DBG.Stopwatch.StartNew();
-        if (currentSet is null) return;
-        var haps = currentSet.GetEventsForRoom(self.abstractRoom.name);
+        if (CurrentSet is null) return;
+        var haps = CurrentSet.GetEventsForRoom(self.abstractRoom.name);
         foreach (var ha in haps)
         {
             //Logger.LogDebug($"update {ha} ({haps.Count()})");
@@ -142,7 +142,7 @@ public sealed partial class Atmod : BaseUnityPlugin
         Logger.LogError("Fetching hapset!");
         try
         {
-            currentSet = HappenSet.TryCreate(self);
+            CurrentSet = HappenSet.TryCreate(self);
         }
         catch (Exception e)
         {
@@ -158,11 +158,11 @@ public sealed partial class Atmod : BaseUnityPlugin
             //maybe put something here
             setupRan = true;
         }
-        if (rw is null || currentSet is null) return;
+        if (rw is null || CurrentSet is null) return;
         if (rw.processManager.currentMainLoop is RainWorldGame) return;
         foreach (var proc in rw.processManager.sideProcesses) if (proc is RainWorldGame) return;
         Logger.LogDebug("No RainWorldGame in processmanager, erasing currentset");
-        currentSet = null;
+        CurrentSet = null;
     }
     public void OnDisable()
     {
