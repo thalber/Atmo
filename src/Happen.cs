@@ -53,11 +53,9 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     internal Happen(HappenConfig cfg, HappenSet owner, RainWorldGame rwg)
     {
         set = owner;
-        //exclude = cfg.exclude.ToArray();
         name = cfg.name;
         actions = cfg.actions;//.Select(x => x.Key).ToArray();
         conditions = cfg.conditions;
-
         List<HappenTrigger> list_triggers = new();
         conditions?.Populate((id, args) =>
         {
@@ -69,6 +67,9 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         //inst.Plog.LogWarning( conditions?.Eval());
         triggers = list_triggers.ToArray();
         HappenBuilding.NewEvent(this);
+
+        if (actions.Count is 0) inst.Plog.LogWarning($"Happen {this}: no actions! Possible missing 'WHAT:' clause");
+        if (conditions is null) inst.Plog.LogWarning($"Happen {this}: did not receive conditions! Possible missing 'WHEN:' clause");
     }
     //private readonly List<Delegate> broken = new();
     #region lifecycle cbs

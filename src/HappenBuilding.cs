@@ -119,7 +119,7 @@ internal static partial class HappenBuilding
             case "chance":
                 {
                     float.TryParse(args.AtOr(0, "0.5"), out var ch);
-                    res = new Maybe(ch, ha);
+                    res = new Maybe(ch);
                 }
                 break;
             case "flicker":
@@ -150,13 +150,11 @@ internal static partial class HappenBuilding
                 break;
             case "after":
                 {
-                    if (args.Length < 2) break;
                     string other = args[0];
                     int.TryParse(args[1], out var delay);
                     res = new AfterOther(ha, other, delay);
                 }
                 break;
-
         }
 
         return res;

@@ -113,9 +113,9 @@ public abstract class HappenTrigger
     /// </summary>
     public sealed class Maybe : HappenTrigger
     {
-        public Maybe(float chance, Happen owner)
+        public Maybe(float chance)
         {
-            yes = UnityEngine.Random.value < chance;
+            yes = URand.value < chance;
         }
         private bool yes;
         public override bool ShouldRunUpdates() => yes;
@@ -234,35 +234,23 @@ public abstract class HappenTrigger
     /// </summary>
     public sealed class AfterOther : HappenTrigger
     {
-        private readonly string tarname;
-        private readonly int delay;
-
-        private bool gain;
-        private int inertia;
-        //private int counter;
+        //todo: redo with queues
+        internal readonly Happen tar;
+        internal readonly System.Collections.BitArray inertia;
         public AfterOther(Happen owner, string tarname, int delay) : base (owner)
         {
-            this.tarname = tarname;
-            this.delay = delay;
-            //this.cd = cd;
+            tar = owner.set.AllHappens.FirstOrDefault(x => x.name == tarname);
+            inertia = new(new bool[delay]);
         }
 
         public override void Update()
         {
-            foreach (var tar in owner.set.AllHappens)
-            {
-                if (tar.name == tarname &&  tar.active)
-                {
-                    gain = true;
-                    inertia = Math.Min(delay, inertia + 1);
-                    return;
-                }
-            }
-            gain = false;
-            inertia = Math.Max(0, inertia - 1);
-
+            inertia.RightShift();
+            inertia[0] = tar.active;
         }
         public override bool ShouldRunUpdates()
-            => gain ? inertia == delay : inertia > 0;
+        {
+            return inertia[inertia.Length - 1];
+        }
     }
 }
