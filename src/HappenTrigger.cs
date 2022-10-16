@@ -50,6 +50,9 @@ public abstract class HappenTrigger
     public abstract class NeedsRWG : HappenTrigger
     {
         public NeedsRWG(RainWorldGame rwg, Happen? ow = null) : base(ow) { this.rwg = rwg; }
+        /// <summary>
+        /// The required rain world instance.
+        /// </summary>
         protected RainWorldGame rwg;
     }
     /// <summary>
