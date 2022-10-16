@@ -62,12 +62,14 @@ internal static partial class HappenBuilding
 
     private static void Make_Sound(Happen ha, string[] args)
     {
+        //todo: add a version that does not cut off with room transition...
         if (!TryParseEnum(args[0], out SoundID soundid))
         {
             return;
         }
 
-        int cooldown = -1;
+        int cooldown = -1,
+            limit = int.MaxValue;
         float
             vol = 1f,
             pitch = 1f,
@@ -92,18 +94,24 @@ internal static partial class HappenBuilding
                 case "pitch":
                     float.TryParse(spl[1], out pitch);
                     break;
+                case "lim":
+                case "limit":
+                    int.TryParse(spl[1], out limit);
+                    break;
             }
         }
         int counter = 0;
         ha.On_RealUpdate += (room) =>
         {
             if (counter != 0) return;
+            if (limit < 1) return;
             for (int i = 0; i < room.updateList.Count; i++)
             {
                 if (room.updateList[i] is Player p)
                 {
                     var em = room.PlaySound(soundid, p.firstChunk, false, vol, pitch);
                     counter = cooldown;
+                    limit++;
                     return;
                 }
             }
