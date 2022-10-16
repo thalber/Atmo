@@ -31,6 +31,15 @@ namespace Atmo
             if (index >= arr.Count || index < 0) return def;
             return arr[index];
         }
+
+        public static void RightShift(this System.Collections.BitArray arr)
+        {
+            for (int i = arr.Count - 2; i >= 0; i--)
+            {
+                arr[i + 1] = arr[i];//arr.Set(i + 1, arr.Get(i));//[i + 1] = arr[i];
+            }
+            arr[0] = false;
+        }
         #endregion collections
         #region refl flag templates
         public const BindingFlags allContexts = BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic;
