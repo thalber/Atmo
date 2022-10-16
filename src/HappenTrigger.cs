@@ -29,7 +29,6 @@ public abstract class HappenTrigger
     /// </summary>
     /// <param name="ow"></param>
     public HappenTrigger(Happen? ow = null) { owner = ow; }
-
     /// <summary>
     /// Answers if a trigger is currently ready.
     /// </summary>
@@ -50,7 +49,7 @@ public abstract class HappenTrigger
     /// </summary>
     public abstract class NeedsRWG : HappenTrigger
     {
-        public NeedsRWG(RainWorldGame rwg, Happen? ow = null) : base (ow) { this.rwg = rwg; }
+        public NeedsRWG(RainWorldGame rwg, Happen? ow = null) : base(ow) { this.rwg = rwg; }
         protected RainWorldGame rwg;
     }
     /// <summary>
@@ -99,7 +98,7 @@ public abstract class HappenTrigger
     /// </summary>
     public sealed class EveryX : HappenTrigger
     {
-        public EveryX(int x, Happen ow) : base (ow) { period = x; }
+        public EveryX(int x, Happen ow) : base(ow) { period = x; }
 
         private readonly int period;
         private int counter;
@@ -200,7 +199,6 @@ public abstract class HappenTrigger
         public override bool ShouldRunUpdates()
             => visit;
     }
-
     /// <summary>
     /// Fries and goes inactive for a duration if the happen stays on for too long.
     /// </summary>
@@ -240,21 +238,81 @@ public abstract class HappenTrigger
     {
         //todo: redo with queues
         internal readonly Happen tar;
-        internal readonly System.Collections.BitArray inertia;
-        public AfterOther(Happen owner, string tarname, int delay) : base (owner)
+        //internal readonly System.Collections.BitArray inertia;
+        internal readonly int delay;
+        internal bool tarWasOn;
+        internal bool amActive;
+        internal readonly List<int> switchOn = new();
+        internal readonly List<int> switchOff = new();
+        public AfterOther(Happen owner, string tarname, int delay) : base(owner)
         {
+            this.delay = delay;
             tar = owner.set.AllHappens.FirstOrDefault(x => x.name == tarname);
-            inertia = new(new bool[delay]);
+            //inertia = new(new bool[delay]);
         }
 
         public override void Update()
         {
-            inertia.RightShift();
-            inertia[0] = tar.active;
+            if (tar.active != tarWasOn)
+            {
+                if (tar.active)
+                {
+                    switchOn.Add(delay);
+                }
+                else
+                {
+                    switchOff.Add(delay);
+                }
+            }
+            for (int i = 0; i < switchOn.Count; i++)
+            {
+                switchOn[i]--;
+            }
+            if (switchOn.FirstOrDefault() < 0)
+            {
+                switchOn.RemoveAt(0);
+                amActive = true;
+            }
+            for (int i = 0; i < switchOff.Count; i++)
+            {
+                switchOff[i]--;
+            }
+            if (switchOff.FirstOrDefault() < 0)
+            {
+                switchOff.RemoveAt(0);
+                amActive = false;
+            }
+            tarWasOn = tar.active;
         }
         public override bool ShouldRunUpdates()
+            => amActive;
+    }
+    /// <summary>
+    /// Activates after a set delay.
+    /// </summary>
+    public sealed class AfterDelay : NeedsRWG
+    {
+        private int delay;
+        /// <summary>
+        /// Creates an instance with delay in set bounds.
+        /// </summary>
+        /// <param name="dmin">Lower bound</param>
+        /// <param name="dmax">Upper bound</param>
+        /// <param name="rwg">RWG instance to check the clock</param>
+        public AfterDelay(int dmin, int dmax, RainWorldGame rwg) : base(rwg)
         {
-            return inertia[inertia.Length - 1];
+            delay = URand.Range(dmin, dmax);
         }
+        /// <summary>
+        /// Creates an instance with static delay.
+        /// </summary>
+        /// <param name="d">Delay</param>
+        /// <param name="rwg">RWG instance to check the clock.</param>
+        public AfterDelay(int d, RainWorldGame rwg) : base(rwg)
+        {
+            delay = d;
+        }
+        public override bool ShouldRunUpdates()
+            => rwg.world.rainCycle.timer > delay;
     }
 }
