@@ -19,7 +19,7 @@ internal class HappenParser
     #region statfields
     private const TXT.RegexOptions options = TXT.RegexOptions.IgnoreCase;
     private readonly static Dictionary<LineKind, TXT.Regex> LineMatchers;
-    private readonly static TXT.Regex roomsep = new TXT.Regex("\\s*,\\s*", options);
+    private readonly static TXT.Regex roomsep = new TXT.Regex("[\\s\\t]*,[\\s\\t]*|[\\s\\t]+", options);
     private readonly static LineKind[] happenProps = new[] { LineKind.HappenWhere, LineKind.HappenWhen, LineKind.HappenWhat, LineKind.HappenEnd };
     #endregion statfields
     private Dictionary<string, List<string>> allGroupContents = new();
@@ -54,13 +54,12 @@ internal class HappenParser
     }
     internal static void Parse(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
     {
-        //inst.Plog.LogDebug("Beginning parse");
         HappenParser p = new(file, set, rwg);
-        //inst.Plog.LogDebug(p.allLines.Aggregate(Utils.JoinWithComma));
         for (int i = 0; i < p.allLines.Length; i++)
         {
             p.Advance();
         }
+
         foreach (KeyValuePair<string, List<string>> gc in p.allGroupContents)
         {
             set.RoomsToGroups.InsertRight(gc.Key);
