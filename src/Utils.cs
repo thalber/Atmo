@@ -102,7 +102,6 @@ namespace Atmo
         /// <returns></returns>
         public static ConstructorInfo ctorof<T>(params Type[] pms)
             => typeof(T).GetConstructor(pms);
-
         /// <summary>
         /// takes fieldinfo from T, defaults to <see cref="allContextsInstance"/>
         /// </summary>
@@ -140,6 +139,16 @@ namespace Atmo
                 field.SetValue(to, field.GetValue(from), context, null, System.Globalization.CultureInfo.CurrentCulture);
             }
         }
+
+        public static void CleanupStatic(this Type t)
+        {
+            foreach (var field in t.GetFields(allContextsStatic)) if (!field.FieldType.IsValueType)
+                    try { field.SetValue(null, null, allContextsStatic, null, System.Globalization.CultureInfo.CurrentCulture); }
+                    catch { }
+            foreach (var nested in t.GetNestedTypes(allContextsStatic))
+                try { nested.CleanupStatic(); }
+                catch { }
+        }
         #endregion
         #region randomization extensions
         public static int ClampedIntDeviation(int start, int mDev, int minRes = int.MinValue, int maxRes = int.MaxValue)
@@ -162,7 +171,7 @@ namespace Atmo
         }
         #endregion
         #region misc bs
-        public static bool TryParseEnum<T> (string str, out T result)
+        public static bool TryParseEnum<T>(string str, out T result)
             where T : Enum
         {
             var values = Enum.GetValues(typeof(T));

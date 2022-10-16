@@ -36,10 +36,10 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         try
         {
-            On.World.ctor += FetchHappenSet;
-            On.Room.Update += RunHappensRealUpd;
             On.AbstractRoom.Update += RunHappensAbstUpd;
             On.RainWorldGame.Update += DoBodyUpdates;
+            On.Room.Update += RunHappensRealUpd;
+            On.World.ctor += FetchHappenSet;
         }
         catch (Exception ex)
         {
@@ -62,7 +62,6 @@ public sealed partial class Atmod : BaseUnityPlugin
         orig(self);
         if (CurrentSet is null) return;
         if (self.pauseMenu != null) return;
-        //todo: check if this still runs body updates when paused
         foreach (var ha in CurrentSet.AllHappens)
         {
             if (ha is null) continue;
@@ -170,11 +169,32 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         try
         {
-            //todo: add static cleanup
             On.World.ctor -= FetchHappenSet;
             On.Room.Update -= RunHappensRealUpd;
-            On.AbstractRoom.Update -= RunHappensAbstUpd;
             On.RainWorldGame.Update -= DoBodyUpdates;
+            On.AbstractRoom.Update -= RunHappensAbstUpd;
+
+            System.Threading.ThreadPool.QueueUserWorkItem((_) =>
+            {
+                using (var logger = BepInEx.Logging.Logger.CreateLogSource("Atmo_Cleanup"))
+                {
+                    System.Diagnostics.Stopwatch sw = new();
+                    sw.Start();
+                    logger.LogMessage("Starting.");
+                    foreach (var t in typeof(Atmod).Assembly.GetTypes())
+                    {
+                        try
+                        {
+                            t.CleanupStatic();
+                        }
+                        catch (Exception ex) {
+                            logger.LogError(ex);
+                        }
+                    }
+                    sw.Stop();
+                    logger.LogMessage($"Finished statics cleanup: {sw.Elapsed}");
+                };
+            });
         }
         catch (Exception ex)
         {

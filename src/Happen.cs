@@ -14,7 +14,6 @@ namespace Atmo;
 /// </summary>
 public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 {
-    //todo: add frame time profiling
     internal const int PROFILER_CYCLE_COREUP = 200;
     internal const int PROFILER_CYCLE_REALUP = 400;
     internal const int STORE_CYCLES = 12;

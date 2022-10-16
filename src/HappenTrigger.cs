@@ -236,7 +236,6 @@ public abstract class HappenTrigger
     /// </summary>
     public sealed class AfterOther : HappenTrigger
     {
-        //todo: redo with queues
         internal readonly Happen tar;
         //internal readonly System.Collections.BitArray inertia;
         internal readonly int delay;
