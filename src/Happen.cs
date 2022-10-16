@@ -73,7 +73,8 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     }
     //private readonly List<Delegate> broken = new();
     #region lifecycle cbs
-    internal void AbstUpdate (AbstractRoom absroom, int time) {
+    internal void AbstUpdate(AbstractRoom absroom, int time)
+    {
         if (On_AbstUpdate is null) return;
         foreach (API.lc_AbstractUpdate cb in On_AbstUpdate.GetInvocationList())
         {
@@ -83,7 +84,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
             }
             catch (Exception ex)
             {
-                inst.Plog.LogError(ErrorMessage(LCE.abstup, cb, ex));
+                inst.Plog.LogError(ErrorMessage(lc_event.abstup, cb, ex));
                 On_AbstUpdate -= cb;
             }
         }
@@ -92,7 +93,8 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     /// Attach to this to receive a call once per abstract update, for every affected room
     /// </summary>
     public event API.lc_AbstractUpdate? On_AbstUpdate;
-    internal void RealUpdate (Room room) {
+    internal void RealUpdate(Room room)
+    {
         sw.Start();
         if (On_RealUpdate is null) return;
         foreach (API.lc_RealizedUpdate cb in On_RealUpdate.GetInvocationList())
@@ -103,7 +105,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
             }
             catch (Exception ex)
             {
-                inst.Plog.LogError(ErrorMessage(LCE.realup, cb, ex));
+                inst.Plog.LogError(ErrorMessage(lc_event.realup, cb, ex));
                 On_RealUpdate -= cb;
             }
         }
@@ -115,7 +117,8 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     /// Attach to this to receive a call once per realized update, for every affected room
     /// </summary>
     public event API.lc_RealizedUpdate? On_RealUpdate;
-    internal void Init(World world) {
+    internal void Init(World world)
+    {
         initRan = true;
         if (On_Init is null) return;
         foreach (API.lc_Init cb in On_Init.GetInvocationList())
@@ -126,7 +129,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
             }
             catch (Exception ex)
             {
-                inst.Plog.LogError(ErrorMessage(LCE.init, cb, ex, false));
+                inst.Plog.LogError(ErrorMessage(lc_event.init, cb, ex, error_response.none));
                 //On_Init -= cb;
             }
         }
@@ -138,8 +141,35 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     internal void CoreUpdate(RainWorldGame rwg)
     {
         sw.Start();
-        foreach (var tr in triggers) tr.Update();
-        active = conditions?.Eval() ?? true;
+
+        for (int tin = 0; tin < triggers.Length; tin++)
+        {
+            try
+            {
+                triggers[tin].Update();
+            }
+            catch (Exception ex)
+            {
+                inst.Plog.LogError(ErrorMessage(
+                    lc_event.triggerupdate,
+                    triggers[tin].Update,
+                    ex,
+                    error_response.none));
+            }
+        }
+
+        try
+        {
+            active = conditions?.Eval() ?? true;
+        }
+        catch (Exception ex)
+        {
+            inst.Plog.LogError(ErrorMessage(
+                lc_event.eval,
+                conditions.Eval,
+                ex,
+                error_response.none));
+        }
         foreach (var t in triggers) t.EvalResults(active);
         if (On_CoreUpdate is null) return;
         foreach (API.lc_CoreUpdate cb in On_CoreUpdate.GetInvocationList())
@@ -150,7 +180,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
             }
             catch (Exception ex)
             {
-                inst.Plog.LogError(ErrorMessage(LCE.coreup, cb, ex));
+                inst.Plog.LogError(ErrorMessage(lc_event.coreup, cb, ex));
                 On_CoreUpdate -= cb;
             }
         }
@@ -182,8 +212,8 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         perf.name = name;
         perf.samples_eval = haeval_readings.Count;
         perf.samples_realup = realup_readings.Count;
-        
-        double 
+
+        double
             realuptotal = 0d,
             evaltotal = 0d;
         if (perf.samples_realup is not 0)
@@ -202,7 +232,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         }
         else
         {
-            perf.avg_eval= float.NaN;
+            perf.avg_eval = float.NaN;
         }
         return perf;
     }
@@ -260,17 +290,33 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         /// </summary>
         public int samples_eval;
     }
-    private enum LCE
+    private enum lc_event
     {
         abstup,
         realup,
         coreup,
         init,
+        eval,
+        triggerupdate,
+    }
+
+    private enum error_response
+    {
+        none,
+        remove_cb,
+        void_trigger
     }
     #endregion
 
-    private string ErrorMessage(LCE where, Delegate cb, Exception ex, bool removing = true)
+    private string ErrorMessage(lc_event where, Delegate cb, Exception ex, error_response resp = error_response.remove_cb)
         => $"Happen {this}: {where}: " +
-        $"Error on callback {cb}//{cb.Method}:" +
-        $"\n{ex}" + (removing ? "\nRemoving problematic callback." : string.Empty);
+        $"Error on invoke {cb}//{cb?.Method}:" +
+        $"\n{ex}" +
+        $"\nAction taken: " + resp switch
+        {
+            error_response.none => "none.",
+            error_response.remove_cb => "removing problematic callback.",
+            error_response.void_trigger => "voiding trigger.",
+            _ => "???",
+        };
 }

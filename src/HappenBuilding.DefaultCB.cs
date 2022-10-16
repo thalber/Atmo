@@ -23,21 +23,18 @@ internal static partial class HappenBuilding
         {
             string acname = action.Key;
             string[] args = action.Value;
-            //inst.Plog.LogWarning($"{acname}({(args.Length == 0 ? string.Empty : args.Aggregate(Utils.JoinWithComma))})");
             switch (action.Key.ToLower())
             {
-                //multiplies player gravity. args: frac
                 case "playergrav":
                 case "playergravity":
                     {
                         Make_Playergrav(ha, args);
                     }
                     break;
-                //plays a sound. args: sound name, cooldown/cd, volume/vol, pitch, pan
                 case "sound":
                 case "playsound":
                     {
-                        Make_sound(ha, args);
+                        Make_Sound(ha, args);
                     }
                     break;
                 case "rumble":
@@ -46,22 +43,6 @@ internal static partial class HappenBuilding
                         Make_Rumble(ha, args);
                     }
                     break;
-                    //case "palette":
-                    //case "palettefade":
-                    //    {
-                    //        int.TryParse(args.AtOr(0, "15"), out var palNum);
-                    //        for (int i = 1; i < args.Length; i++)
-                    //        {
-
-                    //        }
-                    //        ha.On_RealUpdate += (room) =>
-                    //        {
-
-                    //        };
-                    //    }
-                    //    break;
-                    //case "":
-                    //    break;
             }
         }
     }
@@ -79,7 +60,7 @@ internal static partial class HappenBuilding
         };
     }
 
-    private static void Make_sound(Happen ha, string[] args)
+    private static void Make_Sound(Happen ha, string[] args)
     {
         if (!TryParseEnum(args[0], out SoundID soundid))
         {
@@ -164,18 +145,6 @@ internal static partial class HappenBuilding
 
         int counter = 0;
         int active = duration;
-
-        //ha.On_CoreUpdate += (rwg) =>
-        //{
-        //    if (active > 0) active--;
-        //    if (counter > 0) counter--;
-        //    if (counter == 0)
-        //    {
-        //        active = duration;
-        //        counter = cooldown;
-        //    }
-
-        //};
         ha.On_RealUpdate += (room) =>
         {
             //if (active != 0)

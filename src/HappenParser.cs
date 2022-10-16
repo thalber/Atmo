@@ -27,8 +27,9 @@ internal class HappenParser
 
     private string[] allLines;
     private int index = 0;
-    public bool done => index >= allLines.Length;
+    public bool done => aborted || index >= allLines.Length;
 
+    private bool aborted;
     private IO.FileInfo file;
     private HappenSet set;
     private RainWorldGame rwg;
@@ -39,107 +40,73 @@ internal class HappenParser
     private HappenConfig cHapp;
     private List<string> cGroupRooms = new();
     #endregion fields
-
     internal HappenParser(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
     {
+        inst.Plog.LogDebug($"ParseHappen: booting for file: {file.FullName}");
         allLines = IO.File.ReadAllLines(file.FullName, Encoding.UTF8);
         this.file = file;
         this.set = set;
         this.rwg = rwg;
     }
-
-    ~HappenParser()
-    {
-        //lines.Dispose();
-    }
-    internal static void Parse(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
-    {
-        HappenParser p = new(file, set, rwg);
-        for (int i = 0; i < p.allLines.Length; i++)
-        {
-            p.Advance();
-        }
-
-        foreach (KeyValuePair<string, List<string>> gc in p.allGroupContents)
-        {
-            set.RoomsToGroups.InsertRight(gc.Key);
-            set.RoomsToGroups.InsertRangeLeft(gc.Value);
-            foreach (string rm in gc.Value) set.RoomsToGroups.AddLink(rm, gc.Key);
-            set.GroupsToHappens.InsertLeft(gc.Key);
-        }
-        foreach (HappenConfig hac in p.retrievedHappens)
-        {
-            Happen ha = new(hac, set, rwg);
-            set.AllHappens.Add(ha);
-            set.GroupsToHappens.InsertRight(ha);
-            foreach (string g in hac.groups)
-            {
-                set.GroupsToHappens.AddLink(g, ha);
-            }
-            if ((hac.include?.Count ?? 0) > 0)
-            {
-                set.SpecificIncludeToHappens.InsertRangeLeft(hac.include);
-                set.SpecificIncludeToHappens.InsertRight(ha);
-                foreach (var incl in hac.include) set.SpecificIncludeToHappens.AddLink(incl, ha);
-            }
-            if ((hac.exclude?.Count ?? 0) > 0)
-            {
-                set.SpecificExcludeToHappens.InsertRangeLeft(hac.exclude);
-                set.SpecificExcludeToHappens.InsertRight(ha);
-                foreach (var excl in hac.exclude) set.SpecificExcludeToHappens.AddLink(excl, ha);
-            }
-        }
-    }
-
     internal void Advance()
     {
-        cline = allLines[index];//lines.ReadLine();
-        //if (cline is null) return;
+        cline = allLines[index];
         TXT.Match
                 group_que = LineMatchers[LineKind.GroupBegin].Match(cline),
-                //comm_que = LineMatchers[LineKind.Comment].Match(cline),
                 happn_que = LineMatchers[LineKind.HappenBegin].Match(cline);
-        //if (comm_que.Success && comm_que.Success) return;
-
-        if (cline.StartsWith("//")) goto stop;
-        switch (phase)
+        if (cline.StartsWith("//") || aborted) goto stop;
+        try
         {
-            case ParsePhase.None:
-                {
-                    if (group_que.Success)
+            switch (phase)
+            {
+                case ParsePhase.None:
                     {
-                        cGroup = cline.Substring(group_que.Length);
-                        phase = ParsePhase.Group;
+                        if (group_que.Success)
+                        {
+                            cGroup = cline.Substring(group_que.Length);
+                            inst.Plog.LogDebug($"ParseHappen: Beginning group block: {cGroup}");
+                            phase = ParsePhase.Group;
+                        }
+                        else if (happn_que.Success)
+                        {
+                            cHapp = new(cline.Substring(happn_que.Length));
+                            inst.Plog.LogDebug($"ParseHappen: Beginning happen block: {cHapp.name}");
+                            phase = ParsePhase.Happen;
+                            
+                        }
                     }
-                    else if (happn_que.Success)
+                    break;
+                case ParsePhase.Group:
                     {
-                        cHapp = new(cline.Substring(happn_que.Length));
-                        phase = ParsePhase.Happen;
+                        ParseGroup();
                     }
-                }
-                break;
-            case ParsePhase.Group:
-                {
-                    ParseGroup();
-                }
-                break;
-            case ParsePhase.Happen:
-                {
-                    ParseHappen();
-                    //ParseHappen(cl, ref currentHappen, retrievedHappens, ref phase);
-                }
-                break;
-            default:
-                break;
+                    break;
+                case ParsePhase.Happen:
+                    {
+                        ParseHappen();
+                        //ParseHappen(cl, ref currentHappen, retrievedHappens, ref phase);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            inst.Plog.LogError($"ParseHappen: Irrecoverable error:" +
+                $"\n{ex}" +
+                $"\nAborting");
+            aborted = true;
         }
         stop:
         index++;
     }
-
     private void ParseGroup()
     {
-        if (LineMatchers[LineKind.GroupEnd].Match(cline).Success)
+        TXT.Match ge;
+        if ((ge = LineMatchers[LineKind.GroupEnd].Match(cline)).Success && ge.Index == 0)
         {
+            inst.Plog.LogDebug($"ParseHappen: ending group: {cGroup}");
             allGroupContents.Add(cGroup, cGroupRooms);
             ResetGroup();
             phase = ParsePhase.None;
@@ -157,15 +124,16 @@ internal class HappenParser
         {
             TXT.Match match;
             TXT.Regex matcher = LineMatchers[prop];
-            if ((match = matcher.Match(cline)).Success)
+            if ((match = matcher.Match(cline)).Success && match.Index == 0)
             {
                 string payload = cline.Substring(match.Length);
                 switch (prop)
                 {
                     case LineKind.HappenWhere:
                         {
+                            inst.Plog.LogDebug("HappenParse: Recognized WHERE clause");
                             WhereOps c = WhereOps.Group;
-                            string[] items = TXT.Regex.Split(payload, "\\s+");
+                            string[] items = TXT.Regex.Split(payload, "[\\s\\t]+");
                             foreach (string i in items)
                             {
                                 if (i.Length == 0) continue;
@@ -197,7 +165,7 @@ internal class HappenParser
                         break;
                     case LineKind.HappenWhat:
                         {
-                            //string[] items = TXT.Regex.Split(payload, "\\s");
+                            inst.Plog.LogDebug("HappenParse: Recognized WHAT clause");
                             var tokens = PredicateInlay.Tokenize(payload).ToArray();
                             for (int i = 0; i < tokens.Length; i++)
                             {
@@ -213,14 +181,22 @@ internal class HappenParser
                     case LineKind.HappenWhen:
                         try
                         {
+                            if (cHapp.conditions is not null)
+                            {
+                                inst.Plog.LogWarning("HappenParse: Duplicate WHERE clause! Skipping! (Did you forget to close a previous Happen with END HAPPEN?)");
+                                break;
+                            }
+                            inst.Plog.LogDebug("HappenParse: Recognized WHEN clause");
                             cHapp.conditions = new PredicateInlay(payload, null);
                         }
                         catch (Exception ex)
                         {
-                            inst.Plog.LogError($"HappenParse: Error creating eval tree for {cHapp.name}:\n{ex}");
+                            inst.Plog.LogError($"HappenParse: Error creating eval tree from a WHEN block for {cHapp.name}:\n{ex}");
+                            cHapp.conditions = null;
                         }
                         break;
                     case LineKind.HappenEnd:
+                        inst.Plog.LogDebug("HappenParse: finishing a happen block");
                         retrievedHappens.Add(cHapp);
                         cHapp = default;
                         phase = ParsePhase.None;
@@ -232,13 +208,11 @@ internal class HappenParser
             }
         }
     }
-
-    private void ResetGroup(/*ref string? currGroup, ref List<string> currGroupRooms*/)
+    private void ResetGroup()
     {
         cGroup = null;
         cGroupRooms = new();
     }
-
     #region nested
     private enum WhereOps
     {
@@ -281,7 +255,44 @@ internal class HappenParser
             _ => throw new ArgumentException("Invalid LineKind state supplied!"),
         };
     #endregion
+    internal static void Parse(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
+    {
+        HappenParser p = new(file, set, rwg);
+        for (int i = 0; i < p.allLines.Length; i++)
+        {
+            p.Advance();
+        }
 
+        foreach (KeyValuePair<string, List<string>> gc in p.allGroupContents)
+        {
+            set.RoomsToGroups.InsertRight(gc.Key);
+            set.RoomsToGroups.InsertRangeLeft(gc.Value);
+            foreach (string rm in gc.Value) set.RoomsToGroups.AddLink(rm, gc.Key);
+            set.GroupsToHappens.InsertLeft(gc.Key);
+        }
+        foreach (HappenConfig hac in p.retrievedHappens)
+        {
+            Happen ha = new(hac, set, rwg);
+            set.AllHappens.Add(ha);
+            set.GroupsToHappens.InsertRight(ha);
+            foreach (string g in hac.groups)
+            {
+                set.GroupsToHappens.AddLink(g, ha);
+            }
+            if ((hac.include?.Count ?? 0) > 0)
+            {
+                set.SpecificIncludeToHappens.InsertRangeLeft(hac.include);
+                set.SpecificIncludeToHappens.InsertRight(ha);
+                foreach (var incl in hac.include) set.SpecificIncludeToHappens.AddLink(incl, ha);
+            }
+            if ((hac.exclude?.Count ?? 0) > 0)
+            {
+                set.SpecificExcludeToHappens.InsertRangeLeft(hac.exclude);
+                set.SpecificExcludeToHappens.InsertRight(ha);
+                foreach (var excl in hac.exclude) set.SpecificExcludeToHappens.AddLink(excl, ha);
+            }
+        }
+    }
     static HappenParser()
     {
         LineMatchers = new();

@@ -156,7 +156,7 @@ internal static partial class HappenBuilding
                 }
                 break;
         }
-
+        //if (res is null) { inst.Plog.LogWarning("Could"); }
         return res;
     }
 }

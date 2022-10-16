@@ -24,6 +24,10 @@ public abstract class HappenTrigger
     /// </summary>
     protected Happen? owner;
     #endregion
+    /// <summary>
+    /// Provide an owning happen if you need to.
+    /// </summary>
+    /// <param name="ow"></param>
     public HappenTrigger(Happen? ow = null) { owner = ow; }
 
     /// <summary>

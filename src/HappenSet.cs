@@ -27,7 +27,7 @@ public sealed class HappenSet
         if (file is null) return;
         HappenParser.Parse(file, this, rwg);
     }
-
+    //todo: add GetRoomsForEvent
     public IEnumerable<Happen> GetEventsForRoom(string roomname)
     {
         List<Happen> returned = new();
@@ -54,6 +54,10 @@ public sealed class HappenSet
             if (!returned.Contains(ha)) yield return ha;
         }
     }
+    /// <summary>
+    /// Yields performance records for all happens. Consume or discard the enumerable on the same frame.
+    /// </summary>
+    /// <returns></returns>
     public IEnumerable<Happen.Perf> GetPerfRecords()
     {
         foreach (var ha in AllHappens)
@@ -75,12 +79,11 @@ public sealed class HappenSet
             var active = CRS.API.ActivatedPacks;
             foreach (KeyValuePair<string, CRS.CustomWorldStructs.RegionPack> kvp in packs)
             {
-
                 var name = kvp.Key;
                 var data = kvp.Value;
                 //skip inactive
                 if (!active.ContainsKey(name)) continue;
-
+                inst.Plog.LogDebug($"Checking regpack {name}...");
                 var tarpath = CRS.API.BuildPath(
                     regionPackFolder: name,
                     folderName: "World",
@@ -91,15 +94,14 @@ public sealed class HappenSet
                 var tarfile = new IO.FileInfo(tarpath);
                 if (tarfile.Exists)
                 {
-                    //pl.LogError("File found! adding");
+                    pl.LogDebug("Found a .atmo file, reading a happenset...");
                     HappenSet gathered = new(world.game, tarfile);
                     if (res is null) res = gathered;
                     else res += gathered;
-                    //pl.LogWarning(gathered);
                 }
                 else
                 {
-                    pl.LogError("Nope");
+                    pl.LogDebug("No XX.atmo file found.");
                 }
             }
             return res;
@@ -123,6 +125,5 @@ public sealed class HappenSet
         };
         throw new NotImplementedException();
     }
-
     #endregion statics
 }

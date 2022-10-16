@@ -61,6 +61,8 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         orig(self);
         if (CurrentSet is null) return;
+        if (self.pauseMenu != null) return;
+        //todo: check if this still runs body updates when paused
         foreach (var ha in CurrentSet.AllHappens)
         {
             if (ha is null) continue;
@@ -168,6 +170,7 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         try
         {
+            //todo: add static cleanup
             On.World.ctor -= FetchHappenSet;
             On.Room.Update -= RunHappensRealUpd;
             On.AbstractRoom.Update -= RunHappensAbstUpd;
