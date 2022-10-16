@@ -161,6 +161,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         try
         {
             active = conditions?.Eval() ?? true;
+            foreach (var t in triggers) t.EvalResults(active);
         }
         catch (Exception ex)
         {
@@ -170,7 +171,6 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
                 ex,
                 error_response.none));
         }
-        foreach (var t in triggers) t.EvalResults(active);
         if (On_CoreUpdate is null) return;
         foreach (API.lc_CoreUpdate cb in On_CoreUpdate.GetInvocationList())
         {

@@ -141,7 +141,7 @@ public sealed partial class Atmod : BaseUnityPlugin
         orig(self, game, region, name, singleRoomWorld);
         if (singleRoomWorld) return;
 
-        Logger.LogError("Fetching hapset!");
+        //Logger.LogError("Fetching hapset!");
         try
         {
             CurrentSet = HappenSet.TryCreate(self);

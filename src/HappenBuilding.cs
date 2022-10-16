@@ -155,8 +155,8 @@ internal static partial class HappenBuilding
                     res = new AfterOther(ha, other, delay);
                 }
                 break;
+                //todo: update docs to reflect shift to seconds in parameters rather than frames
         }
-        //if (res is null) { inst.Plog.LogWarning("Could"); }
         return res;
     }
 }
