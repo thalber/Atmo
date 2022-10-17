@@ -62,7 +62,7 @@ internal static partial class HappenBuilding
                     break;
                 case "music":
                 case "playmusic":
-                    Make_PlayMusic(ha, args);
+                    //Make_PlayMusic(ha, args);
                     break;
             }
         }
@@ -86,6 +86,7 @@ internal static partial class HappenBuilding
             roomsrange = -1,
             rest = 5;
 
+        MusicEvent mev = new();
         for (int i = 1; i < args.Length; i++)
         {
             var spl = args[i].Split('=');
@@ -104,15 +105,10 @@ internal static partial class HappenBuilding
                     break;
             }
         }
-
-        MusicEvent mev = new();
-        
-
         ha.On_Init += (w) =>
         {
             w.game.manager.musicPlayer?.GameRequestsSong(mev);
         };
-
     }
     private static void Make_GiveMark(Happen ha, string[] args)
     {

@@ -70,7 +70,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         conditions?.Populate((id, args) =>
         {
             HappenTrigger nt = HappenBuilding.CreateTrigger(id, args, rwg, this);
-            list_triggers.Add(nt);
+            //list_triggers.Add(nt);
             return nt.ShouldRunUpdates;
         });
         triggers = list_triggers.ToArray();

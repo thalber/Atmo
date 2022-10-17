@@ -31,7 +31,6 @@ public sealed partial class Atmod : BaseUnityPlugin
     private bool setupRan = false;
     public HappenSet? CurrentSet { get; private set; }
     #endregion
-
     public void OnEnable()
     {
         try
@@ -85,7 +84,7 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         orig(self, timePassed);
         if (CurrentSet is null) return;
-        var haps = CurrentSet.GetEventsForRoom(self.name);
+        var haps = CurrentSet.GetHappensForRoom(self.name);
         foreach (var ha in haps)
         {
             if (ha is null) continue;
@@ -116,7 +115,7 @@ public sealed partial class Atmod : BaseUnityPlugin
         orig(self);
         //DBG.Stopwatch sw = DBG.Stopwatch.StartNew();
         if (CurrentSet is null) return;
-        var haps = CurrentSet.GetEventsForRoom(self.abstractRoom.name);
+        var haps = CurrentSet.GetHappensForRoom(self.abstractRoom.name);
         foreach (var ha in haps)
         {
             //Logger.LogDebug($"update {ha} ({haps.Count()})");

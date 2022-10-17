@@ -22,10 +22,12 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 	  <DebugType>embedded</DebugType>
 	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningsAsErrors>$(WarningsAsErrors);NU1605;</WarningsAsErrors>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 	  <DebugType>embedded</DebugType>
 	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningsAsErrors>$(WarningsAsErrors);NU1605;</WarningsAsErrors>
 	</PropertyGroup>
 
 	<ItemGroup>

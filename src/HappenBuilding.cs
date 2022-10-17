@@ -63,7 +63,7 @@ internal static partial class HappenBuilding
     /// <param name="args">Optional arguments</param>
     /// <param name="rwg">game instance</param>
     /// <returns>Resulting trigger; an <see cref="Always"/> if something went wrong.</returns>
-    internal static HappenTrigger CreateTrigger(
+    internal static HappenTrigger? CreateTrigger(
         string id,
         string[] args,
         RainWorldGame rwg,

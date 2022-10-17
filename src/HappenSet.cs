@@ -28,7 +28,7 @@ public sealed class HappenSet
         HappenParser.Parse(file, this, rwg);
     }
     //todo: add GetRoomsForEvent
-    public IEnumerable<Happen> GetEventsForRoom(string roomname)
+    public IEnumerable<Happen> GetHappensForRoom(string roomname)
     {
         List<Happen> returned = new();
         //goto _specific;
@@ -54,6 +54,11 @@ public sealed class HappenSet
             if (!returned.Contains(ha)) yield return ha;
         }
     }
+
+    //public IEnumerable<string> GetRoomsForHappen(Happen ha)
+    //{
+
+    //}
     /// <summary>
     /// Yields performance records for all happens. Consume or discard the enumerable on the same frame.
     /// </summary>
