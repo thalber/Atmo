@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using RWCustom;
 
+using static Atmo.HappenBuilding;
 using static Atmo.Utils;
+
 using URand = UnityEngine.Random;
 using TXT = System.Text.RegularExpressions;
 
@@ -12,13 +14,9 @@ namespace Atmo;
 /// <summary>
 /// base class for triggers. Triggers determine when happens are allowed to run; to have a happen run on a given frame, each one of its triggers must be ready.
 /// </summary>
-public abstract class HappenTrigger
+public abstract partial class HappenTrigger
 {
     #region fields
-    /// <summary>
-    /// Strings that evaluate to bool.true
-    /// </summary>
-    public static readonly string[] trueStrings = new[] { "true", "1", "yes", };
     /// <summary>
     /// Happen that owns this instance.
     /// </summary>
@@ -44,6 +42,12 @@ public abstract class HappenTrigger
     /// </summary>
     /// <param name="res"></param>
     public virtual void EvalResults(bool res) { }
+
+    #region builtins
+#warning contributor notice: triggers
+    //Add your triggers here.
+    //Don't forget to register them in HappenBuilding.MakeTrigger switch as well.
+    //Do not remove the warning directive.
     /// <summary>
     /// Intermediary abstract class for triggers that require RainWorldGame state access.
     /// </summary>
@@ -317,4 +321,5 @@ public abstract class HappenTrigger
         public override bool ShouldRunUpdates()
             => rwg.world.rainCycle.timer > delay;
     }
+    #endregion
 }

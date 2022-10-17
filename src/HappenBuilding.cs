@@ -16,6 +16,17 @@ namespace Atmo;
 /// </summary>
 internal static partial class HappenBuilding
 {
+    #region fields
+    /// <summary>
+    /// Strings that evaluate to bool.true
+    /// </summary>
+    public static readonly string[] trueStrings = new[] { "true", "1", "yes", };
+    /// <summary>
+    /// Strings that evaluate to bool.false
+    /// </summary>
+    public static readonly string[] falseStrings = new[] { "false", "0", "no", };
+    #endregion
+
     internal static void NewEvent(Happen ha)
     {
         try
