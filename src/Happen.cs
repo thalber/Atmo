@@ -17,21 +17,33 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     internal const int PROFILER_CYCLE_COREUP = 200;
     internal const int PROFILER_CYCLE_REALUP = 400;
     internal const int STORE_CYCLES = 12;
-    #region fields
+    #region fields/props
     #region perfrec
     internal readonly LinkedList<double> realup_readings = new();
     internal readonly List<TimeSpan> realup_times = new(PROFILER_CYCLE_REALUP);
     internal readonly LinkedList<double> haeval_readings = new();
     internal readonly List<TimeSpan> haeval_times = new(PROFILER_CYCLE_COREUP);
     #endregion perfrec
-    private readonly Guid guid = Guid.NewGuid();
-    internal PredicateInlay? conditions;
-    public bool active { get; private set; }
-    private DBG.Stopwatch sw = new();
+    /// <summary>
+    /// Displays whether a happen is active during the current frame. Updated on <see cref="Atmod.DoBodyUpdates(On.RainWorldGame.orig_Update, RainWorldGame)"/>.
+    /// </summary>
+    public bool Active { get; private set; }
     /// <summary>
     /// Whether the init callbacks have been invoked or not.
     /// </summary>
-    public bool initRan;
+    public bool InitRan { get; internal set; }
+    /// <summary>
+    /// Used internally for sorting.
+    /// </summary>
+    private readonly Guid guid = Guid.NewGuid();
+    /// <summary>
+    /// Activation expression. Populated by <see cref="HappenTrigger.ShouldRunUpdates"/> callbacks of items in <see cref="triggers"/>.
+    /// </summary>
+    internal PredicateInlay? conditions;
+    /// <summary>
+    /// Used for frame time profiling.
+    /// </summary>
+    private readonly DBG.Stopwatch sw = new();
     #region fromcfg
     /// <summary>
     /// All triggers associated with the happen.
@@ -46,31 +58,27 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     /// </summary>
     public readonly Dictionary<string, string[]> actions;
     internal HappenSet set;
-    //public readonly string[] exclude;
     #endregion fromcfg
-    #endregion fields
+    #endregion fields/props
     internal Happen(HappenConfig cfg, HappenSet owner, RainWorldGame rwg)
     {
         set = owner;
         name = cfg.name;
-        actions = cfg.actions;//.Select(x => x.Key).ToArray();
+        actions = cfg.actions;
         conditions = cfg.conditions;
         List<HappenTrigger> list_triggers = new();
         conditions?.Populate((id, args) =>
         {
-            var nt = HappenBuilding.CreateTrigger(id, args, rwg, this);
+            HappenTrigger nt = HappenBuilding.CreateTrigger(id, args, rwg, this);
             list_triggers.Add(nt);
-            //inst.Plog.LogWarning($"running pop!!! {nt}, {nt.ShouldRunUpdates()}");
             return nt.ShouldRunUpdates;
         });
-        //inst.Plog.LogWarning( conditions?.Eval());
         triggers = list_triggers.ToArray();
         HappenBuilding.NewEvent(this);
 
         if (actions.Count is 0) inst.Plog.LogWarning($"Happen {this}: no actions! Possible missing 'WHAT:' clause");
         if (conditions is null) inst.Plog.LogWarning($"Happen {this}: did not receive conditions! Possible missing 'WHEN:' clause");
     }
-    //private readonly List<Delegate> broken = new();
     #region lifecycle cbs
     internal void AbstUpdate(AbstractRoom absroom, int time)
     {
@@ -111,14 +119,13 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         LogFrameTime(realup_times, sw.Elapsed, realup_readings, STORE_CYCLES);
         sw.Reset();
     }
-
     /// <summary>
     /// Attach to this to receive a call once per realized update, for every affected room
     /// </summary>
     public event API.lc_RealizedUpdate? On_RealUpdate;
     internal void Init(World world)
     {
-        initRan = true;
+        InitRan = true;
         if (On_Init is null) return;
         foreach (API.lc_Init cb in On_Init.GetInvocationList())
         {
@@ -129,7 +136,6 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
             catch (Exception ex)
             {
                 inst.Plog.LogError(ErrorMessage(lc_event.init, cb, ex, error_response.none));
-                //On_Init -= cb;
             }
         }
     }
@@ -140,7 +146,6 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
     internal void CoreUpdate(RainWorldGame rwg)
     {
         sw.Start();
-
         for (int tin = 0; tin < triggers.Length; tin++)
         {
             try
@@ -149,6 +154,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
             }
             catch (Exception ex)
             {
+                //todo: add a way to void a trigger
                 inst.Plog.LogError(ErrorMessage(
                     lc_event.triggerupdate,
                     triggers[tin].Update,
@@ -156,11 +162,10 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
                     error_response.none));
             }
         }
-
         try
         {
-            active = conditions?.Eval() ?? true;
-            foreach (var t in triggers) t.EvalResults(active);
+            Active = conditions?.Eval() ?? true;
+            foreach (var t in triggers) t.EvalResults(Active);
         }
         catch (Exception ex)
         {
@@ -186,21 +191,11 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         LogFrameTime(haeval_times, sw.Elapsed, haeval_readings, STORE_CYCLES);
         sw.Reset();
     }
-
     /// <summary>
-    /// Subscribe to this to receive an update once per frame
+    /// Subscribe to this to receive an update once per frame.
     /// </summary>
     public event API.lc_CoreUpdate? On_CoreUpdate;
     #endregion
-
-    /// <summary>
-    /// Checks if happen should be running
-    /// </summary>
-    /// <param name="rwg">RainWorldGame instance to check</param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    public bool IsOn(RainWorldGame rwg)
-        => active;
     /// <summary>
     /// Returns a performance report.
     /// </summary>
@@ -235,33 +230,30 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         }
         return perf;
     }
+    #region general
     /// <summary>
     /// Compares to another happen using GUIDs.
     /// </summary>
     /// <param name="other"></param>
     /// <returns></returns>
-    public int CompareTo(Happen other)
-    {
-        return guid.CompareTo(other.guid);
-    }
+    public int CompareTo(Happen other) => guid.CompareTo(other.guid);
     /// <summary>
     /// Compares to another happen using GUIDs.
     /// </summary>
     /// <param name="other"></param>
     /// <returns></returns>
-    public bool Equals(Happen other)
-    {
-        return guid.Equals(other.guid);
-    }
+    public bool Equals(Happen other) => guid.Equals(other.guid);
     /// <summary>
     /// Returns a string representation of the happen.
     /// </summary>
     /// <returns></returns>
-    public override string ToString()
-    {
-        return $"{name}-{guid}[{(actions.Count == 0 ? string.Empty : actions.Select(x => $"{x.Key}").Aggregate(Utils.JoinWithComma))}]({triggers.Length} triggers)";
-    }
-
+    public override string ToString() 
+        => $"{name}-{guid}" +
+        $"[{(actions.Count == 0 
+            ? string.Empty 
+            : actions.Select(x => $"{x.Key}").Aggregate(Utils.JoinWithComma))}]" +
+        $"({triggers.Length} triggers)";
+    #endregion
     #region nested
     /// <summary>
     /// Carries performance report from the happen.
@@ -298,7 +290,6 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         eval,
         triggerupdate,
     }
-
     private enum error_response
     {
         none,
@@ -306,7 +297,6 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
         void_trigger
     }
     #endregion
-
     private string ErrorMessage(lc_event where, Delegate cb, Exception ex, error_response resp = error_response.remove_cb)
         => $"Happen {this}: {where}: " +
         $"Error on invoke {cb}//{cb?.Method}:" +

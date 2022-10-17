@@ -255,9 +255,9 @@ public abstract class HappenTrigger
 
         public override void Update()
         {
-            if (tar.active != tarWasOn)
+            if (tar.Active != tarWasOn)
             {
-                if (tar.active)
+                if (tar.Active)
                 {
                     switchOn.Add(delay);
                 }
@@ -284,7 +284,7 @@ public abstract class HappenTrigger
                 switchOff.RemoveAt(0);
                 amActive = false;
             }
-            tarWasOn = tar.active;
+            tarWasOn = tar.Active;
         }
         public override bool ShouldRunUpdates()
             => amActive;

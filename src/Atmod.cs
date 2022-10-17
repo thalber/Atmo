@@ -91,9 +91,9 @@ public sealed partial class Atmod : BaseUnityPlugin
             if (ha is null) continue;
             try
             {
-                if (ha.IsOn(self.world.game))
+                if (ha.Active)
                 {
-                    if (!ha.initRan) { ha.Init(self.world); ha.initRan = true; }
+                    if (!ha.InitRan) { ha.Init(self.world); ha.InitRan = true; }
                     ha.AbstUpdate(self, timePassed);
                 }
             }
@@ -122,9 +122,9 @@ public sealed partial class Atmod : BaseUnityPlugin
             //Logger.LogDebug($"update {ha} ({haps.Count()})");
             try
             {
-                if (ha.IsOn(self.world.game))
+                if (ha.Active)
                 {
-                    if (!ha.initRan) { ha.Init(self.world); ha.initRan = true; }
+                    if (!ha.InitRan) { ha.Init(self.world); ha.InitRan = true; }
                     ha.RealUpdate(self);
                 }
             }
