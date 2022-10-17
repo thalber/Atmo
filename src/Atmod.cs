@@ -39,6 +39,7 @@ public sealed partial class Atmod : BaseUnityPlugin
             On.RainWorldGame.Update += DoBodyUpdates;
             On.Room.Update += RunHappensRealUpd;
             On.World.ctor += FetchHappenSet;
+            HappenBuilding.InitBuiltins();
         }
         catch (Exception ex)
         {

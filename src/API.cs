@@ -62,63 +62,68 @@ public static class API
     /// </summary>
     /// <param name="args"></param>
     /// <param name="rwg"></param>
-    public delegate HappenTrigger? Create_NamedTriggerFactory(string[] args, RainWorldGame rwg, Happen ha);
+    public delegate HappenTrigger? Create_NamedTriggerFactory(string[] args, Happen ha, RainWorldGame rwg);
     #endregion
     #region API proper
     /// <summary>
     /// Registers a named action. Up to one callback for every lifecycle event.
     /// </summary>
-    /// <param name="action">Action name. Case insensitive.</param>
+    /// <param name="names">Action name(s). Case insensitive.</param>
     /// <param name="au">Abstract update callback.</param>
     /// <param name="ru">Realized update callback.</param>
     /// <param name="oi">Init callback.</param>
     /// <param name="cu">Core update callback.</param>
     /// <param name="ignoreCase">Whether action name matching should be case sensitive.</param>
-    /// <returns>True if successfully added; false if name already taken.</returns>
-    public static bool AddNamedAction(
-        string action,
+    /// <returns>The number of name collisions encountered.</returns>
+    public static int AddNamedAction(
+        string[] names,
         lc_AbstractUpdate? au = null,
         lc_RealizedUpdate? ru = null,
         lc_Init? oi = null,
         lc_CoreUpdate? cu = null,
         bool ignoreCase = true)
     {
-        //if (ignoreCase) action = action.ToLower();
-        if (namedActions.ContainsKey(action)) return false;
-        //API_MakeNewHappen += 
-        Create_RawHappenBuilder newCb = (ha) =>
+        int errc = 0;
+        foreach (var action in names)
         {
-            if (ha.actions.ContainsKey( ignoreCase ? action.ToLower() : action))
+            if (namedActions.ContainsKey(action)) { errc++; continue; }
+            Create_RawHappenBuilder newCb = (ha) =>
             {
-                ha.On_AbstUpdate += au;
-                ha.On_RealUpdate += ru;
-                ha.On_Init += oi;
-                ha.On_CoreUpdate += cu;
-            }
-        };
-        namedActions.Add(action, newCb);
-        EV_MakeNewHappen += newCb;
-        return true;
+                if (ha.actions.ContainsKey(ignoreCase ? action.ToLower() : action))
+                {
+                    ha.On_AbstUpdate += au;
+                    ha.On_RealUpdate += ru;
+                    ha.On_Init += oi;
+                    ha.On_CoreUpdate += cu;
+                }
+            };
+            namedActions.Add(action, newCb);
+            EV_MakeNewHappen += newCb;
+        }
+        return errc;
     }
     /// <summary>
     /// Registers a named action. Uses a <see cref="Create_RawHappenBuilder"/> to add any amount of callbacks to events. 
     /// </summary>
-    /// <param name="action">Action name. Case insensitive.</param>
+    /// <param name="names">Action name(s). Case insensitive.</param>
     /// <param name="builder">User builder callback.</param>
     /// <param name="ignoreCase">Whether action name matching should be case sensitive.</param>
     /// <returns>true if successfully attached, false if name already taken.</returns>
-    public static bool AddNamedAction(
-        string action,
+    public static int AddNamedAction(
+        string[] names,
         Create_NamedHappenBuilder builder,
         bool ignoreCase = true)
     {
-        //action = action.ToLower();
-        if (namedTriggers.ContainsKey(action)) return false;
-        Create_RawHappenBuilder newCb =
-            (ha) => { if (ha.actions.ContainsKey(ignoreCase ? action.ToLower() : action)) builder?.Invoke(ha, ha.actions[action]); };
-        namedActions.Add(action, newCb);
-        EV_MakeNewHappen += newCb;
-        return true;
+        int errc = 0;
+        foreach (var action in names)
+        {
+            if (namedTriggers.ContainsKey(action)) { errc++; continue; }
+            Create_RawHappenBuilder newCb =
+                (ha) => { if (ha.actions.ContainsKey(ignoreCase ? action.ToLower() : action)) builder?.Invoke(ha, ha.actions[action]); };
+            namedActions.Add(action, newCb);
+            EV_MakeNewHappen += newCb;
+        }
+        return errc;
     }
     /// <summary>
     /// Removes a named callback.
@@ -133,25 +138,28 @@ public static class API
     /// <summary>
     /// Registers a named trigger.
     /// </summary>
-    /// <param name="name">Trigger name.</param>
+    /// <param name="names">Trigger's name(s).</param>
     /// <param name="fac">User trigger factory callback.</param>
     /// <param name="ignoreCase">Whether trigger name should be case sensitive.</param>
-    /// <returns>true if successfully attached, false if name already taken.</returns>
-    public static bool AddNamedTrigger(
-        string name,
+    /// <returns>Number of name collisions encountered.</returns>
+    public static int AddNamedTrigger(
+        string[] names,
         Create_NamedTriggerFactory fac,
         bool ignoreCase = true)
     {
-        //name = name.ToLower();
-        if (namedTriggers.ContainsKey(ignoreCase ? name.ToLower() : name)) return false;
-        Create_RawTriggerFactory newCb = (n, args, rwg, ha) =>
+        int errc = 0;
+        foreach (var name in names)
         {
-            if (n == name) return fac(args, rwg, ha);
-            return null;
-        };
-        namedTriggers.Add(name, newCb);
-        EV_MakeNewTrigger += newCb;
-        return true;
+            if (namedTriggers.ContainsKey(ignoreCase ? name.ToLower() : name)) { errc++; continue; }
+            Create_RawTriggerFactory newCb = (n, args, rwg, ha) =>
+            {
+                if (n == name) return fac(args, ha, rwg);
+                return null;
+            };
+            namedTriggers.Add(name, newCb);
+            EV_MakeNewTrigger += newCb;
+        }
+        return errc;
     }
     /// <summary>
     /// Removes a registered trigger by name.

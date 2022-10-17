@@ -45,8 +45,8 @@ public abstract partial class HappenTrigger
 
     #region builtins
 #warning contributor notice: triggers
-    //Add your triggers here.
-    //Don't forget to register them in HappenBuilding.MakeTrigger switch as well.
+    //Place your trigger classes here.
+    //Don't forget to register them in HappenBuilding.RegisterDefaultTriggers as well.
     //Do not remove the warning directive.
     /// <summary>
     /// Intermediary abstract class for triggers that require RainWorldGame state access.
@@ -64,7 +64,7 @@ public abstract partial class HappenTrigger
     /// </summary>
     public sealed class Always : HappenTrigger
     {
-        public Always(Happen ow) : base(ow)
+        public Always() : base(null)
         {
         }
 

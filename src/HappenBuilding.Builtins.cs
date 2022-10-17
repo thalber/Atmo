@@ -19,64 +19,100 @@ namespace Atmo;
 
 internal static partial class HappenBuilding
 {
-    internal static void AddDefaultCallbacks(Happen ha)
+    internal static void InitBuiltins()
     {
-        foreach (var action in ha.actions)
+
+        foreach (Action initfun in new[] { RegisterBuiltinActions, RegisterBuiltinTriggers })
         {
-            string acname = action.Key;
-            string[] args = action.Value;
-            switch (action.Key.ToLower())
+            try
             {
-                case "playergrav":
-                case "playergravity":
-                    Make_Playergrav(ha, args);
-                    break;
-                case "sound":
-                case "playsound":
-                    Make_Sound(ha, args);
-                    break;
-                case "rumble":
-                case "screenshake":
-                    Make_Rumble(ha, args);
-                    break;
-                case "karma":
-                case "setkarma":
-                    Make_SetKarma(ha, args);
-                    break;
-                case "karmacap":
-                case "maxkarma":
-                case "setmaxkarma":
-                    Make_SetMaxKarma(ha, args);
-                    break;
-                case "settimer":
-                case "setraintimer":
-                    Make_SetRainTimer(ha, args);
-                    break;
-                case "log":
-                case "message":
-                    Make_LogCall(ha, args);
-                    break;
-                case "mark":
-                case "givemark":
-                    Make_GiveMark(ha, args);
-                    break;
-                case "music":
-                case "playmusic":
-                    //Make_PlayMusic(ha, args);
-                    break;
+                initfun();
+            }
+            catch (Exception ex)
+            {
+                inst.Plog.LogFatal($"HappenBuilding: Static init: " +
+                    $"failed to {initfun.Method}:" +
+                    $"\n{ex}");
             }
         }
+    }
+    internal static void RegisterBuiltinTriggers()
+    {
+        AddNamedTrigger(new[] { "always" }, (args, ha, rwg) => new Always());
+        AddNamedTrigger(new[] { "untilrain", "beforerain" }, (args, ha, rwg) =>
+        {
+            float.TryParse(args.AtOr(0, "0"), out var delay);
+            return new BeforeRain(rwg, ha, (int)(delay * 40f));
+        });
+        AddNamedTrigger(new[] { "afterrain" }, (args, ha, rwg) =>
+        {
+            float.TryParse(args.AtOr(0, "0"), out var delay);
+            return new AfterRain(rwg, ha, (int)(delay * 40f));
+        });
+        AddNamedTrigger(new[] { "everyx", "every" }, (args, ha, rwg) =>
+        {
+            float.TryParse(args.AtOr(0, "4"), out var period);
+            return new EveryX((int)(period * 40f), ha);
+        });
+        AddNamedTrigger(new[] { "maybe", "chance" }, (args, ha, rwg) =>
+        {
+            float.TryParse(args.AtOr(0, "0.5"), out var ch);
+            return new Maybe(ch);
+        });
+        AddNamedTrigger(new[] { "flicker" }, (args, ha, rwg) =>
+        {
+            int[] argsp = new int[4];
+            for (int i = 0; i < 4; i++)
+            {
+                float.TryParse(args.AtOr(i, "5"), out var pres);
+                argsp[i] = (int)(pres * 40f);
+            }
+            bool startOn = trueStrings.Contains(args.AtOr(4, "1").ToLower());
+            return new Flicker(argsp[0], argsp[1], argsp[2], argsp[3], startOn);
+        });
+        AddNamedTrigger(new[] { "karma", "onkarma" }, (args, ha, rwg) => new OnKarma(rwg, args));
+        AddNamedTrigger(new[] { "visited", "playervisited", "playervisit" }, (args, ha, rwg) => new AfterVisit(rwg, args));
+        AddNamedTrigger(new[] { "fry", "fryafter" }, (args, ha, rwg) =>
+        {
+            float.TryParse(args.AtOr(0, "5"), out var lim);
+            float.TryParse(args.AtOr(1, "10"), out var cd);
+            return new Fry((int)(lim * 40f), (int)(cd * 40f));
+        });
+        AddNamedTrigger(new[] { "after", "afterother" }, (args, ha, rwg) =>
+        {
+            string other = args[0];
+            int.TryParse(args[1], out var delay);
+            return new AfterOther(ha, other, delay);
+        });
+        //todo: update docs to reflect shift to seconds in parameters rather than frames
+    }
+
+    internal static void RegisterBuiltinActions()
+    {
+        AddNamedAction(new[] { "playergrav", "playergravity" }, Make_Playergrav);
+        AddNamedAction(new[] { "sound", "playsound" }, Make_Sound);
+        AddNamedAction(new[] { "rumble", "screenshake" }, Make_Rumble);
+        AddNamedAction(new[] { "karma", "setkarma" }, Make_SetKarma);
+        AddNamedAction(new[] { "karmacap", "maxkarma", "setmaxkarma" }, Make_SetMaxKarma);
+        AddNamedAction(new[] { "log", "message" }, Make_LogCall);
+        AddNamedAction(new[] { "mark", "givemark" }, Make_GiveMark);
+        AddNamedAction(new[] { "raintimer", "setraintimer" }, Make_SetRainTimer);
+        //AddNamedAction(new[] { "music", "playmusic" }, Make_PlayMusic);
+        //AddNamedAction()
     }
     #region actions
 #warning contributor notice: actions
     //add your custom actions in methods here
-    //Use methods with the same structure. Don't forget to also add them to the switch above.
+    //Use methods with the same structure. Don't forget to also add them to the inst method above.
     //Do not remove the warning directive.
     private static void Make_PlayMusic(Happen ha, string[] args)
     {
 #warning unfinished
-        if (args.Length == 0) { inst.Plog.LogWarning($"Happen {ha.name}: music action: " +
-            $"No arguments provided to Music action! won't do anything"); return; }
+        if (args.Length == 0)
+        {
+            inst.Plog.LogWarning($"Happen {ha.name}: music action: " +
+            $"No arguments provided to Music action! won't do anything"); return;
+        }
         string songname = args[0];
         float
             prio = 0.5f,
@@ -114,7 +150,7 @@ internal static partial class HappenBuilding
     {
         bool enabled = true;
         if (falseStrings.Contains(args.AtOr(0, "true").ToLower())) enabled = false;
-        ha.On_Init += (w) => 
+        ha.On_Init += (w) =>
         {
             var dspd = w.game.GetStorySession?.saveState.deathPersistentSaveData;
             if (dspd is null) return;
