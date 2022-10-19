@@ -21,7 +21,6 @@ internal static partial class HappenBuilding
 {
     internal static void InitBuiltins()
     {
-
         foreach (Action initfun in new[] { RegisterBuiltinActions, RegisterBuiltinTriggers })
         {
             try
@@ -36,7 +35,7 @@ internal static partial class HappenBuilding
             }
         }
     }
-    internal static void RegisterBuiltinTriggers()
+    private static void RegisterBuiltinTriggers()
     {
         AddNamedTrigger(new[] { "always" }, (args, ha, rwg) => new Always());
         AddNamedTrigger(new[] { "untilrain", "beforerain" }, (args, ha, rwg) =>
@@ -87,7 +86,7 @@ internal static partial class HappenBuilding
         //todo: update docs to reflect shift to seconds in parameters rather than frames
     }
 
-    internal static void RegisterBuiltinActions()
+    private static void RegisterBuiltinActions()
     {
         AddNamedAction(new[] { "playergrav", "playergravity" }, Make_Playergrav);
         AddNamedAction(new[] { "sound", "playsound" }, Make_Sound);
@@ -95,7 +94,8 @@ internal static partial class HappenBuilding
         AddNamedAction(new[] { "karma", "setkarma" }, Make_SetKarma);
         AddNamedAction(new[] { "karmacap", "maxkarma", "setmaxkarma" }, Make_SetMaxKarma);
         AddNamedAction(new[] { "log", "message" }, Make_LogCall);
-        AddNamedAction(new[] { "mark", "givemark" }, Make_GiveMark);
+        AddNamedAction(new[] { "mark", "themark" }, Make_Mark);
+        AddNamedAction(new[] { "glow", "theglow" }, Make_Glow);
         AddNamedAction(new[] { "raintimer", "setraintimer" }, Make_SetRainTimer);
         //AddNamedAction(new[] { "music", "playmusic" }, Make_PlayMusic);
         //AddNamedAction()
@@ -146,10 +146,23 @@ internal static partial class HappenBuilding
             w.game.manager.musicPlayer?.GameRequestsSong(mev);
         };
     }
-    private static void Make_GiveMark(Happen ha, string[] args)
+    private static void Make_Glow(Happen ha, string[] args)
     {
         bool enabled = true;
         if (falseStrings.Contains(args.AtOr(0, "true").ToLower())) enabled = false;
+        else if (trueStrings.Contains(args.AtOr(0, "true").ToLower())) enabled = true;
+        ha.On_Init += (w) =>
+        {
+            var dspd = w.game.GetStorySession?.saveState;//./deathPersistentSaveData;
+            if (dspd is null) return;
+            dspd.theGlow = enabled;
+        };
+    }
+    private static void Make_Mark(Happen ha, string[] args)
+    {
+        bool enabled = true;
+        if (falseStrings.Contains(args.AtOr(0, "true").ToLower())) enabled = false;
+        else if (trueStrings.Contains(args.AtOr(0, "true").ToLower())) enabled = true;
         ha.On_Init += (w) =>
         {
             var dspd = w.game.GetStorySession?.saveState.deathPersistentSaveData;
