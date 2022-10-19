@@ -119,7 +119,6 @@ public sealed partial class Atmod : BaseUnityPlugin
         var haps = CurrentSet.GetHappensForRoom(self.abstractRoom.name);
         foreach (var ha in haps)
         {
-            //Logger.LogDebug($"update {ha} ({haps.Count()})");
             try
             {
                 if (ha.Active)
@@ -173,31 +172,28 @@ public sealed partial class Atmod : BaseUnityPlugin
             On.Room.Update -= RunHappensRealUpd;
             On.RainWorldGame.Update -= DoBodyUpdates;
             On.AbstractRoom.Update -= RunHappensAbstUpd;
-            var logger = BepInEx.Logging.Logger.CreateLogSource("Atmo_Cleanup");
+            var logger = BepInEx.Logging.Logger.CreateLogSource("Atmo_Purge");
             System.Diagnostics.Stopwatch sw = new();
             sw.Start();
             logger.LogMessage("Spooling cleanup thread.");
             System.Threading.ThreadPool.QueueUserWorkItem((_) =>
             {
-                using (logger)
+                foreach (var t in typeof(Atmod).Assembly.GetTypes())
                 {
-                    foreach (var t in typeof(Atmod).Assembly.GetTypes())
+                    try { t.CleanupStatic(); }
+                    catch (Exception ex)
                     {
-                        try { t.CleanupStatic(); }
-                        catch (Exception ex)
-                        {
-                            logger.LogError($"{t}: Error cleaning up static fields:" +
-                                $"\n{ex}");
-                        }
+                        logger.LogError($"{t}: Error cleaning up static fields:" +
+                            $"\n{ex}");
                     }
-                    sw.Stop();
-                    logger.LogMessage($"Finished statics cleanup: {sw.Elapsed}");
-                };
+                }
+                sw.Stop();
+                logger.LogMessage($"Finished statics cleanup: {sw.Elapsed}");
             });
         }
         catch (Exception ex)
         {
-            Logger.LogError($"Error on disable!\n{ex}");
+            Logger.LogFatal($"Error on disable!\n{ex}");
         }
         finally
         {
