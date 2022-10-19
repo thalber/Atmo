@@ -139,7 +139,6 @@ namespace Atmo
                 field.SetValue(to, field.GetValue(from), context, null, System.Globalization.CultureInfo.CurrentCulture);
             }
         }
-
         public static void CleanupStatic(this Type t)
         {
             foreach (var field in t.GetFields(allContextsStatic)) if (!field.FieldType.IsValueType)

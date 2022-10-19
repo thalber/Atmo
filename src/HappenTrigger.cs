@@ -67,7 +67,6 @@ public abstract partial class HappenTrigger
         public Always() : base(null)
         {
         }
-
         public override bool ShouldRunUpdates() => true;
     }
     /// <summary>

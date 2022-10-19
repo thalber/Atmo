@@ -50,7 +50,7 @@ internal static partial class HappenBuilding
             {
                 inst.Plog.LogError(
                     $"Happenbuild: NewEvent:" +
-                    $"Error invoking event factory {cb}//{cb?.Method.Name} for {ha}:" +
+                    $"Error invoking happen factory {cb}//{cb?.Method.Name} for {ha}:" +
                     $"\n{ex}");
             }
         }
