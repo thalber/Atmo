@@ -266,7 +266,7 @@ internal static partial class HappenBuilding
             return;
         }
 
-        int cooldown = -1,
+        int cooldown = 40,
             limit = int.MaxValue;
         float
             vol = 1f,
@@ -298,7 +298,7 @@ internal static partial class HappenBuilding
                     break;
             }
         }
-        int counter = 0;
+        int counter = 1;
         ha.On_RealUpdate += (room) =>
         {
             if (counter != 0) return;
@@ -309,7 +309,7 @@ internal static partial class HappenBuilding
                 {
                     var em = room.PlaySound(soundid, p.firstChunk, false, vol, pitch);
                     counter = cooldown;
-                    limit++;
+                    limit--;
                     return;
                 }
             }
