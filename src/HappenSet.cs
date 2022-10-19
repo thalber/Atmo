@@ -28,6 +28,27 @@ public sealed class HappenSet
         HappenParser.Parse(file, this, rwg);
     }
     //todo: add GetRoomsForEvent
+
+    public IEnumerable<string> GetRoomsForHappen(Happen ha)
+    {
+        List<string> returned = new();
+        var excludes = SpecificExcludeToHappens.IndexFromRight(ha);
+        var includes = SpecificIncludeToHappens.IndexFromRight(ha);
+        foreach (string group in GroupsToHappens.IndexFromRight(ha))
+        {
+            foreach (string room in RoomsToGroups.IndexFromRight(group))
+            {
+                if (excludes.Contains(room)) break;
+                //if (SpecificExcludeToHappens.IndexFromRight(ha).Contains(room)) continue;
+                returned.Add(room);
+                yield return room;
+            }
+        }
+        foreach (var room in includes)
+        {
+            if (!returned.Contains(room)) yield return room;
+        }
+    }
     public IEnumerable<Happen> GetHappensForRoom(string roomname)
     {
         List<Happen> returned = new();
@@ -39,11 +60,9 @@ public sealed class HappenSet
             foreach (var ha in GroupsToHappens.IndexFromLeft(group))
             {
                 //exclude the minused
-                if (SpecificExcludeToHappens.RightContains(ha) 
-                    && SpecificExcludeToHappens.IndexFromRight(ha)
+                if (SpecificExcludeToHappens.IndexFromRight(ha)
                     .Contains(roomname)) continue;
                 returned.Add(ha);
-                
                 yield return ha;
             }
         }
@@ -55,10 +74,40 @@ public sealed class HappenSet
         }
     }
 
-    //public IEnumerable<string> GetRoomsForHappen(Happen ha)
-    //{
-
-    //}
+    #region insertion
+    public void AddGrouping(Happen ha, IEnumerable<string> groups)
+    {
+        if (groups?.Count() is null or 0) return;
+        GroupsToHappens.AddLinksBulk(groups.Select(gr => new KeyValuePair<string, Happen>(gr, ha)));
+    }
+    public void AddExcludes(Happen ha, IEnumerable<string> excl)
+    {
+        if (excl?.Count() is null or 0) return;
+        foreach (var ex in excl) SpecificExcludeToHappens.AddLink(ex, ha);
+    }
+    public void AddIncludes(Happen ha, IEnumerable<string> incl)
+    {
+        if (incl?.Count() is null or 0) return;
+        foreach (var @in in incl) SpecificIncludeToHappens.AddLink(@in, ha);
+    }
+    public void InsertGroups(IDictionary<string, List<string>> groups)
+    {
+        RoomsToGroups.InsertRangeRight(groups.Keys);
+        GroupsToHappens.InsertRangeLeft(groups.Keys);
+        foreach (var kvp in groups)
+        {
+            RoomsToGroups.InsertRangeLeft(kvp.Value);
+            foreach (var room in kvp.Value) { RoomsToGroups.AddLink(room, kvp.Key); }
+        }
+    }
+    public void InsertHappens(IEnumerable<Happen> haps)
+    {
+        AllHappens.AddRange(haps);
+        GroupsToHappens.InsertRangeRight(haps);
+        SpecificExcludeToHappens.InsertRangeRight(haps);
+        SpecificIncludeToHappens.InsertRangeRight(haps);
+    }
+    #endregion
     /// <summary>
     /// Yields performance records for all happens. Consume or discard the enumerable on the same frame.
     /// </summary>
@@ -110,6 +159,7 @@ public sealed class HappenSet
                 }
             }
             return res;
+            
         }
         catch (Exception ex)
         {

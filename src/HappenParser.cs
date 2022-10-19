@@ -42,7 +42,7 @@ internal class HappenParser
     #endregion fields
     internal HappenParser(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
     {
-        inst.Plog.LogDebug($"ParseHappen: booting for file: {file.FullName}");
+        inst.Plog.LogDebug($"HappenParse: booting for file: {file.FullName}");
         allLines = IO.File.ReadAllLines(file.FullName, Encoding.UTF8);
         this.file = file;
         this.set = set;
@@ -64,15 +64,15 @@ internal class HappenParser
                         if (group_que.Success)
                         {
                             cGroup = cline.Substring(group_que.Length);
-                            inst.Plog.LogDebug($"ParseHappen: Beginning group block: {cGroup}");
+                            inst.Plog.LogDebug($"HappenParse: Beginning group block: {cGroup}");
                             phase = ParsePhase.Group;
                         }
                         else if (happn_que.Success)
                         {
                             cHapp = new(cline.Substring(happn_que.Length));
-                            inst.Plog.LogDebug($"ParseHappen: Beginning happen block: {cHapp.name}");
+                            inst.Plog.LogDebug($"HappenParse: Beginning happen block: {cHapp.name}");
                             phase = ParsePhase.Happen;
-                            
+
                         }
                     }
                     break;
@@ -93,12 +93,12 @@ internal class HappenParser
         }
         catch (Exception ex)
         {
-            inst.Plog.LogError($"ParseHappen: Irrecoverable error:" +
+            inst.Plog.LogError($"HappenParse: Irrecoverable error:" +
                 $"\n{ex}" +
                 $"\nAborting");
             aborted = true;
         }
-        stop:
+    stop:
         index++;
     }
     private void ParseGroup()
@@ -262,36 +262,48 @@ internal class HappenParser
         {
             p.Advance();
         }
+        set.InsertGroups(p.allGroupContents);
+        //foreach (KeyValuePair<string, List<string>> gc in p.allGroupContents)
+        //{
+        //    set.RoomsToGroups.InsertRight(gc.Key);
+        //    set.RoomsToGroups.InsertRangeLeft(gc.Value);
+        //    foreach (string rm in gc.Value) set.RoomsToGroups.AddLink(rm, gc.Key);
+        //    set.GroupsToHappens.InsertLeft(gc.Key);
+        //}
+        //var finalHappens = p.retrievedHappens.Select(x => new KeyValuePair<HappenConfig, Happen>(x, new Happen(x, set, rwg)));
+        //set.InsertHappens(finalHappens.Select(x => x.Value));
+        foreach (HappenConfig cfg in p.retrievedHappens)
+        {
+            var ha = new Happen(cfg, set, rwg);
+            set.InsertHappens(new[] { ha });
+            set.AddGrouping(ha, cfg.groups);
+            set.AddExcludes(ha, cfg.exclude);
+            set.AddIncludes(ha, cfg.include);
 
-        foreach (KeyValuePair<string, List<string>> gc in p.allGroupContents)
-        {
-            set.RoomsToGroups.InsertRight(gc.Key);
-            set.RoomsToGroups.InsertRangeLeft(gc.Value);
-            foreach (string rm in gc.Value) set.RoomsToGroups.AddLink(rm, gc.Key);
-            set.GroupsToHappens.InsertLeft(gc.Key);
+            //inst.Plog.LogDebug($"{ha.name}, {set.GetRoomsForHappen(ha).Aggregate(Utils.JoinWithComma)}");
         }
-        foreach (HappenConfig hac in p.retrievedHappens)
-        {
-            Happen ha = new(hac, set, rwg);
-            set.AllHappens.Add(ha);
-            set.GroupsToHappens.InsertRight(ha);
-            foreach (string g in hac.groups)
-            {
-                set.GroupsToHappens.AddLink(g, ha);
-            }
-            if ((hac.include?.Count ?? 0) > 0)
-            {
-                set.SpecificIncludeToHappens.InsertRangeLeft(hac.include);
-                set.SpecificIncludeToHappens.InsertRight(ha);
-                foreach (var incl in hac.include) set.SpecificIncludeToHappens.AddLink(incl, ha);
-            }
-            if ((hac.exclude?.Count ?? 0) > 0)
-            {
-                set.SpecificExcludeToHappens.InsertRangeLeft(hac.exclude);
-                set.SpecificExcludeToHappens.InsertRight(ha);
-                foreach (var excl in hac.exclude) set.SpecificExcludeToHappens.AddLink(excl, ha);
-            }
-        }
+        //foreach (HappenConfig hac in p.retrievedHappens)
+        //{
+        //    Happen ha = new(hac, set, rwg);
+        //    set.AllHappens.Add(ha);
+        //    set.GroupsToHappens.InsertRight(ha);
+        //    foreach (string g in hac.groups)
+        //    {
+        //        set.GroupsToHappens.AddLink(g, ha);
+        //    }
+        //    if ((hac.include?.Count ?? 0) > 0)
+        //    {
+        //        set.SpecificIncludeToHappens.InsertRangeLeft(hac.include);
+        //        set.SpecificIncludeToHappens.InsertRight(ha);
+        //        foreach (var incl in hac.include) set.SpecificIncludeToHappens.AddLink(incl, ha);
+        //    }
+        //    if ((hac.exclude?.Count ?? 0) > 0)
+        //    {
+        //        set.SpecificExcludeToHappens.InsertRangeLeft(hac.exclude);
+        //        set.SpecificExcludeToHappens.InsertRight(ha);
+        //        foreach (var excl in hac.exclude) set.SpecificExcludeToHappens.AddLink(excl, ha);
+        //    }
+        //}
     }
     static HappenParser()
     {
