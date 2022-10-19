@@ -173,22 +173,21 @@ public sealed partial class Atmod : BaseUnityPlugin
             On.Room.Update -= RunHappensRealUpd;
             On.RainWorldGame.Update -= DoBodyUpdates;
             On.AbstractRoom.Update -= RunHappensAbstUpd;
-
+            var logger = BepInEx.Logging.Logger.CreateLogSource("Atmo_Cleanup");
+            System.Diagnostics.Stopwatch sw = new();
+            sw.Start();
+            logger.LogMessage("Spooling cleanup thread.");
             System.Threading.ThreadPool.QueueUserWorkItem((_) =>
             {
-                using (var logger = BepInEx.Logging.Logger.CreateLogSource("Atmo_Cleanup"))
+                using (logger)
                 {
-                    System.Diagnostics.Stopwatch sw = new();
-                    sw.Start();
-                    logger.LogMessage("Starting.");
                     foreach (var t in typeof(Atmod).Assembly.GetTypes())
                     {
-                        try
+                        try { t.CleanupStatic(); }
+                        catch (Exception ex)
                         {
-                            t.CleanupStatic();
-                        }
-                        catch (Exception ex) {
-                            logger.LogError(ex);
+                            logger.LogError($"{t}: Error cleaning up static fields:" +
+                                $"\n{ex}");
                         }
                     }
                     sw.Stop();
