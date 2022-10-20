@@ -134,15 +134,15 @@ public sealed class HappenSet
                 var data = kvp.Value;
                 //skip inactive
                 if (!active.ContainsKey(name)) continue;
-                inst.Plog.LogDebug($"Checking regpack {name}...");
                 var tarpath = CRS.API.BuildPath(
-                    regionPackFolder: name,
+                    regionPackFolder: data.folderName,
                     folderName: "World",
                     regionID: world.name,
                     file: $"{world.name}.atmo",
                     folder: IO.Path.Combine("Regions", world.name),
                     includeRoot: true);
                 var tarfile = new IO.FileInfo(tarpath);
+                inst.Plog.LogDebug($"Checking regpack {name} (path {tarpath})");
                 if (tarfile.Exists)
                 {
                     inst.Plog.LogDebug("Found a .atmo file, reading a happenset...");
@@ -182,7 +182,10 @@ public sealed class HappenSet
                 l.SpecificExcludeToHappens, 
                 r.SpecificExcludeToHappens),
         };
-        throw new NotImplementedException();
+        res.AllHappens.AddRange(l.AllHappens);
+        res.AllHappens.AddRange(r.AllHappens);
+        return res;
+        //throw new NotImplementedException();
     }
     #endregion statics
 }
