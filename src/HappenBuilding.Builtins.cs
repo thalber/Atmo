@@ -83,9 +83,9 @@ internal static partial class HappenBuilding
             int.TryParse(args[1], out var delay);
             return new AfterOther(ha, other, delay);
         });
+        AddNamedTrigger(new[] { "delay", "ondelay"}, (args, ha, rwg) => new AfterVisit(rwg, args));
         //todo: update docs to reflect shift to seconds in parameters rather than frames
     }
-
     private static void RegisterBuiltinActions()
     {
         AddNamedAction(new[] { "playergrav", "playergravity" }, Make_Playergrav);
@@ -97,6 +97,7 @@ internal static partial class HappenBuilding
         AddNamedAction(new[] { "mark", "themark" }, Make_Mark);
         AddNamedAction(new[] { "glow", "theglow" }, Make_Glow);
         AddNamedAction(new[] { "raintimer", "setraintimer" }, Make_SetRainTimer);
+        AddNamedAction(new[] { "palette", "changepalette" }, Make_ChangePalette);
         //AddNamedAction(new[] { "music", "playmusic" }, Make_PlayMusic);
         //AddNamedAction()
     }
@@ -355,5 +356,47 @@ internal static partial class HappenBuilding
             room.ScreenMovement(null, RND.insideUnitCircle * intensity, shake);
         };
     }
+    private static void Make_ChangePalette(Happen ha, string[] args)
+    {
+        int.TryParse(args.AtOr(0, "15"), out var pal);
+        string[] lastRoomPerCam = null;
+        ha.On_RealUpdate += (rm) =>
+        {
+            if (lastRoomPerCam is null) return;
+            for (int i = 0; i < lastRoomPerCam.Length; i++)
+            {
+                var cam = rm.game.cameras[i];
+                if (cam.room != rm || !rm.BeingViewed || cam.AboutToSwitchRoom) continue;
+                if (cam.room.abstractRoom.name != lastRoomPerCam[i])
+                {
+                    cam.ChangeMainPalette(pal);
+                    inst.Plog.LogDebug("changing palette");
+                }
+            }
+        };
+        ha.On_CoreUpdate += (rwg) =>
+        {
+            if (lastRoomPerCam is null) lastRoomPerCam = new string[rwg.cameras.Length];
+            else for (int i = 0; i < rwg.cameras.Length; i++)
+                {
+                    lastRoomPerCam[i] = rwg.cameras[i].room.abstractRoom.name;
+                }
+        };
+    }
+    //private class palchanger : UAD
+    //{
+    //    private bool done = false;
+    //    internal int pal = 15;
+    //    public override void Update(bool eu)
+    //    {
+    //        if (!done)
+    //        {
+    //            foreach (var cam in room.game.cameras)
+    //            {
+    //                if (cam.room == room) cam.ChangeMainPalette(pal);
+    //            }
+    //        }
+    //    }
+    //}
     #endregion
 }
