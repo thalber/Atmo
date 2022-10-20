@@ -12,7 +12,6 @@ using TXT = System.Text.RegularExpressions;
 namespace Atmo;
 public sealed class HappenSet
 {
-    //todo: unify adding items to multiple pools
     #region fields
     private RainWorldGame rwg;
     internal TwoPools<string, string> RoomsToGroups = new();
@@ -27,8 +26,6 @@ public sealed class HappenSet
         if (file is null) return;
         HappenParser.Parse(file, this, rwg);
     }
-    //todo: add GetRoomsForEvent
-
     public IEnumerable<string> GetRoomsForHappen(Happen ha)
     {
         List<string> returned = new();
@@ -73,7 +70,6 @@ public sealed class HappenSet
             if (!returned.Contains(ha)) yield return ha;
         }
     }
-
     #region insertion
     public void AddGrouping(Happen ha, IEnumerable<string> groups)
     {
@@ -83,11 +79,13 @@ public sealed class HappenSet
     public void AddExcludes(Happen ha, IEnumerable<string> excl)
     {
         if (excl?.Count() is null or 0) return;
+        SpecificExcludeToHappens.InsertRangeLeft(excl);
         foreach (var ex in excl) SpecificExcludeToHappens.AddLink(ex, ha);
     }
     public void AddIncludes(Happen ha, IEnumerable<string> incl)
     {
         if (incl?.Count() is null or 0) return;
+        SpecificIncludeToHappens.InsertRangeLeft(incl);
         foreach (var @in in incl) SpecificIncludeToHappens.AddLink(@in, ha);
     }
     public void InsertGroups(IDictionary<string, List<string>> groups)
@@ -128,7 +126,6 @@ public sealed class HappenSet
         #else 
         try
         {
-            var pl = inst.Plog;
             var packs = CRS.API.InstalledPacks;
             var active = CRS.API.ActivatedPacks;
             foreach (KeyValuePair<string, CRS.CustomWorldStructs.RegionPack> kvp in packs)
@@ -148,18 +145,17 @@ public sealed class HappenSet
                 var tarfile = new IO.FileInfo(tarpath);
                 if (tarfile.Exists)
                 {
-                    pl.LogDebug("Found a .atmo file, reading a happenset...");
+                    inst.Plog.LogDebug("Found a .atmo file, reading a happenset...");
                     HappenSet gathered = new(world.game, tarfile);
                     if (res is null) res = gathered;
                     else res += gathered;
                 }
                 else
                 {
-                    pl.LogDebug("No XX.atmo file found.");
+                    inst.Plog.LogDebug("No XX.atmo file found.");
                 }
             }
             return res;
-            
         }
         catch (Exception ex)
         {
@@ -173,10 +169,18 @@ public sealed class HappenSet
     {
         HappenSet res = new(l.rwg ?? r.rwg)
         {
-            SpecificIncludeToHappens = TwoPools<string, Happen>.Stitch(l.SpecificIncludeToHappens, r.SpecificIncludeToHappens),
-            RoomsToGroups = TwoPools<string, string>.Stitch(l.RoomsToGroups, r.RoomsToGroups),
-            GroupsToHappens = TwoPools<string, Happen>.Stitch(l.GroupsToHappens, r.GroupsToHappens),
-            SpecificExcludeToHappens = TwoPools<string, Happen>.Stitch(l.SpecificExcludeToHappens, r.SpecificExcludeToHappens),
+            SpecificIncludeToHappens = TwoPools<string, Happen>.Stitch(
+                l.SpecificIncludeToHappens, 
+                r.SpecificIncludeToHappens),
+            RoomsToGroups = TwoPools<string, string>.Stitch(
+                l.RoomsToGroups, 
+                r.RoomsToGroups),
+            GroupsToHappens = TwoPools<string, Happen>.Stitch(
+                l.GroupsToHappens, 
+                r.GroupsToHappens),
+            SpecificExcludeToHappens = TwoPools<string, Happen>.Stitch(
+                l.SpecificExcludeToHappens, 
+                r.SpecificExcludeToHappens),
         };
         throw new NotImplementedException();
     }
