@@ -103,16 +103,22 @@ public static class API
         lc_CoreUpdate? cu = null,
         bool ignoreCase = true)
     {
+        StringComparer comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
         if (namedActions.ContainsKey(name)) { return false; }
         Create_RawHappenBuilder newCb = (ha) =>
         {
-            if (ha.actions.ContainsKey(ignoreCase ? name.ToLower() : name))
+            foreach (var ac in ha.actions.Keys)
             {
-                ha.On_AbstUpdate += au;
-                ha.On_RealUpdate += ru;
-                ha.On_Init += oi;
-                ha.On_CoreUpdate += cu;
+                if (comp.Compare(ac, name) == 0)
+                {
+                    ha.On_AbstUpdate += au;
+                    ha.On_RealUpdate += ru;
+                    ha.On_Init += oi;
+                    ha.On_CoreUpdate += cu;
+                    return;
+                }
             }
+
         };
         namedActions.Add(name, newCb);
         EV_MakeNewHappen += newCb;
@@ -144,9 +150,19 @@ public static class API
         Create_NamedHappenBuilder builder,
         bool ignoreCase = true)
     {
+        StringComparer comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
         if (namedTriggers.ContainsKey(name)) { return false; }
         Create_RawHappenBuilder newCb =
-            (ha) => { if (ha.actions.ContainsKey(ignoreCase ? name.ToLower() : name)) builder?.Invoke(ha, ha.actions[name]); };
+            (ha) =>
+            {
+                foreach (KeyValuePair<string, string[]> ac in ha.actions)
+                {
+                    if (comp.Compare(ac.Key, name) == 0)
+                    {
+                        builder?.Invoke(ha, ac.Value);
+                    }
+                }
+            };
         namedActions.Add(name, newCb);
         EV_MakeNewHappen += newCb;
         return true;
@@ -187,10 +203,12 @@ public static class API
         Create_NamedTriggerFactory fac,
         bool ignoreCase = true)
     {
-        if (namedTriggers.ContainsKey(ignoreCase ? name.ToLower() : name)) { return false; }
+        StringComparer comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
+
+        if (namedTriggers.ContainsKey(name)) { return false; }
         Create_RawTriggerFactory newCb = (n, args, rwg, ha) =>
         {
-            if (n == name) return fac(args, ha, rwg);
+            if (comp.Compare(n, name) == 0) return fac(args, ha, rwg);
             return null;
         };
         namedTriggers.Add(name, newCb);
