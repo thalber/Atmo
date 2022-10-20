@@ -133,7 +133,7 @@ internal class HappenParser
                         {
                             inst.Plog.LogDebug("HappenParse: Recognized WHERE clause");
                             WhereOps c = WhereOps.Group;
-                            string[] items = TXT.Regex.Split(payload, "[\\s\\t]+");
+                            string[] items = TXT.Regex.Split(payload, "\\s+");
                             foreach (string i in items)
                             {
                                 if (i.Length == 0) continue;
@@ -263,15 +263,6 @@ internal class HappenParser
             p.Advance();
         }
         set.InsertGroups(p.allGroupContents);
-        //foreach (KeyValuePair<string, List<string>> gc in p.allGroupContents)
-        //{
-        //    set.RoomsToGroups.InsertRight(gc.Key);
-        //    set.RoomsToGroups.InsertRangeLeft(gc.Value);
-        //    foreach (string rm in gc.Value) set.RoomsToGroups.AddLink(rm, gc.Key);
-        //    set.GroupsToHappens.InsertLeft(gc.Key);
-        //}
-        //var finalHappens = p.retrievedHappens.Select(x => new KeyValuePair<HappenConfig, Happen>(x, new Happen(x, set, rwg)));
-        //set.InsertHappens(finalHappens.Select(x => x.Value));
         foreach (HappenConfig cfg in p.retrievedHappens)
         {
             var ha = new Happen(cfg, set, rwg);
@@ -279,31 +270,8 @@ internal class HappenParser
             set.AddGrouping(ha, cfg.groups);
             set.AddExcludes(ha, cfg.exclude);
             set.AddIncludes(ha, cfg.include);
-
-            //inst.Plog.LogDebug($"{ha.name}, {set.GetRoomsForHappen(ha).Aggregate(Utils.JoinWithComma)}");
+            
         }
-        //foreach (HappenConfig hac in p.retrievedHappens)
-        //{
-        //    Happen ha = new(hac, set, rwg);
-        //    set.AllHappens.Add(ha);
-        //    set.GroupsToHappens.InsertRight(ha);
-        //    foreach (string g in hac.groups)
-        //    {
-        //        set.GroupsToHappens.AddLink(g, ha);
-        //    }
-        //    if ((hac.include?.Count ?? 0) > 0)
-        //    {
-        //        set.SpecificIncludeToHappens.InsertRangeLeft(hac.include);
-        //        set.SpecificIncludeToHappens.InsertRight(ha);
-        //        foreach (var incl in hac.include) set.SpecificIncludeToHappens.AddLink(incl, ha);
-        //    }
-        //    if ((hac.exclude?.Count ?? 0) > 0)
-        //    {
-        //        set.SpecificExcludeToHappens.InsertRangeLeft(hac.exclude);
-        //        set.SpecificExcludeToHappens.InsertRight(ha);
-        //        foreach (var excl in hac.exclude) set.SpecificExcludeToHappens.AddLink(excl, ha);
-        //    }
-        //}
     }
     static HappenParser()
     {
