@@ -75,6 +75,9 @@ public sealed class HappenSet
 	public void AddGrouping(Happen ha, IEnumerable<string> groups)
 	{
 		if (groups?.Count() is null or 0) return;
+		Dictionary<string, List<string>> ins = new();
+		foreach (var g in groups) { ins.Add(g, new(0)); }
+		InsertGroups(ins);
 		GroupsToHappens.AddLinksBulk(groups.Select(gr => new KeyValuePair<string, Happen>(gr, ha)));
 	}
 	public void AddExcludes(Happen ha, IEnumerable<string> excl)
@@ -166,7 +169,6 @@ public sealed class HappenSet
 		}
 #endif
 	}
-	//todo: make sure plus works 
 	public static HappenSet operator +(HappenSet l, HappenSet r)
 	{
 		HappenSet res = new(l.world ?? r.world)
@@ -186,6 +188,11 @@ public sealed class HappenSet
 		};
 		res.AllHappens.AddRange(l.AllHappens);
 		res.AllHappens.AddRange(r.AllHappens);
+		foreach (var ha in res.AllHappens)
+		{
+			inst.Plog.LogDebug($"{ha.name}: switching ownership");
+			ha.set = res;
+		}
 		return res;
 		//throw new NotImplementedException();
 	}
