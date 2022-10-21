@@ -11,7 +11,7 @@ namespace Atmo;
 /// <summary>
 /// Main plugin class.
 /// </summary>
-[BepInPlugin("thalber.atmod", "Atmo", "0.3")]
+[BepInPlugin("thalber.atmod", "Atmo", "0.4")]
 public sealed partial class Atmod : BaseUnityPlugin
 {
 	#region fields
