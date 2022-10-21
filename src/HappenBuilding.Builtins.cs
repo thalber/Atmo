@@ -105,10 +105,10 @@ internal static partial class HappenBuilding
 	//add your custom actions in methods here
 	//Use methods with the same structure. Don't forget to also add them to the inst method above.
 	//Do not remove the warning directive.
-	private static void Make_PlayMusic(Happen ha, string[] rawargs)
+	private static void Make_PlayMusic(Happen ha, string[] argsraw)
 	{
 #warning unfinished
-		ArgCollection args = rawargs;
+		ArgSet args = new(argsraw);
 		if (args.Count == 0)
 		{
 			inst.Plog.LogWarning($"Happen {ha.name}: music action: " +
@@ -147,50 +147,37 @@ internal static partial class HappenBuilding
 			w.game.manager.musicPlayer?.GameRequestsSong(mev);
 		};
 	}
-	private static void Make_Glow(Happen ha, string[] rawargs)
+	private static void Make_Glow(Happen ha, string[] argsraw)
 	{
-		ArgCollection args = rawargs;
-		var enabled = true;
-		if (falseStrings.Contains(args.AtOr(0, "true").Str.ToLower())) enabled = false;
-		else if (trueStrings.Contains(args.AtOr(0, "true").Str.ToLower())) enabled = true;
+		ArgSet args = new(argsraw);
+		Arg enabled = args.AtOr(0, true);
 		ha.On_Init += (w) =>
 		{
 			var dspd = w.game.GetStorySession?.saveState;//./deathPersistentSaveData;
 			if (dspd is null) return;
-			dspd.theGlow = enabled;
+			dspd.theGlow = enabled.Bool;
 		};
 	}
-	private static void Make_Mark(Happen ha, string[] args)
+	private static void Make_Mark(Happen ha, string[] argsraw)
 	{
-		var enabled = true;
-		if (falseStrings.Contains(args.AtOr(0, "true").ToLower())) enabled = false;
-		else if (trueStrings.Contains(args.AtOr(0, "true").ToLower())) enabled = true;
+		ArgSet args = new(argsraw);
+		Arg enabled = args.AtOr(0, true);
 		ha.On_Init += (w) =>
 		{
 			var dspd = w.game.GetStorySession?.saveState.deathPersistentSaveData;
 			if (dspd is null) return;
-			dspd.theMark = enabled;
+			dspd.theMark = enabled.Bool;
 		};
 	}
-	private static void Make_LogCall(Happen ha, string[] args)
+	private static void Make_LogCall(Happen ha, string[] argsraw)
 	{
+		ArgSet args = new(argsraw);
 		//todo: revisit when variable support is here
 		List<string> output = new();
 		var sev = LOG.LogLevel.Debug;
-		foreach (var arg in args)
+		foreach (string key in new[] { "sev", "severity" })
 		{
-			string[] spl;
-			if ((spl = arg.Split('=')).Length == 2)
-			{
-				switch (spl[0])
-				{
-				case "severity":
-				case "level":
-				if (TryParseEnum(spl[1], out LOG.LogLevel ll)) sev = ll;
-				continue;
-				}
-				output.Add(arg);
-			}
+			if (args[key] is not null) TryParseEnum(args[key].Value.Str, out sev);
 		}
 		if (output.Count == 0) output.Add("[no message]");
 		var result = string.Concat(output.ToArray());
@@ -199,108 +186,88 @@ internal static partial class HappenBuilding
 			inst.Plog.Log(sev, result);
 		};
 	}
-	private static void Make_SetRainTimer(Happen ha, string[] args)
+	private static void Make_SetRainTimer(Happen ha, string[] argsraw)
 	{
-		int.TryParse(args.AtOr(0, "0"), out var target);
+		ArgSet args = new(argsraw);
+		var target = args.AtOr(0, 0);
+		//int.TryParse(args.AtOr(0, "0").Str, out var target);
 		ha.On_Init += (w) =>
 		{
-			w.rainCycle.timer = target;
+			w.rainCycle.timer = target.I32;
 		};
 	}
-	private static void Make_SetKarma(Happen ha, string[] args)
+	private static void Make_SetKarma(Happen ha, string[] argsraw)
 	{
+		ArgSet args = new(argsraw);
 		ha.On_Init += (w) =>
 		{
 			var dpsd = w.game?.GetStorySession?.saveState?.deathPersistentSaveData;
 			if (dpsd is null || w.game is null) return;
-			var ts = args.AtOr(0, "0");
-			var karma = dpsd.karma;
-			if (ts.StartsWith("+")) karma += int.Parse(ts.Substring(1));
-			else if (ts.StartsWith("-")) karma -= int.Parse(ts.Substring(1));
-			else karma = int.Parse(ts);
+			Arg ts = args.AtOr(0, 0);
+			int karma = dpsd.karma;
+			if (ts.Name is "add" or "+") karma += ts.I32;
+			else if (ts.Name is "sub" or "substract" or "-") karma -= ts.I32;
+			else karma = ts.I32;
 			karma = Clamp(karma, 0, 9);
 			dpsd.karma = karma;
-			foreach (var cam in w.game.cameras) { cam?.hud.karmaMeter?.UpdateGraphic(); }
+			foreach (RoomCamera cam in w.game.cameras) { cam?.hud.karmaMeter?.UpdateGraphic(); }
 		};
 	}
-	private static void Make_SetMaxKarma(Happen ha, string[] args)
+	private static void Make_SetMaxKarma(Happen ha, string[] argsraw)
 	{
+		ArgSet args = new(argsraw);
 		ha.On_Init += (w) =>
 		{
 			var dpsd = w.game?.GetStorySession?.saveState?.deathPersistentSaveData;
 			if (dpsd is null || w.game is null) return;
-			var ts = args.AtOr(0, "0");
+			Arg ts = args.AtOr(0, 0);
 			var cap = dpsd.karmaCap;
-			if (ts.StartsWith("+")) cap += int.Parse(ts.Substring(1));
-			else if (ts.StartsWith("-")) cap -= int.Parse(ts.Substring(1));
-			else cap = int.Parse(ts);
+			if (ts.Name is "add" or "+") cap += ts.I32;
+			else if (ts.Name is "sub" or "-") cap -= ts.I32;
+			else cap = ts.I32;
 			cap = Clamp(cap, 0, 9);
 			dpsd.karma = cap;
 			foreach (var cam in w.game.cameras) { cam?.hud.karmaMeter?.UpdateGraphic(); }
 		};
 	}
-	private static void Make_Playergrav(Happen ha, string[] args)
+	private static void Make_Playergrav(Happen ha, string[] argsraw)
 	{
-		float.TryParse(args.AtOr(0, "0.5"), out var frac);
+		ArgSet args = new(argsraw);
+		Arg frac = args.AtOr(0, 0);
+		//float.TryParse(args.AtOr(0, "0.5"), out var frac);
 		ha.On_RealUpdate += (room) =>
 		{
 			for (var i = 0; i < room.updateList.Count; i++)
 			{
 				var uad = room.updateList[i];
-				if (uad is Player p) p.gravity = frac;
+				if (uad is Player p) p.gravity = frac.F32;
 			}
 		};
 	}
-	private static void Make_Sound(Happen ha, string[] args)
+	private static void Make_Sound(Happen ha, string[] argsraw)
 	{
-		//todo: add a version that does not cut off with room transition...
-		if (args.Length == 0)
+		ArgSet args = new(argsraw);
+		if (args.Count == 0)
 		{
 			inst.Plog.LogError($"Happen {ha.name}: sound action: " +
 				$"No arguments provided.");
 			return;
 		}
 
-		if (!TryParseEnum(args[0], out SoundID soundid))
+		if (!TryParseEnum(args[0].Str, out SoundID soundid))
 		{
 			inst.Plog.LogError($"Happen {ha.name}: sound action: " +
 				$"Invalid SoundID ({args[0]})");
 			return;
 		}
 
-		int cooldown = 40,
-			limit = int.MaxValue;
+		int cooldown = args["cd", "cooldown"]?.I32 ?? 40,
+			limit = args["lim", "limit"]?.I32 ?? int.MaxValue;
 		float
-			vol = 1f,
-			pitch = 1f,
-			pan = 1f;
-		for (var i = 1; i < args.Length; i++)
-		{
-			var spl = TXT.Regex.Split(args[i], "=");
-			if (spl.Length != 2) continue;
-			switch (spl[0].ToLower())
-			{
-			case "cd":
-			case "cooldown":
-			int.TryParse(spl[1], out cooldown);
-			break;
-			case "vol":
-			case "volume":
-			float.TryParse(spl[1], out vol);
-			break;
-			case "pan":
-			float.TryParse(spl[1], out pan);
-			break;
-			case "pitch":
-			float.TryParse(spl[1], out pitch);
-			break;
-			case "lim":
-			case "limit":
-			int.TryParse(spl[1], out limit);
-			break;
-			}
-		}
-		var counter = 1;
+			vol = args["vol", "volume"]?.F32 ?? 0.5f,
+			pitch = args["pitch"]?.F32 ?? 1f,
+			pan = args["pan"]?.F32 ?? 1f;
+		int counter = 1;
 		ha.On_RealUpdate += (room) =>
 		{
 			if (counter != 0) return;
@@ -311,7 +278,7 @@ internal static partial class HappenBuilding
 				{
 					var em = room.PlaySound(soundid, p.firstChunk, false, vol, pitch);
 					counter = cooldown;
-					limit--;
+					limit --;
 					return;
 				}
 			}

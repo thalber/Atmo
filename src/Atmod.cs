@@ -35,6 +35,13 @@ public sealed partial class Atmod : BaseUnityPlugin
 	{
 		try
 		{
+			string[] argsraw = new[] { "1", "var1=true", "var2=15.2", "message=bruh" };
+			ArgSet args = new(argsraw);
+			Logger.LogWarning($"{args[0].Bool}/{args[0].I32}, " +
+				$"{args["var1"]?.Name}:{args["var1"]?.Bool}, " +
+				$"{args["var2"]?.Name}:{args["var2"]?.F32}, " +
+				$"{args["message"]?.Name}:{args[3].Str}");
+
 			On.AbstractRoom.Update += RunHappensAbstUpd;
 			On.RainWorldGame.Update += DoBodyUpdates;
 			On.Room.Update += RunHappensRealUpd;
