@@ -89,6 +89,7 @@ internal static partial class HappenBuilding
 	{
 		AddNamedAction(new[] { "playergrav", "playergravity" }, Make_Playergrav);
 		AddNamedAction(new[] { "sound", "playsound" }, Make_Sound);
+		AddNamedAction(new[] { "soundloop" }, Make_SoundLoop);
 		AddNamedAction(new[] { "rumble", "screenshake" }, Make_Rumble);
 		AddNamedAction(new[] { "karma", "setkarma" }, Make_SetKarma);
 		AddNamedAction(new[] { "karmacap", "maxkarma", "setmaxkarma" }, Make_SetMaxKarma);
@@ -105,6 +106,97 @@ internal static partial class HappenBuilding
 	//add your custom actions in methods here
 	//Use methods with the same structure. Don't forget to also add them to the inst method above.
 	//Do not remove the warning directive.
+	private static void Make_SoundLoop(Happen ha, string[] argsraw)
+	{
+		ArgSet args = new(argsraw);
+		if (args.Count == 0)
+		{
+			inst.Plog.LogError($"Happen {ha.name}: soundloop action: " +
+				$"No arguments provided.");
+			return;
+		}
+		if (!TryParseEnum(args[0].Str, out SoundID soundid))
+		{
+			inst.Plog.LogError($"Happen {ha.name}: soundloop action: " +
+				$"Invalid SoundID ({args[0]})");
+			return;
+		}
+		Arg
+			vol = args["vol", "volume"]?.F32 ?? 1f,
+			pitch = args["pitch"]?.F32 ?? 1f,
+			pan = args["pan"]?.F32 ?? 0f,
+			smStep = args["smoothenstep", "step"]?.F32 ?? 0.05f,
+			smLerp = args["smoothenlerp", "lerp"]?.F32 ?? 0.07f;
+		//id = RND.value;
+		Dictionary<string, List<int>> hashes = new();
+		ha.On_RealUpdate += (rm) =>
+		{
+			if (!hashes.TryGetValue(rm.abstractRoom.name, out var here))
+			{
+				hashes.Add(rm.abstractRoom.name, here = new());
+			}
+			for (int i = 0; i < rm.updateList.Count; i++)
+			{
+				UAD uad = rm.updateList[i];
+				if (uad is DisembodiedLoopEmitter dle && here.Contains(dle.GetHashCode()))
+				{
+					dle.soundStillPlaying = true;
+					dle.alive = true; 
+					return;
+				}
+			}
+			var dsl = rm.PlayDisembodiedLoop(soundid, vol.F32, pitch.F32, pan.F32);
+			here.Add(dsl.GetHashCode());
+		};
+		ha.On_AbstUpdate += (ar, t) =>
+		{
+			if (hashes.TryGetValue(ar.name, out var here) && ar.realizedRoom is null) here.Clear();
+		};
+	}
+	private static void Make_Sound(Happen ha, string[] argsraw)
+	{
+		ArgSet args = new(argsraw);
+		if (args.Count == 0)
+		{
+			inst.Plog.LogError($"Happen {ha.name}: sound action: " +
+				$"No arguments provided.");
+			return;
+		}
+
+		if (!TryParseEnum(args[0].Str, out SoundID soundid))
+		{
+			inst.Plog.LogError($"Happen {ha.name}: sound action: " +
+				$"Invalid SoundID ({args[0]})");
+			return;
+		}
+
+		int cooldown = args["cd", "cooldown"]?.I32 ?? 40,
+			limit = args["lim", "limit"]?.I32 ?? int.MaxValue;
+		float
+			vol = args["vol", "volume"]?.F32 ?? 0.5f,
+			pitch = args["pitch"]?.F32 ?? 1f,
+			pan = args["pan"]?.F32 ?? 1f;
+		int counter = 1;
+		ha.On_RealUpdate += (room) =>
+		{
+			if (counter != 0) return;
+			if (limit < 1) return;
+			for (var i = 0; i < room.updateList.Count; i++)
+			{
+				if (room.updateList[i] is Player p)
+				{
+					var em = room.PlaySound(soundid, p.firstChunk, false, vol, pitch);
+					counter = cooldown;
+					limit--;
+					return;
+				}
+			}
+		};
+		ha.On_CoreUpdate += (rwg) =>
+		{
+			if (counter > 0) counter--;
+		};
+	}
 	private static void Make_PlayMusic(Happen ha, string[] argsraw)
 	{
 #warning unfinished
@@ -244,50 +336,6 @@ internal static partial class HappenBuilding
 			}
 		};
 	}
-	private static void Make_Sound(Happen ha, string[] argsraw)
-	{
-		ArgSet args = new(argsraw);
-		if (args.Count == 0)
-		{
-			inst.Plog.LogError($"Happen {ha.name}: sound action: " +
-				$"No arguments provided.");
-			return;
-		}
-
-		if (!TryParseEnum(args[0].Str, out SoundID soundid))
-		{
-			inst.Plog.LogError($"Happen {ha.name}: sound action: " +
-				$"Invalid SoundID ({args[0]})");
-			return;
-		}
-
-		int cooldown = args["cd", "cooldown"]?.I32 ?? 40,
-			limit = args["lim", "limit"]?.I32 ?? int.MaxValue;
-		float
-			vol = args["vol", "volume"]?.F32 ?? 0.5f,
-			pitch = args["pitch"]?.F32 ?? 1f,
-			pan = args["pan"]?.F32 ?? 1f;
-		int counter = 1;
-		ha.On_RealUpdate += (room) =>
-		{
-			if (counter != 0) return;
-			if (limit < 1) return;
-			for (var i = 0; i < room.updateList.Count; i++)
-			{
-				if (room.updateList[i] is Player p)
-				{
-					var em = room.PlaySound(soundid, p.firstChunk, false, vol, pitch);
-					counter = cooldown;
-					limit --;
-					return;
-				}
-			}
-		};
-		ha.On_CoreUpdate += (rwg) =>
-		{
-			if (counter > 0) counter--;
-		};
-	}
 	private static void Make_Rumble(Happen ha, string[] args)
 	{
 		int cooldown = 200,
@@ -351,20 +399,5 @@ internal static partial class HappenBuilding
 				}
 		};
 	}
-	//private class palchanger : UAD
-	//{
-	//    private bool done = false;
-	//    internal int pal = 15;
-	//    public override void Update(bool eu)
-	//    {
-	//        if (!done)
-	//        {
-	//            foreach (var cam in room.game.cameras)
-	//            {
-	//                if (cam.room == room) cam.ChangeMainPalette(pal);
-	//            }
-	//        }
-	//    }
-	//}
 	#endregion
 }

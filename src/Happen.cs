@@ -70,7 +70,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		conditions?.Populate((id, args) =>
 		{
 			var nt = HappenBuilding.CreateTrigger(id, args, rwg, this);
-			//list_triggers.Add(nt);
+			list_triggers.Add(nt);
 			return nt.ShouldRunUpdates;
 		});
 		triggers = list_triggers.ToArray();
@@ -165,7 +165,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		try
 		{
 			Active = conditions?.Eval() ?? true;
-			foreach (var t in triggers) t.EvalResults(Active);
+			foreach (HappenTrigger t in triggers) t.EvalResults(Active);
 		}
 		catch (Exception ex)
 		{

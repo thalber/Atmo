@@ -41,8 +41,8 @@ public abstract partial class HappenTrigger
 	public virtual void EvalResults(bool res) { }
 
 	#region builtins
-#warning contributor notice: triggers
 #pragma warning disable CS1591
+#warning contributor notice: triggers
 	//Place your trigger classes here.
 	//Don't forget to register them in HappenBuilding.RegisterDefaultTriggers as well.
 	//Do not remove the warning directive.
@@ -233,11 +233,7 @@ public abstract partial class HappenTrigger
 			counter = 0;
 			active = true;
 		}
-		public override bool ShouldRunUpdates()
-		{
-			return active;
-		}
-
+		public override bool ShouldRunUpdates() => active;
 		public override void EvalResults(bool res)
 		{
 			if (active)
