@@ -67,10 +67,15 @@
 	    <Pack>True</Pack>
 	    <PackagePath>\</PackagePath>
 	  </None>
+	  <None Include="C:\Users\thalber\Documents\GitHub\Atmo\src\.editorconfig" />
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 	  <Exec Command="if defined RWMods (copy /Y &quot;$(TargetPath)&quot; &quot;%25RWMods%25&quot;)" />
 	</Target>
+
+	<ItemGroup>
+	  <EditorConfigFiles Remove="C:\Users\thalber\Documents\GitHub\Atmo\src\.editorconfig" />
+	</ItemGroup>
 	
 </Project>
