@@ -38,7 +38,8 @@ public sealed partial class Atmod : BaseUnityPlugin
             On.AbstractRoom.Update += RunHappensAbstUpd;
             On.RainWorldGame.Update += DoBodyUpdates;
             On.Room.Update += RunHappensRealUpd;
-            On.World.ctor += FetchHappenSet;
+            //On.World.ctor += FetchHappenSet;
+            On.World.LoadWorld += FetchHappenSet;
             HappenBuilding.InitBuiltins();
         }
         catch (Exception ex)
@@ -51,7 +52,21 @@ public sealed partial class Atmod : BaseUnityPlugin
         }
     }
 
+
     #region lifecycle
+    private void FetchHappenSet(On.World.orig_LoadWorld orig, World self, int slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates)
+    {
+        orig(self, slugcatNumber, abstractRoomsList, swarmRooms, shelters, gates);
+        if (self.singleRoomWorld) return;
+        try
+        {
+            CurrentSet = HappenSet.TryCreate(self);
+        }
+        catch (Exception e)
+        {
+            Logger.LogError($"Could not create a happenset: {e}");
+        }
+    }
     /// <summary>
     /// Sends an Update call to all events for loaded world
     /// </summary>
@@ -134,21 +149,19 @@ public sealed partial class Atmod : BaseUnityPlugin
         }
     }
     //todo: make sure everything works with region switching
-    private void FetchHappenSet(On.World.orig_ctor orig, World self, RainWorldGame game, Region region, string name, bool singleRoomWorld)
-    {
-        orig(self, game, region, name, singleRoomWorld);
-        if (singleRoomWorld) return;
-
-        //Logger.LogError("Fetching hapset!");
-        try
-        {
-            CurrentSet = HappenSet.TryCreate(self);
-        }
-        catch (Exception e)
-        {
-            Logger.LogError($"Could not create a happenset: {e}");
-        }
-    }
+    //private void FetchHappenSet(On.World.orig_ctor orig, World self, RainWorldGame game, Region region, string name, bool singleRoomWorld)
+    //{
+    //    orig(self, game, region, name, singleRoomWorld);
+    //    if (singleRoomWorld) return;
+    //    try
+    //    {
+    //        CurrentSet = HappenSet.TryCreate(self);
+    //    }
+    //    catch (Exception e)
+    //    {
+    //        Logger.LogError($"Could not create a happenset: {e}");
+    //    }
+    //}
     #endregion lifecycle
     public void Update()
     {

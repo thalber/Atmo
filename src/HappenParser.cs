@@ -14,7 +14,6 @@ internal class HappenParser
 {
     //god this is a mess
     //todo: find a way to make the parser less painful
-
     #region fields
     #region statfields
     private const TXT.RegexOptions options = TXT.RegexOptions.IgnoreCase;
@@ -22,13 +21,12 @@ internal class HappenParser
     private readonly static TXT.Regex roomsep = new TXT.Regex("[\\s\\t]*,[\\s\\t]*|[\\s\\t]+", options);
     private readonly static LineKind[] happenProps = new[] { LineKind.HappenWhere, LineKind.HappenWhen, LineKind.HappenWhat, LineKind.HappenEnd };
     #endregion statfields
-    private Dictionary<string, List<string>> allGroupContents = new();
+    private Dictionary<string, GroupContents> allGroupContents = new();
     private List<HappenConfig> retrievedHappens = new();
 
     private string[] allLines;
     private int index = 0;
     public bool done => aborted || index >= allLines.Length;
-
     private bool aborted;
     private IO.FileInfo file;
     private HappenSet set;
@@ -36,9 +34,9 @@ internal class HappenParser
     //private IO.StreamReader lines;
     private string cline;
     private ParsePhase phase = ParsePhase.None;
-    private string? cGroup = null;
     private HappenConfig cHapp;
-    private List<string> cGroupRooms = new();
+    private string? cGroupName = null;
+    private GroupContents cGroupContents = new();
     #endregion fields
     internal HappenParser(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
     {
@@ -63,8 +61,8 @@ internal class HappenParser
                     {
                         if (group_que.Success)
                         {
-                            cGroup = cline.Substring(group_que.Length);
-                            inst.Plog.LogDebug($"HappenParse: Beginning group block: {cGroup}");
+                            cGroupName = cline.Substring(group_que.Length);
+                            inst.Plog.LogDebug($"HappenParse: Beginning group block: {cGroupName}");
                             phase = ParsePhase.Group;
                         }
                         else if (happn_que.Success)
@@ -106,16 +104,32 @@ internal class HappenParser
         TXT.Match ge;
         if ((ge = LineMatchers[LineKind.GroupEnd].Match(cline)).Success && ge.Index == 0)
         {
-            inst.Plog.LogDebug($"ParseHappen: ending group: {cGroup}");
-            allGroupContents.Add(cGroup, cGroupRooms);
+            inst.Plog.LogDebug($"HappenParse: ending group: {cGroupName}");
+            inst.Plog.LogDebug($"{cGroupContents.matchers.Count}, {cGroupContents.rooms.Count}");
+            allGroupContents.Add(cGroupName, cGroupContents);
             ResetGroup();
             phase = ParsePhase.None;
+            return;
+        }
+        if (cline.Length > 4 && cline.StartsWith(":/") && cline.EndsWith("/:"))
+        {
+            try
+            {
+                cGroupContents.matchers.Add(new TXT.Regex(cline.Substring(2, cline.Length - 4)));
+                inst.Plog.LogDebug($"HappenParse: Created a regex matcher for: {cline}");
+            }
+            catch (Exception ex)
+            {
+                inst.Plog.LogWarning($"HappenParse: error creating a regular expression in group block!" +
+                    $"\n{ex}" +
+                    $"\nSource line: {cline}");
+            }
             return;
         }
         foreach (string ss in roomsep.Split(cline))
         {
             if (ss.Length is 0) continue;
-            cGroupRooms.Add(ss);
+            cGroupContents.rooms.Add(ss);
         }
     }
     private void ParseHappen()
@@ -210,10 +224,29 @@ internal class HappenParser
     }
     private void ResetGroup()
     {
-        cGroup = null;
-        cGroupRooms = new();
+        cGroupName = null;
+        cGroupContents = new();
     }
     #region nested
+    private struct GroupContents
+    {
+        internal List<string> rooms = new();
+        internal List<TXT.Regex> matchers = new();
+        public GroupContents()
+        {
+        }
+        public GroupContents Finalize(World w)
+        {
+            foreach (var matcher in matchers)
+            {
+                for (int i = 0; i < w.abstractRooms.Length; i++)
+                {
+                    if (matcher.IsMatch(w.abstractRooms[i].name)) rooms.Add(w.abstractRooms[i].name);
+                }
+            }
+            return this;
+        }
+    }
     private enum WhereOps
     {
         Group,
@@ -262,7 +295,13 @@ internal class HappenParser
         {
             p.Advance();
         }
-        set.InsertGroups(p.allGroupContents);
+        Dictionary<string, List<string>> groupsFinal = new();
+        foreach (KeyValuePair<string, GroupContents> groupPre in p.allGroupContents)
+        {
+            GroupContents fin = groupPre.Value.Finalize(set.world);
+            groupsFinal.Add(groupPre.Key, fin.rooms);
+        }
+        set.InsertGroups(groupsFinal);
         foreach (HappenConfig cfg in p.retrievedHappens)
         {
             var ha = new Happen(cfg, set, rwg);
@@ -270,7 +309,6 @@ internal class HappenParser
             set.AddGrouping(ha, cfg.groups);
             set.AddExcludes(ha, cfg.exclude);
             set.AddIncludes(ha, cfg.include);
-            
         }
     }
     static HappenParser()

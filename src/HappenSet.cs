@@ -13,17 +13,19 @@ namespace Atmo;
 public sealed class HappenSet
 {
     #region fields
-    private RainWorldGame rwg;
+    internal readonly RainWorldGame rwg;
+    internal readonly World world;
     internal TwoPools<string, string> RoomsToGroups = new();
     internal TwoPools<string, Happen> GroupsToHappens = new();
     internal TwoPools<string, Happen> SpecificIncludeToHappens = new();
     internal TwoPools<string, Happen> SpecificExcludeToHappens = new();
     internal readonly List<Happen> AllHappens = new();
     #endregion
-    private HappenSet(RainWorldGame rwg, IO.FileInfo? file = null)
+    private HappenSet(World world, IO.FileInfo? file = null)
     {
-        this.rwg = rwg;
-        if (file is null) return;
+        this.world = world;
+        rwg = world.game;
+        if (world is null || file is null) return;
         HappenParser.Parse(file, this, rwg);
     }
     public IEnumerable<string> GetRoomsForHappen(Happen ha)
@@ -146,7 +148,7 @@ public sealed class HappenSet
                 if (tarfile.Exists)
                 {
                     inst.Plog.LogDebug("Found a .atmo file, reading a happenset...");
-                    HappenSet gathered = new(world.game, tarfile);
+                    HappenSet gathered = new(world, tarfile);
                     if (res is null) res = gathered;
                     else res += gathered;
                 }
@@ -167,7 +169,7 @@ public sealed class HappenSet
     //todo: make sure plus works 
     public static HappenSet operator +(HappenSet l, HappenSet r)
     {
-        HappenSet res = new(l.rwg ?? r.rwg)
+        HappenSet res = new(l.world ?? r.world)
         {
             SpecificIncludeToHappens = TwoPools<string, Happen>.Stitch(
                 l.SpecificIncludeToHappens, 
