@@ -15,10 +15,10 @@ internal class HappenParser
 	//todo: find a way to make the parser less painful
 	#region fields
 	#region statfields
-	private const TXT.RegexOptions options = TXT.RegexOptions.IgnoreCase;
-	private readonly static Dictionary<LineKind, TXT.Regex> LineMatchers;
-	private readonly static TXT.Regex roomsep = new("[\\s\\t]*,[\\s\\t]*|[\\s\\t]+", options);
-	private readonly static LineKind[] happenProps = new[] { LineKind.HappenWhere, LineKind.HappenWhen, LineKind.HappenWhat, LineKind.HappenEnd };
+	private const TXT.RegexOptions Options = TXT.RegexOptions.IgnoreCase;
+	private static readonly Dictionary<LineKind, TXT.Regex> LineMatchers;
+	private static readonly TXT.Regex roomsep = new("[\\s\\t]*,[\\s\\t]*|[\\s\\t]+", Options);
+	private static readonly LineKind[] happenProps = new[] { LineKind.HappenWhere, LineKind.HappenWhen, LineKind.HappenWhat, LineKind.HappenEnd };
 	#endregion statfields
 	private Dictionary<string, GroupContents> allGroupContents = new();
 	private List<HappenConfig> retrievedHappens = new();
@@ -277,15 +277,15 @@ internal class HappenParser
 	{
 		return lk switch
 		{
-			LineKind.Comment => new TXT.Regex("//", options),
-			LineKind.HappenWhat => new TXT.Regex("WHAT\\s*:\\s*", options),
-			LineKind.HappenBegin => new TXT.Regex("HAPPEN\\s*:\\s*", options),
-			LineKind.HappenWhen => new TXT.Regex("WHEN\\s*:\\s*", options),
-			LineKind.HappenWhere => new TXT.Regex("WHERE\\s*:\\s*", options),
-			LineKind.GroupBegin => new TXT.Regex("GROUP\\s*:\\s*", options),
-			LineKind.GroupEnd => new TXT.Regex("END\\s+GROUP", options),
-			LineKind.HappenEnd => new TXT.Regex("END\\s+HAPPEN", options),
-			LineKind.Other => new TXT.Regex(".*", options),
+			LineKind.Comment => new TXT.Regex("//", Options),
+			LineKind.HappenWhat => new TXT.Regex("WHAT\\s*:\\s*", Options),
+			LineKind.HappenBegin => new TXT.Regex("HAPPEN\\s*:\\s*", Options),
+			LineKind.HappenWhen => new TXT.Regex("WHEN\\s*:\\s*", Options),
+			LineKind.HappenWhere => new TXT.Regex("WHERE\\s*:\\s*", Options),
+			LineKind.GroupBegin => new TXT.Regex("GROUP\\s*:\\s*", Options),
+			LineKind.GroupEnd => new TXT.Regex("END\\s+GROUP", Options),
+			LineKind.HappenEnd => new TXT.Regex("END\\s+HAPPEN", Options),
+			LineKind.Other => new TXT.Regex(".*", Options),
 			_ => throw new ArgumentException("Invalid LineKind state supplied!"),
 		};
 	}

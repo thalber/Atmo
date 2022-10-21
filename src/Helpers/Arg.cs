@@ -112,13 +112,45 @@ public struct Arg
         _raw = val.ToString();
     }
     #region casts
+    /// <summary>
+	/// Converts an instance into a string.
+	/// </summary>
+	/// <param name="arg"></param>
     public static explicit operator string(Arg arg) => arg.Str;
+    /// <summary>
+	/// Creates an instance from a string.
+	/// </summary>
+	/// <param name="src"></param>
     public static implicit operator Arg(string src) => new(src);
+    /// <summary>
+	/// Converts an instance into an int.
+	/// </summary>
+	/// <param name="arg"></param>
     public static explicit operator int(Arg arg) => arg.I32;
+    /// <summary>
+	/// Creates an unnamed instance from an int.
+	/// </summary>
+	/// <param name="src"></param>
     public static implicit operator Arg(int src) => new(src);
+    /// <summary>
+	/// Converts an instance into a float.
+	/// </summary>
+	/// <param name="arg"></param>
     public static explicit operator float(Arg arg) => arg.F32;
+    /// <summary>
+	/// Creates an unnamed instance from a float.
+	/// </summary>
+	/// <param name="src"></param>
     public static implicit operator Arg(float src) => new(src);
+    /// <summary>
+	/// Converts an instance into a bool.
+	/// </summary>
+	/// <param name="arg"></param>
     public static explicit operator bool(Arg arg) => arg.Bool;
+    /// <summary>
+	/// Creates an unnamed instance from a bool.
+	/// </summary>
+	/// <param name="src"></param>
     public static implicit operator Arg(bool src) => new(src);
     #endregion;
 }
