@@ -181,10 +181,11 @@ public sealed partial class Atmod : BaseUnityPlugin
     {
         try
         {
-            On.World.ctor -= FetchHappenSet;
+            //On.World.ctor -= FetchHappenSet;
             On.Room.Update -= RunHappensRealUpd;
             On.RainWorldGame.Update -= DoBodyUpdates;
             On.AbstractRoom.Update -= RunHappensAbstUpd;
+            On.World.LoadWorld -= FetchHappenSet;
             var logger = BepInEx.Logging.Logger.CreateLogSource("Atmo_Purge");
             System.Diagnostics.Stopwatch sw = new();
             sw.Start();

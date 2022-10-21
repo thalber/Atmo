@@ -111,7 +111,7 @@ internal class HappenParser
             phase = ParsePhase.None;
             return;
         }
-        if (cline.Length > 4 && cline.StartsWith(":/") && cline.EndsWith("/:"))
+        if (cline.Length > 4 && cline.StartsWith("./") && cline.EndsWith("/."))
         {
             try
             {
