@@ -16,7 +16,7 @@ using static UnityEngine.Mathf;
 using URand = UnityEngine.Random;
 
 #nullable disable
-namespace Atmo
+namespace Atmo.Helpers
 {
 	/// <summary>
 	/// contains general purpose utility methods
@@ -202,7 +202,7 @@ namespace Atmo
 		public static Color RandDev(this Color bcol, Color dbound, bool clamped = true)
 		{
 			Color res = default;
-			for (var i = 0; i < 3; i++) res[i] = bcol[i] + (dbound[i] * URand.Range(-1f, 1f));
+			for (var i = 0; i < 3; i++) res[i] = bcol[i] + dbound[i] * URand.Range(-1f, 1f);
 			return clamped ? res.Clamped() : res;
 		}
 		#endregion
@@ -241,7 +241,7 @@ namespace Atmo
 				{
 					total += realup_times[i];
 				}
-				realup_readings.AddLast(total.TotalMilliseconds / (double)realup_times.Capacity);
+				realup_readings.AddLast(total.TotalMilliseconds / realup_times.Capacity);
 				if (realup_readings.Count > storeCap) realup_readings.RemoveFirst();
 				realup_times.Clear();
 			}
@@ -288,7 +288,7 @@ namespace Atmo
 			if (resname is null) throw new ArgumentNullException("can not get with a null name");
 			casm ??= Assembly.GetExecutingAssembly();
 			var str = casm.GetManifestResourceStream(resname);
-			var bf = (str is null) ? null : new byte[str.Length];
+			var bf = str is null ? null : new byte[str.Length];
 			str?.Read(bf, 0, (int)str.Length);
 			return bf;
 		}
@@ -306,7 +306,7 @@ namespace Atmo
 			try
 			{
 				var bf = ResourceBytes(resname, casm);
-				return (bf is null) ? null : enc.GetString(bf);
+				return bf is null ? null : enc.GetString(bf);
 			}
 			catch (Exception ee) { inst.Plog.LogError($"Error getting ER: {ee}"); return null; }
 		}

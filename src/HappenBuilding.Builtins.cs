@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Atmo.Helpers;
 using static Atmo.API;
 using static Atmo.Atmod;
 using static Atmo.HappenBuilding;
 using static Atmo.HappenTrigger;
-using static Atmo.Utils;
+using static Atmo.Helpers.Utils;
 using static UnityEngine.Mathf;
 using LOG = BepInEx.Logging;
 using RND = UnityEngine.Random;
@@ -104,10 +105,11 @@ internal static partial class HappenBuilding
 	//add your custom actions in methods here
 	//Use methods with the same structure. Don't forget to also add them to the inst method above.
 	//Do not remove the warning directive.
-	private static void Make_PlayMusic(Happen ha, string[] args)
+	private static void Make_PlayMusic(Happen ha, string[] rawargs)
 	{
 #warning unfinished
-		if (args.Length == 0)
+		ArgCollection args = rawargs;
+		if (args.Count == 0)
 		{
 			inst.Plog.LogWarning($"Happen {ha.name}: music action: " +
 			$"No arguments provided to Music action! won't do anything"); return;
@@ -122,9 +124,9 @@ internal static partial class HappenBuilding
 			rest = 5;
 
 		MusicEvent mev = new();
-		for (var i = 1; i < args.Length; i++)
+		for (var i = 1; i < args.Count; i++)
 		{
-			var spl = args[i].Split('=');
+			var spl = ((string)args[i]).Split('=');
 			if (spl.Length != 2) continue;
 			switch (spl[0].ToLower())
 			{
@@ -145,11 +147,12 @@ internal static partial class HappenBuilding
 			w.game.manager.musicPlayer?.GameRequestsSong(mev);
 		};
 	}
-	private static void Make_Glow(Happen ha, string[] args)
+	private static void Make_Glow(Happen ha, string[] rawargs)
 	{
+		ArgCollection args = rawargs;
 		var enabled = true;
-		if (falseStrings.Contains(args.AtOr(0, "true").ToLower())) enabled = false;
-		else if (trueStrings.Contains(args.AtOr(0, "true").ToLower())) enabled = true;
+		if (falseStrings.Contains(args.AtOr(0, "true").Str.ToLower())) enabled = false;
+		else if (trueStrings.Contains(args.AtOr(0, "true").Str.ToLower())) enabled = true;
 		ha.On_Init += (w) =>
 		{
 			var dspd = w.game.GetStorySession?.saveState;//./deathPersistentSaveData;
