@@ -6,8 +6,15 @@ using System.Text;
 
 namespace Atmo.Helpers;
 
+/// <summary>
+/// A set of <see cref="Arg"/>s. Implements IList, so can be indexed by position, as well as <see cref="Arg"/>'s name.
+/// </summary>
 public sealed class ArgSet : IList<Arg>
 {
+	/// <summary>
+	/// Creates the instance from a given array of raw string arguments.
+	/// </summary>
+	/// <param name="rawargs"></param>
 	public ArgSet(string[] rawargs)
 	{
 		for (int i = 0; i < rawargs.Length; i++)
@@ -17,10 +24,13 @@ public sealed class ArgSet : IList<Arg>
 			if (newarg .Name is not null) { _named.Add(newarg.Name, newarg); }
 		}
 	}
-
 	private readonly List<Arg> _args = new();
 	private readonly Dictionary<string, Arg> _named = new();
-	//public Arg? this[string argname] => _named.TryGetValue(argname, out var val) ? val : null;
+	/// <summary>
+	/// Checks given names and returns first matching named argument, if any.
+	/// </summary>
+	/// <param name="names">Names to check</param>
+	/// <returns>An <see cref="Arg"/> if one is found, null otherwise.</returns>
 	public Arg? this[params string[] names]
 	{
 		get
@@ -29,6 +39,8 @@ public sealed class ArgSet : IList<Arg>
 			return null;
 		}
 	}
+
+#pragma warning disable CS1591
 	#region interface
 	#region ilist
 	public Arg this[int index] { get => ((IList<Arg>)_args)[index]; set => ((IList<Arg>)_args)[index] = value; }
@@ -79,8 +91,5 @@ public sealed class ArgSet : IList<Arg>
 	}
 	#endregion ilist
 	#endregion interface;
-
-	#region casts
-	//public static implicit operator ArgSet(string[] argsraw) => new(argsraw);
-	#endregion
+#pragma warning restore
 }

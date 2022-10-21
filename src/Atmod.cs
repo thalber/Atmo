@@ -29,23 +29,21 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// </summary>
 	internal BepInEx.Logging.ManualLogSource Plog => Logger;
 	private bool setupRan = false;
+	/// <summary>
+	/// Currently active <see cref="HappenSet"/>. Null if not in session, if in arena session, or if failed to read from session.
+	/// </summary>
 	public HappenSet? CurrentSet { get; private set; }
 	#endregion
+	/// <summary>
+	/// Applies hooks and sets <see cref="inst"/>.
+	/// </summary>
 	public void OnEnable()
 	{
 		try
 		{
-			string[] argsraw = new[] { "1", "var1=true", "var2=15.2", "message=bruh" };
-			ArgSet args = new(argsraw);
-			Logger.LogWarning($"{args[0].Bool}/{args[0].I32}, " +
-				$"{args["var1"]?.Name}:{args["var1"]?.Bool}, " +
-				$"{args["var2"]?.Name}:{args["var2"]?.F32}, " +
-				$"{args["message"]?.Name}:{args[3].Str}");
-
 			On.AbstractRoom.Update += RunHappensAbstUpd;
 			On.RainWorldGame.Update += DoBodyUpdates;
 			On.Room.Update += RunHappensRealUpd;
-			//On.World.ctor += FetchHappenSet;
 			On.World.LoadWorld += FetchHappenSet;
 			HappenBuilding.InitBuiltins();
 		}
@@ -58,8 +56,6 @@ public sealed partial class Atmod : BaseUnityPlugin
 			inst = this;
 		}
 	}
-
-
 	#region lifecycle
 	private void FetchHappenSet(On.World.orig_LoadWorld orig, World self, int slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates)
 	{
@@ -170,6 +166,9 @@ public sealed partial class Atmod : BaseUnityPlugin
 	//    }
 	//}
 	#endregion lifecycle
+	/// <summary>
+	/// Cleans up set if not ingame.
+	/// </summary>
 	public void Update()
 	{
 		rw ??= FindObjectOfType<RainWorld>();
@@ -184,6 +183,9 @@ public sealed partial class Atmod : BaseUnityPlugin
 		Logger.LogDebug("No RainWorldGame in processmanager, erasing currentset");
 		CurrentSet = null;
 	}
+	/// <summary>
+	/// Undoes hooks and spins up a static cleanup async procedure.
+	/// </summary>
 	public void OnDisable()
 	{
 		try

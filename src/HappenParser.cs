@@ -134,10 +134,10 @@ internal class HappenParser
 	}
 	private void ParseHappen()
 	{
-		foreach (var prop in happenProps)
+		foreach (LineKind prop in happenProps)
 		{
 			TXT.Match match;
-			var matcher = LineMatchers[prop];
+			TXT.Regex matcher = LineMatchers[prop];
 			if ((match = matcher.Match(cline)).Success && match.Index == 0)
 			{
 				var payload = cline.Substring(match.Length);
@@ -146,8 +146,8 @@ internal class HappenParser
 				case LineKind.HappenWhere:
 					{
 						inst.Plog.LogDebug("HappenParse: Recognized WHERE clause");
-						var c = WhereOps.Group;
-						var items = TXT.Regex.Split(payload, "\\s+");
+						WhereOps c = WhereOps.Group;
+						string[]? items = TXT.Regex.Split(payload, "\\s+");
 						foreach (var i in items)
 						{
 							if (i.Length == 0) continue;
@@ -180,13 +180,13 @@ internal class HappenParser
 				case LineKind.HappenWhat:
 					{
 						inst.Plog.LogDebug("HappenParse: Recognized WHAT clause");
-						var tokens = PredicateInlay.Tokenize(payload).ToArray();
+						PredicateInlay.Token[]? tokens = PredicateInlay.Tokenize(payload).ToArray();
 						for (var i = 0; i < tokens.Length; i++)
 						{
-							var tok = tokens[i];
+							PredicateInlay.Token tok = tokens[i];
 							if (tok.type == PredicateInlay.TokenType.Word)
 							{
-								var leaf = PredicateInlay.MakeLeaf(tokens, in i) ?? new();
+								PredicateInlay.Leaf leaf = PredicateInlay.MakeLeaf(tokens, in i) ?? new();
 								cHapp.actions.AddOrUpdate(leaf.funcName, leaf.args);
 							}
 						}
@@ -237,7 +237,7 @@ internal class HappenParser
 		}
 		public GroupContents Finalize(World w)
 		{
-			foreach (var matcher in matchers)
+			foreach (TXT.Regex? matcher in matchers)
 			{
 				for (var i = 0; i < w.abstractRooms.Length; i++)
 				{
@@ -299,13 +299,13 @@ internal class HappenParser
 			p.Advance();
 		}
 		Dictionary<string, List<string>> groupsFinal = new();
-		foreach (var groupPre in p.allGroupContents)
+		foreach (KeyValuePair<string, GroupContents> groupPre in p.allGroupContents)
 		{
-			var fin = groupPre.Value.Finalize(set.world);
+			GroupContents fin = groupPre.Value.Finalize(set.world);
 			groupsFinal.Add(groupPre.Key, fin.rooms);
 		}
 		set.InsertGroups(groupsFinal);
-		foreach (var cfg in p.retrievedHappens)
+		foreach (HappenConfig cfg in p.retrievedHappens)
 		{
 			var ha = new Happen(cfg, set, rwg);
 			set.InsertHappens(new[] { ha });

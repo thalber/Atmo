@@ -9,6 +9,9 @@ using IO = System.IO;
 using TXT = System.Text.RegularExpressions;
 
 namespace Atmo;
+/// <summary>
+/// Represents a set of Happens for a single region. Binds together room names, groups and happens.
+/// </summary>
 public sealed class HappenSet
 {
 	#region fields
@@ -27,11 +30,16 @@ public sealed class HappenSet
 		if (world is null || file is null) return;
 		HappenParser.Parse(file, this, rwg);
 	}
+	/// <summary>
+	/// Yields all rooms a given happen should be active in.
+	/// </summary>
+	/// <param name="ha"></param>
+	/// <returns></returns>
 	public IEnumerable<string> GetRoomsForHappen(Happen ha)
 	{
 		List<string> returned = new();
-		var excludes = SpecificExcludeToHappens.IndexFromRight(ha);
-		var includes = SpecificIncludeToHappens.IndexFromRight(ha);
+		IEnumerable<string>? excludes = SpecificExcludeToHappens.IndexFromRight(ha);
+		IEnumerable<string>? includes = SpecificIncludeToHappens.IndexFromRight(ha);
 		foreach (var group in GroupsToHappens.IndexFromRight(ha))
 		{
 			foreach (var room in RoomsToGroups.IndexFromRight(group))
@@ -47,6 +55,11 @@ public sealed class HappenSet
 			if (!returned.Contains(room)) yield return room;
 		}
 	}
+	/// <summary>
+	/// Yields all happens a given room should have active.
+	/// </summary>
+	/// <param name="roomname"></param>
+	/// <returns></returns>
 	public IEnumerable<Happen> GetHappensForRoom(string roomname)
 	{
 		List<Happen> returned = new();
@@ -55,7 +68,7 @@ public sealed class HappenSet
 		foreach (var group in RoomsToGroups.IndexFromLeft(roomname))
 		{
 			if (!GroupsToHappens.LeftContains(group)) continue;
-			foreach (var ha in GroupsToHappens.IndexFromLeft(group))
+			foreach (Happen? ha in GroupsToHappens.IndexFromLeft(group))
 			{
 				//exclude the minused
 				if (SpecificExcludeToHappens.IndexFromRight(ha)
@@ -66,12 +79,17 @@ public sealed class HappenSet
 		}
 	_specific:
 		if (!SpecificIncludeToHappens.LeftContains(roomname)) yield break;
-		foreach (var ha in SpecificIncludeToHappens.IndexFromLeft(roomname))
+		foreach (Happen? ha in SpecificIncludeToHappens.IndexFromLeft(roomname))
 		{
 			if (!returned.Contains(ha)) yield return ha;
 		}
 	}
 	#region insertion
+	/// <summary>
+	/// Binds a given happen to a set of groups. Assumes that happen has already been added via <see cref="InsertHappens(IEnumerable{Happen})"/>.
+	/// </summary>
+	/// <param name="ha"></param>
+	/// <param name="groups"></param>
 	public void AddGrouping(Happen ha, IEnumerable<string> groups)
 	{
 		if (groups?.Count() is null or 0) return;
@@ -80,28 +98,46 @@ public sealed class HappenSet
 		InsertGroups(ins);
 		GroupsToHappens.AddLinksBulk(groups.Select(gr => new KeyValuePair<string, Happen>(gr, ha)));
 	}
+	/// <summary>
+	/// Adds room excludes for a given happen. Assumes happen has already been added via <see cref="InsertHappens(IEnumerable{Happen})"/>
+	/// </summary>
+	/// <param name="ha"></param>
+	/// <param name="excl"></param>
 	public void AddExcludes(Happen ha, IEnumerable<string> excl)
 	{
 		if (excl?.Count() is null or 0) return;
 		SpecificExcludeToHappens.InsertRangeLeft(excl);
 		foreach (var ex in excl) SpecificExcludeToHappens.AddLink(ex, ha);
 	}
+	/// <summary>
+	/// Adds room includes for a given happen. Assumes happen has already been added via <see cref="InsertHappens(IEnumerable{Happen})"/>
+	/// </summary>
+	/// <param name="ha"></param>
+	/// <param name="incl"></param>
 	public void AddIncludes(Happen ha, IEnumerable<string> incl)
 	{
 		if (incl?.Count() is null or 0) return;
 		SpecificIncludeToHappens.InsertRangeLeft(incl);
 		foreach (var @in in incl) SpecificIncludeToHappens.AddLink(@in, ha);
 	}
+	/// <summary>
+	/// Adds a group with its contents.
+	/// </summary>
+	/// <param name="groups"></param>
 	public void InsertGroups(IDictionary<string, List<string>> groups)
 	{
 		RoomsToGroups.InsertRangeRight(groups.Keys);
 		GroupsToHappens.InsertRangeLeft(groups.Keys);
-		foreach (var kvp in groups)
+		foreach (KeyValuePair<string, List<string>> kvp in groups)
 		{
 			RoomsToGroups.InsertRangeLeft(kvp.Value);
 			foreach (var room in kvp.Value) { RoomsToGroups.AddLink(room, kvp.Key); }
 		}
 	}
+	/// <summary>
+	/// Inserts a set of happens without binding them to anything.
+	/// </summary>
+	/// <param name="haps"></param>
 	public void InsertHappens(IEnumerable<Happen> haps)
 	{
 		AllHappens.AddRange(haps);
@@ -116,7 +152,7 @@ public sealed class HappenSet
 	/// <returns></returns>
 	public IEnumerable<Happen.Perf> GetPerfRecords()
 	{
-		foreach (var ha in AllHappens)
+		foreach (Happen? ha in AllHappens)
 		{
 			yield return ha.PerfRecord();
 		}
@@ -130,12 +166,12 @@ public sealed class HappenSet
 #else
 		try
 		{
-			var packs = CRS.API.InstalledPacks;
-			var active = CRS.API.ActivatedPacks;
-			foreach (var kvp in packs)
+			Dictionary<string, CRS.CustomWorldStructs.RegionPack>? packs = CRS.API.InstalledPacks;
+			Dictionary<string, string>? active = CRS.API.ActivatedPacks;
+			foreach (KeyValuePair<string, CRS.CustomWorldStructs.RegionPack> kvp in packs)
 			{
-				var name = kvp.Key;
-				var data = kvp.Value;
+				string? name = kvp.Key;
+				CRS.CustomWorldStructs.RegionPack data = kvp.Value;
 				//skip inactive
 				if (!active.ContainsKey(name)) continue;
 				var tarpath = CRS.API.BuildPath(
@@ -169,6 +205,12 @@ public sealed class HappenSet
 		}
 #endif
 	}
+	/// <summary>
+	/// Concatenates two instances together. Used when merging from several files.
+	/// </summary>
+	/// <param name="l"></param>
+	/// <param name="r"></param>
+	/// <returns></returns>
 	public static HappenSet operator +(HappenSet l, HappenSet r)
 	{
 		HappenSet res = new(l.world ?? r.world)
@@ -188,7 +230,7 @@ public sealed class HappenSet
 		};
 		res.AllHappens.AddRange(l.AllHappens);
 		res.AllHappens.AddRange(r.AllHappens);
-		foreach (var ha in res.AllHappens)
+		foreach (Happen? ha in res.AllHappens)
 		{
 			inst.Plog.LogDebug($"{ha.name}: switching ownership");
 			ha.set = res;

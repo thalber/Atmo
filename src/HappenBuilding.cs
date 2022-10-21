@@ -54,6 +54,7 @@ internal static partial class HappenBuilding
 	/// <param name="id">Name or ID</param>
 	/// <param name="args">Optional arguments</param>
 	/// <param name="rwg">game instance</param>
+	/// <param name="owner">Happen that requests the trigger.</param>
 	/// <returns>Resulting trigger; an <see cref="Always"/> if something went wrong.</returns>
 	internal static HappenTrigger CreateTrigger(
 		string id,
@@ -61,7 +62,6 @@ internal static partial class HappenBuilding
 		RainWorldGame rwg,
 		Happen owner)
 	{
-#warning untested
 		HappenTrigger? res = null;
 		//res = DefaultTrigger(id, args, rwg, owner);
 

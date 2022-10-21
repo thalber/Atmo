@@ -7,6 +7,9 @@ using static Atmo.HappenBuilding;
 using static Atmo.HappenTrigger;
 
 namespace Atmo;
+/// <summary>
+/// Static class for user API. You will likely be interacting with the mod from here.
+/// </summary>
 public static class API
 {
 	#region fields
@@ -24,7 +27,6 @@ public static class API
 	/// delegate for being called by happens on realized updates
 	/// </summary>
 	/// <param name="room">room</param>
-	/// <param name="eu"></param>
 	public delegate void lc_RealizedUpdate(Room room);
 	/// <summary>
 	/// Delegate for being called on first abstract update
@@ -54,14 +56,16 @@ public static class API
 	/// <param name="name">Trigger name (id)</param>
 	/// <param name="args">optional arguments.</param>
 	/// <param name="rwg">Game instance.</param>
+	/// <param name="ha">Happen to attach things to.</param>
 	/// <returns>Child of <see cref="HappenTrigger"/> if subscriber wishes to claim the trigger; null if not.</returns>
 	public delegate HappenTrigger? Create_RawTriggerFactory(string name, string[] args, RainWorldGame rwg, Happen ha);
 	/// <summary>
 	/// Delegate for registering named triggers.
 	/// </summary>
-	/// <param name="args"></param>
-	/// <param name="rwg"></param>
-	public delegate HappenTrigger? Create_NamedTriggerFactory(string[] args, Happen ha, RainWorldGame rwg);
+	/// <param name="args">Trigger arguments.</param>
+	/// <param name="rwg">Current RainWorldGame instance.</param>
+	/// <param name="ha">Happen the trigger is to be attached to.</param>
+	public delegate HappenTrigger? Create_NamedTriggerFactory(string[] args, RainWorldGame rwg, Happen ha);
 	#endregion
 	#region API proper
 	/// <summary>
@@ -216,7 +220,7 @@ public static class API
 		if (namedTriggers.ContainsKey(name)) { return false; }
 		Create_RawTriggerFactory newCb = (n, args, rwg, ha) =>
 		{
-			if (comp.Compare(n, name) == 0) return fac(args, ha, rwg);
+			if (comp.Compare(n, name) == 0) return fac(args, rwg, ha);
 			return null;
 		};
 		namedTriggers.Add(name, newCb);

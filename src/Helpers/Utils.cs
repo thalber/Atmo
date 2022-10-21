@@ -16,6 +16,7 @@ using static UnityEngine.Mathf;
 using URand = UnityEngine.Random;
 
 #nullable disable
+#pragma warning disable CS1591
 namespace Atmo.Helpers
 {
 	/// <summary>
@@ -323,4 +324,5 @@ namespace Atmo.Helpers
 		#endregion
 	}
 }
+#pragma warning restore CS1591
 #nullable restore

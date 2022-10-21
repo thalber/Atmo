@@ -28,7 +28,6 @@ public abstract partial class HappenTrigger
 	/// <summary>
 	/// Answers if a trigger is currently ready.
 	/// </summary>
-	/// <param name="game"></param>
 	/// <returns></returns>
 	public abstract bool ShouldRunUpdates();
 	/// <summary>
@@ -43,6 +42,7 @@ public abstract partial class HappenTrigger
 
 	#region builtins
 #warning contributor notice: triggers
+#pragma warning disable CS1591
 	//Place your trigger classes here.
 	//Don't forget to register them in HappenBuilding.RegisterDefaultTriggers as well.
 	//Do not remove the warning directive.
@@ -339,5 +339,6 @@ public abstract partial class HappenTrigger
 			return rwg.world.rainCycle.timer > delay;
 		}
 	}
+#pragma warning restore CS1591
 	#endregion
 }

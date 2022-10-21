@@ -20,7 +20,7 @@ internal static partial class HappenBuilding
 {
 	internal static void InitBuiltins()
 	{
-		foreach (var initfun in new[] { RegisterBuiltinActions, RegisterBuiltinTriggers })
+		foreach (Action initfun in new[] { RegisterBuiltinActions, RegisterBuiltinTriggers })
 		{
 			try
 			{
@@ -36,28 +36,28 @@ internal static partial class HappenBuilding
 	}
 	private static void RegisterBuiltinTriggers()
 	{
-		AddNamedTrigger(new[] { "always" }, (args, ha, rwg) => new Always());
-		AddNamedTrigger(new[] { "untilrain", "beforerain" }, (args, ha, rwg) =>
+		AddNamedTrigger(new[] { "always" }, (args, rwg, ha) => new Always());
+		AddNamedTrigger(new[] { "untilrain", "beforerain" }, (args, rwg, ha) =>
 		{
 			float.TryParse(args.AtOr(0, "0"), out var delay);
 			return new BeforeRain(rwg, ha, (int)(delay * 40f));
 		});
-		AddNamedTrigger(new[] { "afterrain" }, (args, ha, rwg) =>
+		AddNamedTrigger(new[] { "afterrain" }, (args, rwg, ha) =>
 		{
 			float.TryParse(args.AtOr(0, "0"), out var delay);
 			return new AfterRain(rwg, ha, (int)(delay * 40f));
 		});
-		AddNamedTrigger(new[] { "everyx", "every" }, (args, ha, rwg) =>
+		AddNamedTrigger(new[] { "everyx", "every" }, (args, rwg, ha) =>
 		{
 			float.TryParse(args.AtOr(0, "4"), out var period);
 			return new EveryX((int)(period * 40f), ha);
 		});
-		AddNamedTrigger(new[] { "maybe", "chance" }, (args, ha, rwg) =>
+		AddNamedTrigger(new[] { "maybe", "chance" }, (args, rwg, ha) =>
 		{
 			float.TryParse(args.AtOr(0, "0.5"), out var ch);
 			return new Maybe(ch);
 		});
-		AddNamedTrigger(new[] { "flicker" }, (args, ha, rwg) =>
+		AddNamedTrigger(new[] { "flicker" }, (args, rwg, ha) =>
 		{
 			var argsp = new int[4];
 			for (var i = 0; i < 4; i++)
@@ -68,21 +68,21 @@ internal static partial class HappenBuilding
 			var startOn = trueStrings.Contains(args.AtOr(4, "1").ToLower());
 			return new Flicker(argsp[0], argsp[1], argsp[2], argsp[3], startOn);
 		});
-		AddNamedTrigger(new[] { "karma", "onkarma" }, (args, ha, rwg) => new OnKarma(rwg, args));
-		AddNamedTrigger(new[] { "visited", "playervisited", "playervisit" }, (args, ha, rwg) => new AfterVisit(rwg, args));
-		AddNamedTrigger(new[] { "fry", "fryafter" }, (args, ha, rwg) =>
+		AddNamedTrigger(new[] { "karma", "onkarma" }, (args, rwg, ha) => new OnKarma(rwg, args));
+		AddNamedTrigger(new[] { "visited", "playervisited", "playervisit" }, (args, rwg, ha) => new AfterVisit(rwg, args));
+		AddNamedTrigger(new[] { "fry", "fryafter" }, (args, rwg, ha) =>
 		{
 			float.TryParse(args.AtOr(0, "5"), out var lim);
 			float.TryParse(args.AtOr(1, "10"), out var cd);
 			return new Fry((int)(lim * 40f), (int)(cd * 40f));
 		});
-		AddNamedTrigger(new[] { "after", "afterother" }, (args, ha, rwg) =>
+		AddNamedTrigger(new[] { "after", "afterother" }, (args, rwg, ha) =>
 		{
 			var other = args[0];
 			int.TryParse(args[1], out var delay);
 			return new AfterOther(ha, other, delay);
 		});
-		AddNamedTrigger(new[] { "delay", "ondelay" }, (args, ha, rwg) => new AfterVisit(rwg, args));
+		AddNamedTrigger(new[] { "delay", "ondelay" }, (args, rwg, ha) => new AfterVisit(rwg, args));
 		//todo: update docs to reflect shift to seconds in parameters rather than frames
 	}
 	private static void RegisterBuiltinActions()
@@ -114,7 +114,7 @@ internal static partial class HappenBuilding
 			inst.Plog.LogWarning($"Happen {ha.name}: music action: " +
 			$"No arguments provided to Music action! won't do anything"); return;
 		}
-		var songname = args[0];
+		Arg songname = args[0];
 		float
 			prio = 0.5f,
 			maxthreat = 1f,
@@ -174,7 +174,7 @@ internal static partial class HappenBuilding
 		ArgSet args = new(argsraw);
 		//todo: revisit when variable support is here
 		List<string> output = new();
-		var sev = LOG.LogLevel.Debug;
+		LOG.LogLevel sev = LOG.LogLevel.Debug;
 		foreach (string key in new[] { "sev", "severity" })
 		{
 			if (args[key] is not null) TryParseEnum(args[key].Value.Str, out sev);
@@ -189,7 +189,7 @@ internal static partial class HappenBuilding
 	private static void Make_SetRainTimer(Happen ha, string[] argsraw)
 	{
 		ArgSet args = new(argsraw);
-		var target = args.AtOr(0, 0);
+		Arg target = args.AtOr(0, 0);
 		//int.TryParse(args.AtOr(0, "0").Str, out var target);
 		ha.On_Init += (w) =>
 		{
@@ -227,7 +227,7 @@ internal static partial class HappenBuilding
 			else cap = ts.I32;
 			cap = Clamp(cap, 0, 9);
 			dpsd.karma = cap;
-			foreach (var cam in w.game.cameras) { cam?.hud.karmaMeter?.UpdateGraphic(); }
+			foreach (RoomCamera? cam in w.game.cameras) { cam?.hud.karmaMeter?.UpdateGraphic(); }
 		};
 	}
 	private static void Make_Playergrav(Happen ha, string[] argsraw)
@@ -239,7 +239,7 @@ internal static partial class HappenBuilding
 		{
 			for (var i = 0; i < room.updateList.Count; i++)
 			{
-				var uad = room.updateList[i];
+				UAD? uad = room.updateList[i];
 				if (uad is Player p) p.gravity = frac.F32;
 			}
 		};
@@ -333,7 +333,7 @@ internal static partial class HappenBuilding
 			if (lastRoomPerCam is null) return;
 			for (var i = 0; i < lastRoomPerCam.Length; i++)
 			{
-				var cam = rm.game.cameras[i];
+				RoomCamera? cam = rm.game.cameras[i];
 				if (cam.room != rm || !rm.BeingViewed || cam.AboutToSwitchRoom) continue;
 				if (cam.room.abstractRoom.name != lastRoomPerCam[i])
 				{
