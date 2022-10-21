@@ -152,19 +152,6 @@ public sealed partial class Atmod : BaseUnityPlugin
 		}
 	}
 	//todo: make sure everything works with region switching
-	//private void FetchHappenSet(On.World.orig_ctor orig, World self, RainWorldGame game, Region region, string name, bool singleRoomWorld)
-	//{
-	//    orig(self, game, region, name, singleRoomWorld);
-	//    if (singleRoomWorld) return;
-	//    try
-	//    {
-	//        CurrentSet = HappenSet.TryCreate(self);
-	//    }
-	//    catch (Exception e)
-	//    {
-	//        Logger.LogError($"Could not create a happenset: {e}");
-	//    }
-	//}
 	#endregion lifecycle
 	/// <summary>
 	/// Cleans up set if not ingame.
@@ -184,7 +171,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		CurrentSet = null;
 	}
 	/// <summary>
-	/// Undoes hooks and spins up a static cleanup async procedure.
+	/// Undoes hooks and spins up a static cleanup member cleanup procedure.
 	/// </summary>
 	public void OnDisable()
 	{
@@ -195,10 +182,11 @@ public sealed partial class Atmod : BaseUnityPlugin
 			On.RainWorldGame.Update -= DoBodyUpdates;
 			On.AbstractRoom.Update -= RunHappensAbstUpd;
 			On.World.LoadWorld -= FetchHappenSet;
-			var logger = BepInEx.Logging.Logger.CreateLogSource("Atmo_Purge");
+			BepInEx.Logging.ManualLogSource? cleanup_logger = 
+				BepInEx.Logging.Logger.CreateLogSource("Atmo_Purge");
 			System.Diagnostics.Stopwatch sw = new();
 			sw.Start();
-			logger.LogMessage("Spooling cleanup thread.");
+			cleanup_logger.LogMessage("Spooling cleanup thread.");
 			System.Threading.ThreadPool.QueueUserWorkItem((_) =>
 			{
 				foreach (var t in typeof(Atmod).Assembly.GetTypes())
@@ -206,12 +194,12 @@ public sealed partial class Atmod : BaseUnityPlugin
 					try { t.CleanupStatic(); }
 					catch (Exception ex)
 					{
-						logger.LogError($"{t}: Error cleaning up static fields:" +
+						cleanup_logger.LogError($"{t}: Error cleaning up static fields:" +
 							$"\n{ex}");
 					}
 				}
 				sw.Stop();
-				logger.LogMessage($"Finished statics cleanup: {sw.Elapsed}");
+				cleanup_logger.LogMessage($"Finished statics cleanup: {sw.Elapsed}");
 			});
 		}
 		catch (Exception ex)

@@ -216,11 +216,11 @@ public static class API
 		StringComparer? comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
 
 		if (namedTriggers.ContainsKey(name)) { return false; }
-		Create_RawTriggerFactory newCb = (n, args, rwg, ha) =>
+		HappenTrigger? newCb(string n, string[] args, RainWorldGame rwg, Happen ha)
 		{
 			if (comp.Compare(n, name) == 0) return fac(args, rwg, ha);
 			return null;
-		};
+		}
 		namedTriggers.Add(name, newCb);
 		EV_MakeNewTrigger += newCb;
 		return true;

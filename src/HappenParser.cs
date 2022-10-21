@@ -20,16 +20,16 @@ internal class HappenParser
 	private static readonly TXT.Regex roomsep = new("[\\s\\t]*,[\\s\\t]*|[\\s\\t]+", Options);
 	private static readonly LineKind[] happenProps = new[] { LineKind.HappenWhere, LineKind.HappenWhen, LineKind.HappenWhat, LineKind.HappenEnd };
 	#endregion statfields
-	private Dictionary<string, GroupContents> allGroupContents = new();
-	private List<HappenConfig> retrievedHappens = new();
+	private readonly Dictionary<string, GroupContents> allGroupContents = new();
+	private readonly List<HappenConfig> retrievedHappens = new();
 
-	private string[] allLines;
+	private readonly string[] allLines;
 	private int index = 0;
 	public bool done => aborted || index >= allLines.Length;
 	private bool aborted;
-	private IO.FileInfo file;
-	private HappenSet set;
-	private RainWorldGame rwg;
+	private readonly IO.FileInfo file;
+	private readonly HappenSet set;
+	private readonly RainWorldGame rwg;
 	//private IO.StreamReader lines;
 	private string cline;
 	private ParsePhase phase = ParsePhase.None;
