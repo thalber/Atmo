@@ -1,15 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Atmo.Helpers;
-using static Atmo.API;
-using static Atmo.Atmod;
-using static Atmo.HappenBuilding;
+﻿using static Atmo.API;
 using static Atmo.HappenTrigger;
-using static Atmo.Helpers.Utils;
 using static UnityEngine.Mathf;
-
 
 namespace Atmo;
 public static partial class HappenBuilding

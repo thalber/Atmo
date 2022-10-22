@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using static Atmo.HappenBuilding;
-using static Atmo.HappenTrigger;
-
-namespace Atmo;
+﻿namespace Atmo;
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
 /// <summary>
 /// Static class for user API. You will likely be interacting with the mod from here.

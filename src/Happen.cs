@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Atmo.Helpers;
-using static Atmo.Atmod;
-using static Atmo.Helpers.Utils;
-
-using DBG = System.Diagnostics;
-
+﻿
 namespace Atmo;
 /// <summary>
 /// A "World event": sealed class that carries custom code in form of callbacks. Every happen is read from within a <c>HAPPEN:...END HAPPEN</c> block in an .ATMO file. The following example block:

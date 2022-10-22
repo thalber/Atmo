@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using static Atmo.API;
+﻿using static Atmo.API;
 using static Atmo.HappenTrigger;
 
 namespace Atmo;

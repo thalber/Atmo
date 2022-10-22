@@ -1,20 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
-using Mono.Cecil.Cil;
-using MonoMod;
-using MonoMod.Cil;
-using RWCustom;
-//using RegionKit.Machinery;
 using UnityEngine;
-using static Atmo.Atmod;
-using static RWCustom.Custom;
 using static UnityEngine.Mathf;
-using URand = UnityEngine.Random;
-
 #nullable disable
 #pragma warning disable CS1591
 namespace Atmo.Helpers
@@ -184,20 +171,20 @@ namespace Atmo.Helpers
 		#region randomization extensions
 		public static int ClampedIntDeviation(int start, int mDev, int minRes = int.MinValue, int maxRes = int.MaxValue)
 		{
-			return IntClamp(URand.Range(start - mDev, start + mDev), minRes, maxRes);
+			return IntClamp(RND.Range(start - mDev, start + mDev), minRes, maxRes);
 		}
 		public static float ClampedFloatDeviation(float start, float mDev, float minRes = float.MinValue, float maxRes = float.MaxValue)
 		{
-			return Clamp(Lerp(start - mDev, start + mDev, URand.value), minRes, maxRes);
+			return Clamp(Lerp(start - mDev, start + mDev, RND.value), minRes, maxRes);
 		}
 		public static float RandSign()
 		{
-			return URand.value > 0.5f ? -1f : 1f;
+			return RND.value > 0.5f ? -1f : 1f;
 		}
 
 		public static Vector2 V2RandLerp(Vector2 a, Vector2 b)
 		{
-			return Vector2.Lerp(a, b, URand.value);
+			return Vector2.Lerp(a, b, RND.value);
 		}
 
 		public static float NextFloat01(this System.Random r)
@@ -213,7 +200,7 @@ namespace Atmo.Helpers
 		public static Color RandDev(this Color bcol, Color dbound, bool clamped = true)
 		{
 			Color res = default;
-			for (var i = 0; i < 3; i++) res[i] = bcol[i] + dbound[i] * URand.Range(-1f, 1f);
+			for (var i = 0; i < 3; i++) res[i] = bcol[i] + dbound[i] * RND.Range(-1f, 1f);
 			return clamped ? res.Clamped() : res;
 		}
 		#endregion
@@ -274,7 +261,7 @@ namespace Atmo.Helpers
 
 		public static string CombinePath(params string[] parts)
 		{
-			return parts.Aggregate(Path.Combine);
+			return parts.Aggregate(IO.Path.Combine);
 		}
 
 		public static RainWorld CRW => UnityEngine.Object.FindObjectOfType<RainWorld>();

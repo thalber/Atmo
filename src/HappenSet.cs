@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Atmo;
+﻿namespace Atmo;
 /// <summary>
 /// Represents a set of Happens for a single region. Binds together room names, groups and happens.
 /// </summary>
