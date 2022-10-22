@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Atmo.Helpers;
 using BepInEx;
-using static Atmo.API;
-using static Atmo.HappenTrigger;
 
 namespace Atmo;
 
@@ -41,6 +36,13 @@ public sealed partial class Atmod : BaseUnityPlugin
 	{
 		try
 		{
+			string x = "eee";
+			Func<string, object> c;
+			object a = x switch
+			{
+				"eee" => (c = (x) => new() ).Invoke("eee"),
+			};
+
 			On.AbstractRoom.Update += RunHappensAbstUpd;
 			On.RainWorldGame.Update += DoBodyUpdates;
 			On.Room.Update += RunHappensRealUpd;
@@ -85,7 +87,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 			if (ha is null) continue;
 			try
 			{
-				ha.CoreUpdate(self);
+				ha.CoreUpdate();
 			}
 			catch (Exception e)
 			{

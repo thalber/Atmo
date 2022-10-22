@@ -10,7 +10,55 @@ using DBG = System.Diagnostics;
 
 namespace Atmo;
 /// <summary>
-/// A "World event": sealed class that carries custom code in form of callbacks
+/// A "World event": sealed class that carries custom code in form of callbacks. Every happen is read from within a <c>HAPPEN:...END HAPPEN</c> block in an .ATMO file. The following example block:
+/// <para>
+/// <code>
+/// HAPPEN: test
+/// WHAT: palette 15
+/// WHERE: first + SU_A41 SU_A42 - SU_A22
+/// WHERE: SU_C04
+/// WHEN: karma 1 2 10
+/// END HAPPEN
+/// </code>
+/// Will result in a happen that has the following properties:
+/// <list type="table">
+/// <listheader><term>Property</term> <description>Contents and meaning</description></listheader>
+/// <item>
+///		<term><see cref="name"/></term> 
+///		<description>
+///			Unique string that identifies an instance. 
+///			This happen will be called <c>test</c>.
+///		</description>
+///	</item>
+/// <item>
+///		<term>Behaviour</term> 
+///		<description>
+///			The instance's lifetime events are populated with callbacks taken from <see cref="API.EV_MakeNewHappen"/>.
+///			For registering your behaviours, see <seealso cref="API"/>.
+///			To see examples of how some of the builtin behaviours work, see <seealso cref="HappenBuilding.InitBuiltins"/>.
+///			This happen will change main palette of affected rooms to 15.
+///		</description>
+///	</item>
+/// <item>
+///		<term>Grouping</term> 
+///		<description>
+///			The set of rooms an instance is active in.
+///			This Happen will activate in group called <c>first</c>, and additionally in rooms <c>SU_A41</c> and <c>SU_A42</c>, 
+///			but will not be activated in <c>SU_A22</c> if <c>SU_A22</c> is present in the group. 
+///			See <seealso cref="HappenSet"/> to see how Happens and Rooms are grouped together.
+///		</description>
+///	</item>
+/// <item>
+///		<term><see cref="conditions"/></term> 
+///		<description>
+///			A <seealso cref="HappenTrigger"/> created from the WHEN expression,
+///			which determines when the Happen should be active or not. 
+///			This happen will be active when player's karma level is 1, 2 or 10. 
+///			See code of <seealso cref="PredicateInlay"/> if you want to know how the expression is parsed.
+///		</description>
+///	</item>
+/// </list>
+/// </para>
 /// </summary>
 public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 {
@@ -32,6 +80,11 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// Whether the init callbacks have been invoked or not.
 	/// </summary>
 	public bool InitRan { get; internal set; }
+	/// <summary>
+	/// HappenSet this Happen is associated with.
+	/// Ownership may change when merging atmo files from different regpacks.
+	/// </summary>
+	public HappenSet set { get; internal set; }
 	/// <summary>
 	/// Used internally for sorting.
 	/// </summary>
@@ -57,19 +110,31 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// A set of actions with their parameters.
 	/// </summary>
 	public readonly Dictionary<string, string[]> actions;
-	internal HappenSet set;
+	/// <summary>
+	/// Current game instance.
+	/// </summary>
+	public readonly RainWorldGame game;
+
 	#endregion fromcfg
 	#endregion fields/props
-	internal Happen(HappenConfig cfg, HappenSet owner, RainWorldGame rwg)
+	/// <summary>
+	/// Creates a new instance from given config, set and game reference.
+	/// </summary>
+	/// <param name="cfg">A config containing basic setup info.
+	/// Make sure it is properly instantiated, and none of the fields are unexpectedly null.</param>
+	/// <param name="owner">HappenSet this happen will belong to. Must not be null.</param>
+	/// <param name="game">Current game instance. Must not be null.</param>
+	public Happen(HappenConfig cfg, HappenSet owner!!, RainWorldGame game!!)
 	{
 		set = owner;
 		name = cfg.name;
+		this.game = game;
 		actions = cfg.actions;
 		conditions = cfg.conditions;
 		List<HappenTrigger> list_triggers = new();
 		conditions?.Populate((id, args) =>
 		{
-			var nt = HappenBuilding.CreateTrigger(id, args, rwg, this);
+			var nt = HappenBuilding.CreateTrigger(id, args, game, this);
 			list_triggers.Add(nt);
 			return nt.ShouldRunUpdates;
 		});
@@ -97,7 +162,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		}
 	}
 	/// <summary>
-	/// Attach to this to receive a call once per abstract update, for every affected room
+	/// Attach to this to receive a call once per abstract update, for every affected room.
 	/// </summary>
 	public event API.lc_AbstractUpdate? On_AbstUpdate;
 	internal void RealUpdate(Room room)
@@ -120,7 +185,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		sw.Reset();
 	}
 	/// <summary>
-	/// Attach to this to receive a call once per realized update, for every affected room
+	/// Attach to this to receive a call once per realized update, for every affected room.
 	/// </summary>
 	public event API.lc_RealizedUpdate? On_RealUpdate;
 	internal void Init(World world)
@@ -140,10 +205,10 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		}
 	}
 	/// <summary>
-	/// Subscribe to this to receive one call when abstract update is first ran.
+	/// Subscribe to this to receive one call before abstract or realized update is first ran.
 	/// </summary>
 	public event API.lc_Init? On_Init;
-	internal void CoreUpdate(RainWorldGame rwg)
+	internal void CoreUpdate()
 	{
 		sw.Start();
 		for (var tin = 0; tin < triggers.Length; tin++)
@@ -180,7 +245,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		{
 			try
 			{
-				cb(rwg);
+				cb(game);
 			}
 			catch (Exception ex)
 			{
@@ -197,7 +262,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	public event API.lc_CoreUpdate? On_CoreUpdate;
 	#endregion
 	/// <summary>
-	/// Returns a performance report.
+	/// Returns a performance report struct.
 	/// </summary>
 	/// <returns></returns>
 	public Perf PerfRecord()
@@ -242,7 +307,6 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	{
 		return guid.CompareTo(other.guid);
 	}
-
 	/// <summary>
 	/// Compares to another happen using GUIDs.
 	/// </summary>
@@ -252,7 +316,6 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	{
 		return guid.Equals(other.guid);
 	}
-
 	/// <summary>
 	/// Returns a string representation of the happen.
 	/// </summary>

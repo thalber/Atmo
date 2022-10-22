@@ -1,46 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using RWCustom;
-using Atmo.Helpers;
-using static Atmo.HappenBuilding;
-using static Atmo.Helpers.Utils;
-using TXT = System.Text.RegularExpressions;
-using URand = UnityEngine.Random;
 
 namespace Atmo;
 /// <summary>
-/// base class for triggers. Triggers determine when happens are allowed to run; to have a happen run on a given frame, each one of its triggers must be ready.
+/// Base class for triggers. Triggers determine when happens are allowed to run; They are composed into a <see cref="PredicateInlay"/> instance, that acts as a logical expression tree.
+/// <para>
+/// This expression: <code> WHEN: (maybe 0.7 OR karma 1 2 3) AND fry 25 5 </code> will be turned into a set of happentrigger children:
+/// <list type="number">
+/// <item>A <see cref="Maybe"/>, that takes argument 0.7. Each cycle, this will either be active with 70% chance, or inactive with 30% chance.</item>
+/// <item>A <see cref="OnKarma"/>, that is active when the player's current karma is 1, 2 or 3.</item>
+/// <item>A <see cref="Fry"/>, that takes two arguments: activity limit and cooldown. It will always be active, but turn off (for 5 seconds) once the happen is active for long enough (25 seconds).</item>
+/// </list>
+/// These objects' collective response to <see cref="ShouldRunUpdates"/> will be checked up to once each frame. Expressions follow normal boolean logic stucture, operator precedence is NOT > AND > XOR > OR.
+/// </para>
+/// <para>
+/// Note that <see cref="PredicateInlay.Eval"/> can short-circuit, so some of the triggers may not receive a call to their <see cref="ShouldRunUpdates"/> every frame. In this example, evaluation starts with Maybe, then goes on to Karma. If at least one of them is true, Fry gets evaluated; if they are both false, expression short-circuits, and Fry is not evaluated.
+/// </para>
 /// </summary>
 public abstract partial class HappenTrigger
 {
 	#region fields
 	/// <summary>
-	/// Happen that owns this instance.
+	/// Happen that owns this instance. Some triggers, such as <see cref="AfterOther"/>, need this to check state of other triggers, the owning happen itself, or other happens in the current set.
 	/// </summary>
 	protected Happen? owner;
 	#endregion
 	/// <summary>
-	/// Provide an owning happen if you need to.
+	/// Provide an owning happen if you need to. You can provide null or omit the parameter if you do not require it.
 	/// </summary>
-	/// <param name="ow"></param>
+	/// <param name="ow">The happen instance that owns this trigger. Can be null.</param>
 	public HappenTrigger(Happen? ow = null) { owner = ow; }
 	/// <summary>
-	/// Answers if a trigger is currently ready.
+	/// Answers if a trigger is currently ready. This can be called up to once per frame.
 	/// </summary>
 	/// <returns></returns>
 	public abstract bool ShouldRunUpdates();
 	/// <summary>
-	/// called every <see cref="Happen.CoreUpdate(RainWorldGame)"/>, *once* every frame
+	/// Called every <see cref="Happen.CoreUpdate(RainWorldGame)"/>, *once* every frame. Override this to do your frame-persistent logic.
 	/// </summary>
 	public virtual void Update() { }
 	/// <summary>
-	/// Called after every eval to signal expression's final result for current frame.
+	/// Called after every eval to signal expression's final result for current frame. For example, <see cref="Fry"/> uses this to track how long has the happen been active.
 	/// </summary>
 	/// <param name="res"></param>
 	public virtual void EvalResults(bool res) { }
-
 	#region builtins
 #pragma warning disable CS1591
 #warning contributor notice: triggers
@@ -48,15 +51,20 @@ public abstract partial class HappenTrigger
 	//Don't forget to register them in HappenBuilding.RegisterDefaultTriggers as well.
 	//Do not remove the warning directive.
 	/// <summary>
-	/// Intermediary abstract class for triggers that require RainWorldGame state access.
+	/// Intermediary abstract class for triggers that require RainWorldGame state access (such as <see cref="OnKarma"/> or <see cref="AfterRain"/>). Make sure to provide non-null <see cref="RainWorldGame"/> instance to its constructor.
 	/// </summary>
 	public abstract class NeedsRWG : HappenTrigger
 	{
-		public NeedsRWG(RainWorldGame rwg, Happen? ow = null) : base(ow) { this.rwg = rwg; }
+		/// <summary>
+		/// Intermediary constructor. Make sure you provide non-null RainWorldGame instance. Owner may be null.
+		/// </summary>
+		/// <param name="game">Current game instance for state access.</param>
+		/// <param name="ow"></param>
+		public NeedsRWG(RainWorldGame game!!, Happen? ow = null) : base(ow) { this.game = game; }
 		/// <summary>
 		/// The required rain world instance.
 		/// </summary>
-		protected RainWorldGame rwg;
+		protected readonly RainWorldGame game;
 	}
 	/// <summary>
 	/// Sample trigger, Always true.
@@ -72,7 +80,10 @@ public abstract partial class HappenTrigger
 		}
 	}
 	/// <summary>
-	/// Sample trigger, works after rain starts. Supports an optional delay (in frames)
+	/// Sample trigger, works after rain starts. Supports an optional delay (in seconds.)
+	/// <para>
+	/// Example use: <code></code>
+	/// </para>
 	/// </summary>
 	public sealed class AfterRain : NeedsRWG
 	{
@@ -83,7 +94,7 @@ public abstract partial class HappenTrigger
 		private readonly int delay;
 		public override bool ShouldRunUpdates()
 		{
-			return rwg.world.rainCycle.TimeUntilRain + delay <= 0;
+			return game.world.rainCycle.TimeUntilRain + delay <= 0;
 		}
 	}
 	/// <summary>
@@ -98,7 +109,7 @@ public abstract partial class HappenTrigger
 		private readonly int delay;
 		public override bool ShouldRunUpdates()
 		{
-			return rwg.world.rainCycle.TimeUntilRain + delay >= 0;
+			return game.world.rainCycle.TimeUntilRain + delay >= 0;
 		}
 	}
 	/// <summary>
@@ -129,7 +140,7 @@ public abstract partial class HappenTrigger
 	{
 		public Maybe(Arg chance)
 		{
-			yes = URand.value < chance.F32;
+			yes = RND.value < chance.F32;
 		}
 		private readonly bool yes;
 		public override bool ShouldRunUpdates() => yes;
@@ -148,10 +159,10 @@ public abstract partial class HappenTrigger
 
 		public Flicker(Arg minOn, Arg maxOn, Arg minOff, Arg maxOff, bool startOn = true)
 		{
-			this.minOn = minOn.I32;
-			this.maxOn = maxOn.I32;
-			this.minOff = minOff.I32;
-			this.maxOff = maxOff.I32;
+			this.minOn = (int?)(minOn?.F32 * 40) ?? 200;
+			this.maxOn = (int?)(maxOn?.F32 * 40) ?? 200;
+			this.minOff = (int?)(minOff?.F32 * 40) ?? 400;
+			this.maxOff = (int?)(maxOff?.F32 * 40) ?? 400;
 			ResetCounter(startOn);
 		}
 		private void ResetCounter(bool next)
@@ -159,8 +170,8 @@ public abstract partial class HappenTrigger
 			on = next;
 			counter = on switch
 			{
-				true => URand.Range(minOn, maxOn),
-				false => URand.Range(minOff, maxOff),
+				true => RND.Range(minOn, maxOn),
+				false => RND.Range(minOff, maxOff),
 			};
 		}
 		public override bool ShouldRunUpdates()
@@ -193,7 +204,7 @@ public abstract partial class HappenTrigger
 		}
 		public override bool ShouldRunUpdates()
 		{
-			return levels.Contains((rwg.Players[0].realizedCreature as Player)?.Karma ?? 0);
+			return levels.Contains((game.Players[0].realizedCreature as Player)?.Karma ?? 0);
 		}
 	}
 	/// <summary>
@@ -210,7 +221,7 @@ public abstract partial class HappenTrigger
 		public override void Update()
 		{
 			if (visit) return;
-			foreach (var player in rwg.Players) if (rooms.Contains(player.Room.name)) visit = true;
+			foreach (var player in game.Players) if (rooms.Contains(player.Room.name)) visit = true;
 		}
 		public override bool ShouldRunUpdates()
 		{
@@ -228,8 +239,8 @@ public abstract partial class HappenTrigger
 		private bool active;
 		public Fry(Arg limit, Arg cd)
 		{
-			this.limit = limit.I32;
-			this.cd = cd.I32;
+			this.limit = (int)(limit.F32 * 40f);
+			this.cd = (int)(cd.F32 * 40f);
 			counter = 0;
 			active = true;
 		}
@@ -318,7 +329,7 @@ public abstract partial class HappenTrigger
 		/// <param name="rwg">RWG instance to check the clock</param>
 		public AfterDelay(Arg dmin, Arg dmax, RainWorldGame rwg) : base(rwg)
 		{
-			delay = URand.Range((int?)(dmin?.F32 * 40f) ?? 0, (int?)(dmax?.F32 * 40f) ?? 2400);
+			delay = RND.Range((int?)(dmin?.F32 * 40f) ?? 0, (int?)(dmax?.F32 * 40f) ?? 2400);
 		}
 		/// <summary>
 		/// Creates an instance with static delay.
@@ -331,7 +342,7 @@ public abstract partial class HappenTrigger
 		}
 		public override bool ShouldRunUpdates()
 		{
-			return rwg.world.rainCycle.timer > delay;
+			return game.world.rainCycle.timer > delay;
 		}
 	}
 #pragma warning restore CS1591

@@ -2,15 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Atmo.Helpers;
-using static Atmo.Atmod;
 using static Atmo.HappenBuilding;
 using static Atmo.HappenTrigger;
 
 namespace Atmo;
+#pragma warning disable CS0419 // Ambiguous reference in cref attribute
 /// <summary>
 /// Static class for user API. You will likely be interacting with the mod from here.
+/// There are several ways you may interact with it:
+/// <list type="bullet">
+/// <item><see cref="AddNamedAction"/> overloads: attach behaviour to happens that have a specific action name in their WHAT clause;</item>
+/// <item><see cref="AddNamedTrigger"/> overloads: attach a factory callback that creates a trigger that matches specified name(s);</item>
+/// <item><see cref="EV_MakeNewHappen"/> and <see cref="EV_MakeNewTrigger"/> events: directly attach callbacks without name checking.</item>
+/// </list>
+/// See also: <seealso cref="Happen"/> for core lifecycle logic, <seealso cref="HappenTrigger"/> for how conditions work.
 /// </summary>
+#pragma warning restore CS0419 // Ambiguous reference in cref attribute
 public static class API
 {
 	#region fields
@@ -19,15 +26,15 @@ public static class API
 	#endregion
 	#region dels
 	/// <summary>
-	/// delegate for calling by happens on abstract updates
+	/// Delegates for happens' abstract updates.
 	/// </summary>
-	/// <param name="absroom">absroom</param>
-	/// <param name="time">absupdate step</param>
+	/// <param name="absroom">Abstract room the update is happening in.</param>
+	/// <param name="time">Abstract update step, in frames.</param>
 	public delegate void lc_AbstractUpdate(AbstractRoom absroom, int time);
 	/// <summary>
-	/// delegate for being called by happens on realized updates
+	/// Delegate for happens' realized updates.
 	/// </summary>
-	/// <param name="room">room</param>
+	/// <param name="room">The room update is happening in.</param>
 	public delegate void lc_RealizedUpdate(Room room);
 	/// <summary>
 	/// Delegate for being called on first abstract update
@@ -35,38 +42,38 @@ public static class API
 	/// <param name="world"></param>
 	public delegate void lc_Init(World world);
 	/// <summary>
-	/// Delegate for being called on core update
+	/// Delegate for happens' init call.
 	/// </summary>
-	/// <param name="rwg"></param>
+	/// <param name="rwg">Current instance of <see cref="RainWorldGame"/>. Always a Story session.</param>
 	public delegate void lc_CoreUpdate(RainWorldGame rwg);
 	/// <summary>
-	/// callback for attaching custom behaviour to happens. Can be directly attached to <see cref="EV_MakeNewHappen"/>
+	/// Callback for attaching custom behaviour to happens. Can be directly attached to <see cref="EV_MakeNewHappen"/>
 	/// </summary>
-	/// <param name="ha"></param>
-	public delegate void Create_RawHappenBuilder(Happen ha);
+	/// <param name="happen">Happen that needs lifetime callbacks attached. Check its instance members to see if your code should affect it, and use its instance events to attach behaviour.</param>
+	public delegate void Create_RawHappenBuilder(Happen happen);
 	/// <summary>
-	/// Delegate for registering named callbacks.
+	/// Delegate for registering named actions.
 	/// Used by <see cref="AddNamedAction(string, Create_NamedHappenBuilder, bool)"/>.
 	/// </summary>
-	/// <param name="ha"></param>
-	/// <param name="args"></param>
-	public delegate void Create_NamedHappenBuilder(Happen ha, ArgSet args);
+	/// <param name="happen">Happen that needs lifetime callbacks attached. One of the its <see cref="Happen.actions"/> has a name you selected. Use its instance events to attach behaviour.</param>
+	/// <param name="args">The event's arguments, taking from a WHAT: clause.</param>
+	public delegate void Create_NamedHappenBuilder(Happen happen, ArgSet args);
 	/// <summary>
-	/// Delegate for including custom triggers. Can be directly attached to <see cref="EV_MakeNewTrigger"/>.
+	/// Delegate for including custom triggers. Can be directly attached to <see cref="EV_MakeNewTrigger"/>. Make sure to check the first parameter (name) and see if it is fitting.
 	/// </summary>
-	/// <param name="name">Trigger name (id)</param>
-	/// <param name="args">optional arguments.</param>
-	/// <param name="rwg">Game instance.</param>
-	/// <param name="ha">Happen to attach things to.</param>
+	/// <param name="name">Trigger name (id).</param>
+	/// <param name="args">A set of (usually optional) arguments.</param>
+	/// <param name="game">Current game instance.</param>
+	/// <param name="happen">Happen to attach things to.</param>
 	/// <returns>Child of <see cref="HappenTrigger"/> if subscriber wishes to claim the trigger; null if not.</returns>
-	public delegate HappenTrigger? Create_RawTriggerFactory(string name, ArgSet args, RainWorldGame rwg, Happen ha);
+	public delegate HappenTrigger? Create_RawTriggerFactory(string name, ArgSet args, RainWorldGame game, Happen happen);
 	/// <summary>
 	/// Delegate for registering named triggers.
 	/// </summary>
 	/// <param name="args">Trigger arguments.</param>
-	/// <param name="rwg">Current RainWorldGame instance.</param>
-	/// <param name="ha">Happen the trigger is to be attached to.</param>
-	public delegate HappenTrigger? Create_NamedTriggerFactory(ArgSet args, RainWorldGame rwg, Happen ha);
+	/// <param name="game">Current RainWorldGame instance.</param>
+	/// <param name="happen">Happen the trigger is to be attached to.</param>
+	public delegate HappenTrigger? Create_NamedTriggerFactory(ArgSet args, RainWorldGame game, Happen happen);
 	#endregion
 	#region API proper
 	/// <summary>
@@ -201,7 +208,6 @@ public static class API
 				.Select((name) => AddNamedTrigger(name, fac, ignoreCase) ? 0 : 1)
 				.Aggregate((x, y) => x + y);
 	}
-
 	/// <summary>
 	/// Registers a named trigger. Single name.
 	/// </summary>
@@ -236,17 +242,21 @@ public static class API
 		EV_MakeNewTrigger -= namedTriggers[name];
 		namedTriggers.Remove(name);
 	}
+#pragma warning disable CS0419 // Ambiguous reference in cref attribute
 	/// <summary>
-	/// Subscribe to this to attach your custom callbacks to newly created happen objects. You can also use <see cref="AddNamedAction(string, Create_NamedHappenBuilder, bool)"/> and <see cref="AddNamedAction(string, lc_AbstractUpdate?, lc_RealizedUpdate?, lc_Init?, lc_CoreUpdate?, bool)"/> as name-safe shorthands.
+	/// Subscribe to this to attach your custom callbacks to newly created happen objects.
+	/// You can also use <see cref="AddNamedAction"/> overloads as name-safe shorthands.
 	/// </summary>
 	public static event Create_RawHappenBuilder? EV_MakeNewHappen;
 	internal static IEnumerable<Create_RawHappenBuilder?>? MNH_invl
-		=> EV_MakeNewHappen?.GetInvocationList().Cast<Create_RawHappenBuilder?>();//.ToArray();
+		=> EV_MakeNewHappen?.GetInvocationList().Cast<Create_RawHappenBuilder?>();
 	/// <summary>
-	/// Subscribe to this to dispense your custom triggers. You can also use <see cref="AddNamedTrigger(string, Create_NamedTriggerFactory, bool)"/> as a name-safe shorthand.
+	/// Subscribe to this to dispense your custom triggers.
+	/// You can also use <see cref="AddNamedTrigger"/> overloads as a name-safe shorthand.
 	/// </summary>
 	public static event Create_RawTriggerFactory? EV_MakeNewTrigger;
 	internal static IEnumerable<Create_RawTriggerFactory?>? MNT_invl
-		=> EV_MakeNewTrigger?.GetInvocationList()?.Cast<Create_RawTriggerFactory?>();//.ToArray();
+		=> EV_MakeNewTrigger?.GetInvocationList()?.Cast<Create_RawTriggerFactory?>();
+#pragma warning restore CS0419 // Ambiguous reference in cref attribute
 	#endregion
 }

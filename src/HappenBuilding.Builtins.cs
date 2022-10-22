@@ -9,14 +9,10 @@ using static Atmo.HappenBuilding;
 using static Atmo.HappenTrigger;
 using static Atmo.Helpers.Utils;
 using static UnityEngine.Mathf;
-using LOG = BepInEx.Logging;
-using RND = UnityEngine.Random;
-using TXT = System.Text.RegularExpressions;
-using UAD = UpdatableAndDeletable;
+
 
 namespace Atmo;
-
-internal static partial class HappenBuilding
+public static partial class HappenBuilding
 {
 	internal static void InitBuiltins()
 	{
@@ -60,19 +56,17 @@ internal static partial class HappenBuilding
 		AddNamedTrigger(new[] { "flicker" }, (args, rwg, ha) =>
 		{
 			return new Flicker(
-				args.AtOr(0, 5),
-				args.AtOr(1, 5),
-				args.AtOr(2, 5),
-				args.AtOr(3, 5),
+				args.AtOr(0, 5.0f),
+				args.AtOr(1, 5.0f),
+				args.AtOr(2, 5.0f),
+				args.AtOr(3, 5.0f),
 				args.AtOr(4, true).Bool);
 		});
 		AddNamedTrigger(new[] { "karma", "onkarma" }, (args, rwg, ha) => new OnKarma(rwg, args));
 		AddNamedTrigger(new[] { "visited", "playervisited", "playervisit" }, (args, rwg, ha) => new AfterVisit(rwg, args));
 		AddNamedTrigger(new[] { "fry", "fryafter" }, (args, rwg, ha) =>
 		{
-			//float.TryParse(args.AtOr(0, "5"), out var lim);
-			//float.TryParse(args.AtOr(1, "10"), out var cd);
-			return new Fry(args.AtOr(0, 5), args.AtOr(1, 10));
+			return new Fry(args.AtOr(0, 5f), args.AtOr(1, 10f));
 		});
 		AddNamedTrigger(new[] { "after", "afterother" }, (args, rwg, ha) =>
 		{
@@ -130,30 +124,29 @@ internal static partial class HappenBuilding
 		//smLerp = args["smoothenlerp", "lerp"]?.F32 ?? 0.07f
 		;
 		string lastSid = sid.Str;
-		Dictionary<string, List<int>> hashes = new();
+		Dictionary<string, DisembodiedLoopEmitter> soundloops = new();//hashes = new();
 		ha.On_RealUpdate += (rm) =>
 		{
-			if (!hashes.TryGetValue(rm.abstractRoom.name, out var here))
-			{
-				hashes.Add(rm.abstractRoom.name, here = new());
-			}
 			for (int i = 0; i < rm.updateList.Count; i++)
 			{
-				UAD uad = rm.updateList[i];
-				if (uad is DisembodiedLoopEmitter dle && here.Contains(dle.GetHashCode()))
+				if (rm.updateList[i] is DisembodiedLoopEmitter dle && soundloops.ContainsValue(dle))
 				{
 					dle.soundStillPlaying = true;
 					dle.alive = true;
 					return;
 				}
 			}
-			var dsl = rm.PlayDisembodiedLoop(soundid, vol.F32, pitch.F32, pan.F32);
-			here.Add(dsl.GetHashCode());
+			inst.Plog.LogDebug("Need to create a new soundloop!");
+			DisembodiedLoopEmitter? newdle = rm.PlayDisembodiedLoop(soundid, vol.F32, pitch.F32, pan.F32);
+			newdle.requireActiveUpkeep = false;
+			newdle.alive = true;
+			newdle.soundStillPlaying = true;
+			soundloops.AddOrUpdate(rm.abstractRoom.name, newdle);
 		};
 		ha.On_AbstUpdate += (ar, t) =>
 		{
 			//clean up hashes from abstractized rooms
-			if (hashes.TryGetValue(ar.name, out var here) && ar.realizedRoom is null) here.Clear();
+			if (soundloops.TryGetValue(ar.name, out var here) && ar.realizedRoom is null) soundloops.Remove(ar.name);//here.Clear();
 		};
 		ha.On_CoreUpdate += (rwg) =>
 		{
@@ -163,6 +156,7 @@ internal static partial class HappenBuilding
 				sid.AsEnum(out soundid);
 			}
 			lastSid = sid.Str;
+			if (!ha.Active) { foreach (var dsl in soundloops.Values) dsl.requireActiveUpkeep = true; soundloops.Clear(); }
 		};
 	}
 	private static void Make_Sound(Happen ha, ArgSet args)
@@ -368,7 +362,7 @@ internal static partial class HappenBuilding
 	private static void Make_ChangePalette(Happen ha, ArgSet args)
 	{
 		//todo: support for fade palettes?
-		Arg? palA = args["palA", "A", "1"];
+		Arg? palA = args.AtOr(0, 15);//["palA", "A", "1"];
 		string[] lastRoomPerCam = null;
 		ha.On_RealUpdate += (rm) =>
 		{

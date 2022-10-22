@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using Atmo.Helpers;
-using static Atmo.Atmod;
-using CRS = CustomRegions.Mod;
-using IO = System.IO;
-using TXT = System.Text.RegularExpressions;
 
 namespace Atmo;
 internal class HappenParser

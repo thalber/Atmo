@@ -1,48 +1,32 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Atmo.Helpers;
 using static Atmo.API;
-using static Atmo.Atmod;
-using static Atmo.HappenBuilding;
 using static Atmo.HappenTrigger;
-using URand = UnityEngine.Random;
 
 namespace Atmo;
 /// <summary>
 /// Manages happens' initialization and builtin behaviours.
 /// </summary>
-internal static partial class HappenBuilding
+public static partial class HappenBuilding
 {
-	#region fields
-	
-	#endregion
-
-	internal static void NewEvent(Happen ha)
+	/// <summary>
+	/// Populates a happen with callbacks. Called automatically by the constructor.
+	/// </summary>
+	/// <param name="happen"></param>
+	internal static void NewEvent(Happen happen)
 	{
-		//try
-		//{
-		//    AddDefaultCallbacks(ha);
-		//}
-		//catch (Exception ex)
-		//{
-		//    inst.Plog.LogError($"HappenBuild: NewEvent:" +
-		//        $"Error adding default callbacks to {ha}:" +
-		//        $"\n{ex}");
-		//}
 		if (MNH_invl is null) return;
 		foreach (var cb in MNH_invl)
 		{
 			try
 			{
-				cb?.Invoke(ha);
+				cb?.Invoke(happen);
 			}
 			catch (Exception ex)
 			{
 				inst.Plog.LogError(
 					$"Happenbuild: NewEvent:" +
-					$"Error invoking happen factory {cb}//{cb?.Method.Name} for {ha}:" +
+					$"Error invoking happen factory {cb}//{cb?.Method.Name} for {happen}:" +
 					$"\n{ex}");
 			}
 		}
