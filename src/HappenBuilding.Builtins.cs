@@ -144,7 +144,7 @@ public static partial class HappenBuilding
 			//lazy enum parsing
 			if (sid.Str != lastSid)
 			{
-				sid.AsEnum(out soundid);
+				sid.GetEnum(out soundid);
 			}
 			lastSid = sid.Str;
 			if (!ha.Active) { foreach (var dsl in soundloops.Values) dsl.requireActiveUpkeep = true; soundloops.Clear(); }
@@ -194,7 +194,7 @@ public static partial class HappenBuilding
 			if (counter > 0) counter--;
 			if (sid.Str != lastSid)
 			{
-				sid.AsEnum(out soundid);
+				sid.GetEnum(out soundid);
 			}
 			lastSid = sid.Str;
 		};
@@ -265,7 +265,7 @@ public static partial class HappenBuilding
 		//todo: revisit when variable support is here
 		List<string> output = new();
 		Arg sev = args["sev", "severity"] ?? new Arg(LOG.LogLevel.Message.ToString());
-		sev.AsEnum(out LOG.LogLevel sevVal);
+		sev.GetEnum(out LOG.LogLevel sevVal);
 		string lastSev = sev.Str;
 
 		Arg? onInit = args["init", "oninit"];
@@ -282,7 +282,7 @@ public static partial class HappenBuilding
 		{
 			if (sev.Str != lastSev)
 			{
-				sev.AsEnum(out sevVal);
+				sev.GetEnum(out sevVal);
 			}
 			lastSev = sev.Str;
 		};

@@ -8,6 +8,8 @@ namespace Atmo.Helpers;
 
 /// <summary>
 /// A set of <see cref="Arg"/>s. Implements IList, so can be indexed by position, as well as <see cref="Arg"/>'s name.
+/// ArgSets can be created from string arrays, explicitly (<see cref="ArgSet(string[])"/>) or implicitly (a cast that invokes the same constructor).
+/// When instantiating, ArgSet creates a dictionary-based index of named args. All args are created with linkage. 
 /// </summary>
 public sealed class ArgSet : IList<Arg>
 {
@@ -19,7 +21,7 @@ public sealed class ArgSet : IList<Arg>
 	{
 		for (int i = 0; i < rawargs.Length; i++)
 		{
-			Arg newarg = new(rawargs[i] ?? string.Empty);
+			Arg newarg = new(rawargs[i] ?? string.Empty, true);
 			_args.Add(newarg);
 			if (newarg.Name is not null) { _named.Add(newarg.Name, newarg); }
 		}
@@ -43,52 +45,32 @@ public sealed class ArgSet : IList<Arg>
 #pragma warning disable CS1591
 	#region interface
 	#region ilist
-	public Arg this[int index] { get => ((IList<Arg>)_args)[index]; set => ((IList<Arg>)_args)[index] = value; }
-	public int Count => ((ICollection<Arg>)_args).Count;
-	public bool IsReadOnly => ((ICollection<Arg>)_args).IsReadOnly;
+	public Arg this[int index] { get => _args[index]; set => _args[index] = value; }
+	public int Count 
+		=> _args.Count;
+	public bool IsReadOnly 
+		=> false;
 	public void Add(Arg item)
-	{
-		((ICollection<Arg>)_args).Add(item);
-	}
+		=> _args.Add(item);
 	public void Clear()
-	{
-		((ICollection<Arg>)_args).Clear();
-	}
+		=> _args.Clear();
 	public bool Contains(Arg item)
-	{
-		return ((ICollection<Arg>)_args).Contains(item);
-	}
+		=> _args.Contains(item);
 	public void CopyTo(Arg[] array, int arrayIndex)
-	{
-		((ICollection<Arg>)_args).CopyTo(array, arrayIndex);
-	}
+		=> _args.CopyTo(array, arrayIndex);
 	public IEnumerator<Arg> GetEnumerator()
-	{
-		return ((IEnumerable<Arg>)_args).GetEnumerator();
-	}
+		=> _args.GetEnumerator();
 	public int IndexOf(Arg item)
-	{
-		return ((IList<Arg>)_args).IndexOf(item);
-	}
+		=> _args.IndexOf(item);
 	public void Insert(int index, Arg item)
-	{
-		((IList<Arg>)_args).Insert(index, item);
-	}
+		=> _args.Insert(index, item);
 
 	public bool Remove(Arg item)
-	{
-		return ((ICollection<Arg>)_args).Remove(item);
-	}
-
-	public void RemoveAt(int index)
-	{
-		((IList<Arg>)_args).RemoveAt(index);
-	}
-
-	IEnumerator IEnumerable.GetEnumerator()
-	{
-		return ((IEnumerable)_args).GetEnumerator();
-	}
+		=> _args.Remove(item);
+	public void RemoveAt(int index) 
+		=> _args.RemoveAt(index);
+	IEnumerator IEnumerable.GetEnumerator() 
+		=> _args.GetEnumerator();
 	#endregion ilist
 	#endregion interface;
 #pragma warning restore

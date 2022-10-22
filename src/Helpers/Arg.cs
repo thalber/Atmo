@@ -8,6 +8,41 @@ using static Atmo.Helpers.Utils;
 namespace Atmo.Helpers;
 /// <summary>
 /// Wraps a string argument for easy conversion into several other language primitives. Can be named (named arguments come in form of "name=value").
+/// <para>
+/// Args most frequently come in form of <seealso cref="ArgSet"/>s. Arg supports several primitive types: <see cref="int"/>, <see cref="float"/>, <see cref="string"/> and <see cref="bool"/>, and does its best to convert between them (for more details, see docstrings for property accessors). You can implicitly cast from supported primitive types to Arg:
+/// <code>
+///		<see cref="Arg"/> x = 1,
+///		y = 2f,
+///		z = "three",
+///		w = false;
+/// </code>
+/// and do explicit conversions the other way around
+/// (alternatively, use getters of <see cref="I32"/>/<see cref="F32"/>/<see cref="Bool"/>/<see cref="Str"/>):
+/// <code>
+///		<see cref="Arg"/> arg = new(12);
+///		<see cref="float"/> fl = (<see cref="float"/>)arg; // 12f
+///		<see cref="bool"/> bo = (<see cref="bool"/>)arg; // true
+///		<see cref="string"/> st = (<see cref="string"/>)arg; // "12"
+/// </code>
+/// The reason conversions to primitives are explicit is because in Rain World modding 
+/// you will often have tangled math blocks, where an incorrectly inferred int/float division 
+/// can cause a hard to catch rounding logic error and be very annoying to debug.
+/// </para>
+/// <para>
+/// When created from a string (<see cref="Arg(string, bool)"/> constructor, when <c>linkage</c> is <c>true</c>), an Arg can:
+/// <list type="bullet">
+///		<item>
+///			Become named. This happens when the provided string contains at least one equal sign character (<c>=</c>).
+///			Part before that becomes Arg's name, part after that is parsed into contents.
+///		</item>
+///		<item>
+///			Become linked to a variable. This happens when value part of the source string begins with a
+///			Dollar sign (<c>$</c>). An Arg that references a variable ignores 
+///			its own inner state and accesses the variable object instead.
+///			See <seealso cref="VarRegistry"/> for var storage details.
+///		</item>
+/// </list>
+/// </para>
 /// </summary>
 public sealed class Arg
 {
@@ -24,10 +59,10 @@ public sealed class Arg
 		//F32 = asfloat;
 		int.TryParse(_str, out _i32);
 		bool.TryParse(_str, out _bool);
-		if (Utils.trueStrings.Contains(_str.ToLower())) _bool = true;
-		if (Utils.falseStrings.Contains(_str.ToLower())) _bool = false;
+		if (trueStrings.Contains(_str.ToLower())) _bool = true;
+		if (falseStrings.Contains(_str.ToLower())) _bool = false;
 	}
-
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
 	/// <summary>
 	/// Raw string previously used to create the argument.
 	/// </summary>
@@ -129,7 +164,8 @@ public sealed class Arg
 	/// </summary>
 	/// <typeparam name="T">Type of the enum.</typeparam>
 	/// <param name="value">Out param. Contains resulting enum value.</param>
-	public void AsEnum<T> (out T value) 
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+	public void GetEnum<T> (out T value) 
 		where T : Enum
 	{
 		if (TryParseEnum(Str, out value)) { return; }
@@ -155,17 +191,26 @@ public sealed class Arg
 	/// </summary>
 	public bool IsVar => _var is not null;
 	//todo: allow changing names?
+	#region ctors
 	/// <summary>
 	/// Creates the structure from a given string.
 	/// </summary>
 	/// <param name="orig">String to create argument from. Named arguments receive "name=value" type strings here. Can not be null.</param>
-	public Arg(string orig!!)
+	/// <param name="linkage">Whether to check the provided string's structure, determining name and linking to a variable if needed. Off by default, for implicit casts</param>
+	public Arg(string orig!!, bool linkage = false)
 	{
+		//todo: add a variant that allows to construct from a string without checking structure?
 		_raw = orig;
 		_f32 = default;
 		_i32 = default;
 		_bool = default;
-		Raw = orig;
+		if (linkage) Raw = orig;
+		else
+		{
+			_str = orig;
+			_parseStr();
+		}
+		_str ??= string.Empty;
 	}
 	/// <summary>
 	/// Creates the structure from a given int. Always unnamed. Mostly used for implicit casts.
@@ -175,6 +220,7 @@ public sealed class Arg
 	{
 		I32 = val;
 		_raw = val.ToString();
+		_str ??= string.Empty;
 	}
 	/// <summary>
 	/// Creates the structure from a given float. Always unnamed. Mostly used for implicit casts.
@@ -184,6 +230,7 @@ public sealed class Arg
 	{
 		F32 = val;
 		_raw = val.ToString();
+		_str ??= string.Empty;
 	}
 	/// <summary>
 	/// Creates the structure from a given bool. Always unnamed. Mostly used for implicit casts.
@@ -193,7 +240,20 @@ public sealed class Arg
 	{
 		Bool = val;
 		_raw = val.ToString();
+		_str ??= string.Empty;
 	}
+	/// <summary>
+	/// Creates a new instance that wraps another as a variable, with an optional name.
+	/// </summary>
+	/// <param name="val">Another arg instance that serves as a variable. Must not be null.</param>
+	/// <param name="name">Name of the new instance.</param>
+	public Arg(Arg val!!, string? name = null)
+	{
+		_var = val;
+		Name = name;
+		_raw = _str = string.Empty;
+	}
+	#endregion
 	#region casts
 	/// <summary>
 	/// Converts an instance into a string.
@@ -204,7 +264,7 @@ public sealed class Arg
 	/// Creates an instance from a string.
 	/// </summary>
 	/// <param name="src"></param>
-	public static implicit operator Arg(string src) => new(src);
+	public static implicit operator Arg(string src) => new(src, false);
 	/// <summary>
 	/// Converts an instance into an int.
 	/// </summary>
