@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Atmo.Helpers;
+﻿namespace Atmo.Helpers;
 
 public class VarRegistry
 {
@@ -13,5 +8,4 @@ public class VarRegistry
 	{
 		throw new NotImplementedException("Registry not in yet!");
 	}
-
 }

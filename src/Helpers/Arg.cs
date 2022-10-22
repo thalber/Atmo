@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using static Atmo.Helpers.Utils;
-
-namespace Atmo.Helpers;
+﻿namespace Atmo.Helpers;
 /// <summary>
 /// Wraps a string argument for easy conversion into several other language primitives. Can be named (named arguments come in form of "name=value").
 /// <para>
