@@ -84,7 +84,7 @@ public abstract partial class HappenTrigger
 	/// </summary>
 	public sealed class AfterRain : NeedsRWG
 	{
-		public AfterRain(RainWorldGame rwg, Happen ow, Arg delay = null) : base(rwg, ow)
+		public AfterRain(RainWorldGame game, Happen ow, Arg? delay = null) : base(game, ow)
 		{
 			this.delay = (int?)(delay?.F32 * 40) ?? 0;
 		}
@@ -99,7 +99,7 @@ public abstract partial class HappenTrigger
 	/// </summary>
 	public sealed class BeforeRain : NeedsRWG
 	{
-		public BeforeRain(RainWorldGame rwg, Happen ow, Arg delay = null) : base(rwg, ow)
+		public BeforeRain(RainWorldGame game, Happen ow, Arg? delay = null) : base(game, ow)
 		{
 			this.delay = (int?)(delay?.F32 * 40) ?? 0;
 		}
@@ -185,7 +185,7 @@ public abstract partial class HappenTrigger
 	{
 		private readonly List<int> levels = new();
 		//private readonly List<>;
-		public OnKarma(RainWorldGame rwg, ArgSet options, Happen? ow = null) : base(rwg, ow)
+		public OnKarma(RainWorldGame game, ArgSet options, Happen? ow = null) : base(game, ow)
 		{
 			foreach (Arg op in options)
 			{
@@ -211,7 +211,7 @@ public abstract partial class HappenTrigger
 	{
 		private string[] rooms;
 		private bool visit = false;
-		public AfterVisit(RainWorldGame rwg, ArgSet roomnames) : base(rwg)
+		public AfterVisit(RainWorldGame game, ArgSet roomnames) : base(game)
 		{
 			rooms = roomnames.Select(x => x.Str).ToArray();//roomnamesseWhere;
 		}
@@ -323,8 +323,8 @@ public abstract partial class HappenTrigger
 		/// </summary>
 		/// <param name="dmin">Lower bound</param>
 		/// <param name="dmax">Upper bound</param>
-		/// <param name="rwg">RWG instance to check the clock</param>
-		public AfterDelay(Arg dmin, Arg dmax, RainWorldGame rwg) : base(rwg)
+		/// <param name="game">RWG instance to check the clock</param>
+		public AfterDelay(Arg dmin, Arg dmax, RainWorldGame game) : base(game)
 		{
 			delay = RND.Range((int?)(dmin?.F32 * 40f) ?? 0, (int?)(dmax?.F32 * 40f) ?? 2400);
 		}
