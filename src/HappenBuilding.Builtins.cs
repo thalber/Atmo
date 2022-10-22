@@ -39,48 +39,49 @@ internal static partial class HappenBuilding
 		AddNamedTrigger(new[] { "always" }, (args, rwg, ha) => new Always());
 		AddNamedTrigger(new[] { "untilrain", "beforerain" }, (args, rwg, ha) =>
 		{
-			float.TryParse(args.AtOr(0, "0"), out var delay);
-			return new BeforeRain(rwg, ha, (int)(delay * 40f));
+			//float.TryParse(args.AtOr(0, "0"), out var delay);
+			return new BeforeRain(rwg, ha, args.AtOr(0, 0f));
 		});
 		AddNamedTrigger(new[] { "afterrain" }, (args, rwg, ha) =>
 		{
-			float.TryParse(args.AtOr(0, "0"), out var delay);
-			return new AfterRain(rwg, ha, (int)(delay * 40f));
+			//float.TryParse(args.AtOr(0, "0"), out var delay);
+			return new AfterRain(rwg, ha, args.AtOr(0, 0f));
 		});
 		AddNamedTrigger(new[] { "everyx", "every" }, (args, rwg, ha) =>
 		{
-			float.TryParse(args.AtOr(0, "4"), out var period);
-			return new EveryX((int)(period * 40f), ha);
+			//float.TryParse(args.AtOr(0, "4"), out var period);
+			return new EveryX(args.AtOr(0, 4f), ha);
 		});
 		AddNamedTrigger(new[] { "maybe", "chance" }, (args, rwg, ha) =>
 		{
-			float.TryParse(args.AtOr(0, "0.5"), out var ch);
-			return new Maybe(ch);
+			//float.TryParse(args.AtOr(0, "0.5"), out var ch);
+			return new Maybe(args.AtOr(0, 0.5f));
 		});
 		AddNamedTrigger(new[] { "flicker" }, (args, rwg, ha) =>
 		{
-			var argsp = new int[4];
-			for (var i = 0; i < 4; i++)
-			{
-				float.TryParse(args.AtOr(i, "5"), out var pres);
-				argsp[i] = (int)(pres * 40f);
-			}
-			var startOn = trueStrings.Contains(args.AtOr(4, "1").ToLower());
-			return new Flicker(argsp[0], argsp[1], argsp[2], argsp[3], startOn);
+			return new Flicker(
+				args.AtOr(0, 5),
+				args.AtOr(1, 5),
+				args.AtOr(2, 5),
+				args.AtOr(3, 5),
+				args.AtOr(4, true).Bool);
 		});
 		AddNamedTrigger(new[] { "karma", "onkarma" }, (args, rwg, ha) => new OnKarma(rwg, args));
 		AddNamedTrigger(new[] { "visited", "playervisited", "playervisit" }, (args, rwg, ha) => new AfterVisit(rwg, args));
 		AddNamedTrigger(new[] { "fry", "fryafter" }, (args, rwg, ha) =>
 		{
-			float.TryParse(args.AtOr(0, "5"), out var lim);
-			float.TryParse(args.AtOr(1, "10"), out var cd);
-			return new Fry((int)(lim * 40f), (int)(cd * 40f));
+			//float.TryParse(args.AtOr(0, "5"), out var lim);
+			//float.TryParse(args.AtOr(1, "10"), out var cd);
+			return new Fry(args.AtOr(0, 5), args.AtOr(1, 10));
 		});
 		AddNamedTrigger(new[] { "after", "afterother" }, (args, rwg, ha) =>
 		{
-			var other = args[0];
-			int.TryParse(args[1], out var delay);
-			return new AfterOther(ha, other, delay);
+			if (args.Count < 2)
+			{
+				inst.Plog.LogWarning($"HappenBuilding: builtins: after trigger on {ha.name} needs name of the target trigger and delay!");
+				return null;
+			}
+			return new AfterOther(ha, args[0], args[1]);
 		});
 		AddNamedTrigger(new[] { "delay", "ondelay" }, (args, rwg, ha) => new AfterVisit(rwg, args));
 		//todo: update docs to reflect shift to seconds in parameters rather than frames
@@ -106,9 +107,8 @@ internal static partial class HappenBuilding
 	//add your custom actions in methods here
 	//Use methods with the same structure. Don't forget to also add them to the inst method above.
 	//Do not remove the warning directive.
-	private static void Make_SoundLoop(Happen ha, string[] argsraw)
+	private static void Make_SoundLoop(Happen ha, ArgSet args)
 	{
-		ArgSet args = new(argsraw);
 		if (args.Count == 0)
 		{
 			inst.Plog.LogError($"Happen {ha.name}: soundloop action: " +
@@ -122,12 +122,14 @@ internal static partial class HappenBuilding
 			return;
 		}
 		Arg
+			sid = args[0],
 			vol = args["vol", "volume"]?.F32 ?? 1f,
 			pitch = args["pitch"]?.F32 ?? 1f,
-			pan = args["pan"]?.F32 ?? 0f,
-			smStep = args["smoothenstep", "step"]?.F32 ?? 0.05f,
-			smLerp = args["smoothenlerp", "lerp"]?.F32 ?? 0.07f;
-		//id = RND.value;
+			pan = args["pan"]?.F32 ?? 0f;
+		//smStep = args["smoothenstep", "step"]?.F32 ?? 0.05f,
+		//smLerp = args["smoothenlerp", "lerp"]?.F32 ?? 0.07f
+		;
+		string lastSid = sid.Str;
 		Dictionary<string, List<int>> hashes = new();
 		ha.On_RealUpdate += (rm) =>
 		{
@@ -141,7 +143,7 @@ internal static partial class HappenBuilding
 				if (uad is DisembodiedLoopEmitter dle && here.Contains(dle.GetHashCode()))
 				{
 					dle.soundStillPlaying = true;
-					dle.alive = true; 
+					dle.alive = true;
 					return;
 				}
 			}
@@ -150,12 +152,21 @@ internal static partial class HappenBuilding
 		};
 		ha.On_AbstUpdate += (ar, t) =>
 		{
+			//clean up hashes from abstractized rooms
 			if (hashes.TryGetValue(ar.name, out var here) && ar.realizedRoom is null) here.Clear();
 		};
+		ha.On_CoreUpdate += (rwg) =>
+		{
+			//lazy enum parsing
+			if (sid.Str != lastSid)
+			{
+				sid.AsEnum(out soundid);
+			}
+			lastSid = sid.Str;
+		};
 	}
-	private static void Make_Sound(Happen ha, string[] argsraw)
+	private static void Make_Sound(Happen ha, ArgSet args)
 	{
-		ArgSet args = new(argsraw);
 		if (args.Count == 0)
 		{
 			inst.Plog.LogError($"Happen {ha.name}: sound action: " +
@@ -169,7 +180,8 @@ internal static partial class HappenBuilding
 				$"Invalid SoundID ({args[0]})");
 			return;
 		}
-
+		Arg sid = args[0];
+		string lastSid = sid.Str;
 		int cooldown = args["cd", "cooldown"]?.I32 ?? 40,
 			limit = args["lim", "limit"]?.I32 ?? int.MaxValue;
 		float
@@ -185,7 +197,7 @@ internal static partial class HappenBuilding
 			{
 				if (room.updateList[i] is Player p)
 				{
-					var em = room.PlaySound(soundid, p.firstChunk, false, vol, pitch);
+					ChunkSoundEmitter? em = room.PlaySound(soundid, p.firstChunk, false, vol, pitch);
 					counter = cooldown;
 					limit--;
 					return;
@@ -195,12 +207,16 @@ internal static partial class HappenBuilding
 		ha.On_CoreUpdate += (rwg) =>
 		{
 			if (counter > 0) counter--;
+			if (sid.Str != lastSid)
+			{
+				sid.AsEnum(out soundid);
+			}
+			lastSid = sid.Str;
 		};
 	}
-	private static void Make_PlayMusic(Happen ha, string[] argsraw)
+	private static void Make_PlayMusic(Happen ha, ArgSet args)
 	{
 #warning unfinished
-		ArgSet args = new(argsraw);
 		if (args.Count == 0)
 		{
 			inst.Plog.LogWarning($"Happen {ha.name}: music action: " +
@@ -239,9 +255,8 @@ internal static partial class HappenBuilding
 			w.game.manager.musicPlayer?.GameRequestsSong(mev);
 		};
 	}
-	private static void Make_Glow(Happen ha, string[] argsraw)
+	private static void Make_Glow(Happen ha, ArgSet args)
 	{
-		ArgSet args = new(argsraw);
 		Arg enabled = args.AtOr(0, true);
 		ha.On_Init += (w) =>
 		{
@@ -250,9 +265,8 @@ internal static partial class HappenBuilding
 			dspd.theGlow = enabled.Bool;
 		};
 	}
-	private static void Make_Mark(Happen ha, string[] argsraw)
+	private static void Make_Mark(Happen ha, ArgSet args)
 	{
-		ArgSet args = new(argsraw);
 		Arg enabled = args.AtOr(0, true);
 		ha.On_Init += (w) =>
 		{
@@ -261,26 +275,35 @@ internal static partial class HappenBuilding
 			dspd.theMark = enabled.Bool;
 		};
 	}
-	private static void Make_LogCall(Happen ha, string[] argsraw)
+	private static void Make_LogCall(Happen ha, ArgSet args)
 	{
-		ArgSet args = new(argsraw);
 		//todo: revisit when variable support is here
 		List<string> output = new();
-		LOG.LogLevel sev = LOG.LogLevel.Debug;
-		foreach (string key in new[] { "sev", "severity" })
+		Arg sev = args["sev", "severity"] ?? new Arg(LOG.LogLevel.Message.ToString());
+		sev.AsEnum(out LOG.LogLevel sevVal);
+		string lastSev = sev.Str;
+
+		Arg? onInit = args["init", "oninit"];
+		Arg? onAbst = args["abst", "abstractupdate", "abstup"];
+		if (onInit is not null) ha.On_Init += (w) =>
 		{
-			if (args[key] is not null) TryParseEnum(args[key].Value.Str, out sev);
-		}
-		if (output.Count == 0) output.Add("[no message]");
-		var result = string.Concat(output.ToArray());
-		ha.On_Init += (w) =>
+			inst.Plog.Log(sevVal, onInit.Str);
+		};
+		if (onAbst is not null) ha.On_AbstUpdate += (abstr, t) =>
 		{
-			inst.Plog.Log(sev, result);
+			inst.Plog.Log(sevVal, $"\"{onAbst.Str}\":{abstr}:{t}");
+		};
+		ha.On_CoreUpdate += (_) =>
+		{
+			if (sev.Str != lastSev)
+			{
+				sev.AsEnum(out sevVal);
+			}
+			lastSev = sev.Str;
 		};
 	}
-	private static void Make_SetRainTimer(Happen ha, string[] argsraw)
+	private static void Make_SetRainTimer(Happen ha, ArgSet args)
 	{
-		ArgSet args = new(argsraw);
 		Arg target = args.AtOr(0, 0);
 		//int.TryParse(args.AtOr(0, "0").Str, out var target);
 		ha.On_Init += (w) =>
@@ -288,9 +311,8 @@ internal static partial class HappenBuilding
 			w.rainCycle.timer = target.I32;
 		};
 	}
-	private static void Make_SetKarma(Happen ha, string[] argsraw)
+	private static void Make_SetKarma(Happen ha, ArgSet args)
 	{
-		ArgSet args = new(argsraw);
 		ha.On_Init += (w) =>
 		{
 			var dpsd = w.game?.GetStorySession?.saveState?.deathPersistentSaveData;
@@ -305,9 +327,8 @@ internal static partial class HappenBuilding
 			foreach (RoomCamera cam in w.game.cameras) { cam?.hud.karmaMeter?.UpdateGraphic(); }
 		};
 	}
-	private static void Make_SetMaxKarma(Happen ha, string[] argsraw)
+	private static void Make_SetMaxKarma(Happen ha, ArgSet args)
 	{
-		ArgSet args = new(argsraw);
 		ha.On_Init += (w) =>
 		{
 			var dpsd = w.game?.GetStorySession?.saveState?.deathPersistentSaveData;
@@ -322,9 +343,8 @@ internal static partial class HappenBuilding
 			foreach (RoomCamera? cam in w.game.cameras) { cam?.hud.karmaMeter?.UpdateGraphic(); }
 		};
 	}
-	private static void Make_Playergrav(Happen ha, string[] argsraw)
+	private static void Make_Playergrav(Happen ha, ArgSet args)
 	{
-		ArgSet args = new(argsraw);
 		Arg frac = args.AtOr(0, 0);
 		//float.TryParse(args.AtOr(0, "0.5"), out var frac);
 		ha.On_RealUpdate += (room) =>
@@ -336,45 +356,19 @@ internal static partial class HappenBuilding
 			}
 		};
 	}
-	private static void Make_Rumble(Happen ha, string[] args)
+	private static void Make_Rumble(Happen ha, ArgSet args)
 	{
-		int cooldown = 200,
-			duration = 80;
-		float intensity = 1f,
-			shake = 0.5f;
-
-		for (var i = 0; i < args.Length; i++)
-		{
-			var spl = TXT.Regex.Split(args[i], "=");
-			if (spl.Length != 2) continue;
-			switch (spl[0].ToLower())
-			{
-			case "cooldown":
-			case "cd":
-			int.TryParse(spl[1], out cooldown);
-			break;
-			case "duration":
-			int.TryParse(spl[1], out duration);
-			break;
-			case "intensity":
-			float.TryParse(spl[1], out intensity);
-			break;
-			case "shake":
-			float.TryParse(spl[1], out shake);
-			break;
-			}
-		}
-		var counter = 0;
-		var active = duration;
+		Arg intensity = args["int", "intensity"]?.F32 ?? 1f,
+			shake = args["shake"]?.F32 ?? 0.5f;
 		ha.On_RealUpdate += (room) =>
 		{
-			//if (active != 0)
-			room.ScreenMovement(null, RND.insideUnitCircle * intensity, shake);
+			room.ScreenMovement(null, RND.insideUnitCircle * intensity.F32, shake.F32);
 		};
 	}
-	private static void Make_ChangePalette(Happen ha, string[] args)
+	private static void Make_ChangePalette(Happen ha, ArgSet args)
 	{
-		int.TryParse(args.AtOr(0, "15"), out var pal);
+		//todo: support for fade palettes?
+		Arg? palA = args["palA", "A", "1"];
 		string[] lastRoomPerCam = null;
 		ha.On_RealUpdate += (rm) =>
 		{
@@ -385,7 +379,8 @@ internal static partial class HappenBuilding
 				if (cam.room != rm || !rm.BeingViewed || cam.AboutToSwitchRoom) continue;
 				if (cam.room.abstractRoom.name != lastRoomPerCam[i])
 				{
-					cam.ChangeMainPalette(pal);
+					if (palA is not null) cam.ChangeMainPalette(palA.I32);
+					//if (palB is not null) cam.ChangeFadePalette(palB.I32);
 					inst.Plog.LogDebug("changing palette");
 				}
 			}

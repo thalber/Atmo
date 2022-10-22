@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using RWCustom;
+using Atmo.Helpers;
 using static Atmo.HappenBuilding;
 using static Atmo.Helpers.Utils;
 using TXT = System.Text.RegularExpressions;
@@ -75,11 +76,11 @@ public abstract partial class HappenTrigger
 	/// </summary>
 	public sealed class AfterRain : NeedsRWG
 	{
-		public AfterRain(RainWorldGame rwg, Happen ow, int delay = 0) : base(rwg, ow)
+		public AfterRain(RainWorldGame rwg, Happen ow, Arg delay = null) : base(rwg, ow)
 		{
-			this.delay = delay;
+			this.delay = (int?)(delay?.F32 * 40) ?? 0;
 		}
-		private int delay;
+		private readonly int delay;
 		public override bool ShouldRunUpdates()
 		{
 			return rwg.world.rainCycle.TimeUntilRain + delay <= 0;
@@ -90,11 +91,11 @@ public abstract partial class HappenTrigger
 	/// </summary>
 	public sealed class BeforeRain : NeedsRWG
 	{
-		public BeforeRain(RainWorldGame rwg, Happen ow, int delay = 0) : base(rwg, ow)
+		public BeforeRain(RainWorldGame rwg, Happen ow, Arg delay = null) : base(rwg, ow)
 		{
-			this.delay = delay;
+			this.delay = (int?)(delay?.F32 * 40) ?? 0;
 		}
-		private int delay;
+		private readonly int delay;
 		public override bool ShouldRunUpdates()
 		{
 			return rwg.world.rainCycle.TimeUntilRain + delay >= 0;
@@ -105,7 +106,10 @@ public abstract partial class HappenTrigger
 	/// </summary>
 	public sealed class EveryX : HappenTrigger
 	{
-		public EveryX(int x, Happen ow) : base(ow) { period = x; }
+		public EveryX(Arg x, Happen ow) : base(ow)
+		{
+			period = (int?)(x?.F32 * 40) ?? 30;
+		}
 
 		private readonly int period;
 		private int counter;
@@ -123,15 +127,12 @@ public abstract partial class HappenTrigger
 	/// </summary>
 	public sealed class Maybe : HappenTrigger
 	{
-		public Maybe(float chance)
+		public Maybe(Arg chance)
 		{
-			yes = URand.value < chance;
+			yes = URand.value < chance.F32;
 		}
-		private bool yes;
-		public override bool ShouldRunUpdates()
-		{
-			return yes;
-		}
+		private readonly bool yes;
+		public override bool ShouldRunUpdates() => yes;
 	}
 	/// <summary>
 	/// Turns on and off periodically.
@@ -145,15 +146,14 @@ public abstract partial class HappenTrigger
 		private bool on;
 		private int counter;
 
-		public Flicker(int minOn, int maxOn, int minOff, int maxOff, bool startOn = true)
+		public Flicker(Arg minOn, Arg maxOn, Arg minOff, Arg maxOff, bool startOn = true)
 		{
-			this.minOn = minOn;
-			this.maxOn = maxOn;
-			this.minOff = minOff;
-			this.maxOff = maxOff;
+			this.minOn = minOn.I32;
+			this.maxOn = maxOn.I32;
+			this.minOff = minOff.I32;
+			this.maxOff = maxOff.I32;
 			ResetCounter(startOn);
 		}
-
 		private void ResetCounter(bool next)
 		{
 			on = next;
@@ -177,12 +177,12 @@ public abstract partial class HappenTrigger
 	{
 		private readonly List<int> levels = new();
 		//private readonly List<>;
-		public OnKarma(RainWorldGame rwg, string[] options, Happen? ow = null) : base(rwg, ow)
+		public OnKarma(RainWorldGame rwg, ArgSet options, Happen? ow = null) : base(rwg, ow)
 		{
-			foreach (var op in options)
+			foreach (Arg op in options)
 			{
-				if (int.TryParse(op, out var r)) levels.Add(r);
-				var spl = TXT.Regex.Split(op, "\\s*-\\s*");
+				if (int.TryParse(op.Str, out var r)) levels.Add(r);
+				var spl = TXT.Regex.Split(op.Str, "\\s*-\\s*");
 				if (spl.Length == 2)
 				{
 					int.TryParse(spl[0], out var min);
@@ -203,9 +203,9 @@ public abstract partial class HappenTrigger
 	{
 		private string[] rooms;
 		private bool visit = false;
-		public AfterVisit(RainWorldGame rwg, string[] roomnames) : base(rwg)
+		public AfterVisit(RainWorldGame rwg, ArgSet roomnames) : base(rwg)
 		{
-			rooms = roomnames;
+			rooms = roomnames.Select(x => x.Str).ToArray();//roomnamesseWhere;
 		}
 		public override void Update()
 		{
@@ -226,10 +226,10 @@ public abstract partial class HappenTrigger
 		private readonly int cd;
 		private int counter;
 		private bool active;
-		public Fry(int limit, int cd)
+		public Fry(Arg limit, Arg cd)
 		{
-			this.limit = limit;
-			this.cd = cd;
+			this.limit = limit.I32;
+			this.cd = cd.I32;
 			counter = 0;
 			active = true;
 		}
@@ -253,22 +253,24 @@ public abstract partial class HappenTrigger
 	/// </summary>
 	public sealed class AfterOther : HappenTrigger
 	{
-		internal readonly Happen tar;
+		internal Happen tar;
 		//internal readonly System.Collections.BitArray inertia;
+		internal readonly string tarname;
 		internal readonly int delay;
 		internal bool tarWasOn;
 		internal bool amActive;
 		internal readonly List<int> switchOn = new();
 		internal readonly List<int> switchOff = new();
-		public AfterOther(Happen owner, string tarname, int delay) : base(owner)
+		public AfterOther(Happen owner, Arg tarname, Arg delay) : base(owner)
 		{
-			this.delay = delay;
-			tar = owner.set.AllHappens.FirstOrDefault(x => x.name == tarname);
-			//inertia = new(new bool[delay]);
+			this.delay = (int?)(delay.F32 * 40) ?? 40;
+			this.tarname = (string)tarname;
+			//tar = owner.set.AllHappens.FirstOrDefault(x => x.name == tarname.Str);
 		}
-
 		public override void Update()
 		{
+			tar ??= owner?.set.AllHappens.FirstOrDefault(x => x.name == tarname);
+			if (tar is null) return;
 			if (tar.Active != tarWasOn)
 			{
 				if (tar.Active)
@@ -300,10 +302,7 @@ public abstract partial class HappenTrigger
 			}
 			tarWasOn = tar.Active;
 		}
-		public override bool ShouldRunUpdates()
-		{
-			return amActive;
-		}
+		public override bool ShouldRunUpdates() => amActive;
 	}
 	/// <summary>
 	/// Activates after a set delay.
@@ -317,18 +316,18 @@ public abstract partial class HappenTrigger
 		/// <param name="dmin">Lower bound</param>
 		/// <param name="dmax">Upper bound</param>
 		/// <param name="rwg">RWG instance to check the clock</param>
-		public AfterDelay(int dmin, int dmax, RainWorldGame rwg) : base(rwg)
+		public AfterDelay(Arg dmin, Arg dmax, RainWorldGame rwg) : base(rwg)
 		{
-			delay = URand.Range(dmin, dmax);
+			delay = URand.Range((int?)(dmin?.F32 * 40f) ?? 0, (int?)(dmax?.F32 * 40f) ?? 2400);
 		}
 		/// <summary>
 		/// Creates an instance with static delay.
 		/// </summary>
 		/// <param name="d">Delay</param>
 		/// <param name="rwg">RWG instance to check the clock.</param>
-		public AfterDelay(int d, RainWorldGame rwg) : base(rwg)
+		public AfterDelay(Arg d, RainWorldGame rwg) : base(rwg)
 		{
-			delay = d;
+			delay = (int?)(d?.F32 * 40f) ?? 2400;
 		}
 		public override bool ShouldRunUpdates()
 		{

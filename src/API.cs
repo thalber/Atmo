@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Atmo.Helpers;
 using static Atmo.Atmod;
 using static Atmo.HappenBuilding;
 using static Atmo.HappenTrigger;
@@ -49,7 +50,7 @@ public static class API
 	/// </summary>
 	/// <param name="ha"></param>
 	/// <param name="args"></param>
-	public delegate void Create_NamedHappenBuilder(Happen ha, string[] args);
+	public delegate void Create_NamedHappenBuilder(Happen ha, ArgSet args);
 	/// <summary>
 	/// Delegate for including custom triggers. Can be directly attached to <see cref="EV_MakeNewTrigger"/>.
 	/// </summary>
@@ -58,14 +59,14 @@ public static class API
 	/// <param name="rwg">Game instance.</param>
 	/// <param name="ha">Happen to attach things to.</param>
 	/// <returns>Child of <see cref="HappenTrigger"/> if subscriber wishes to claim the trigger; null if not.</returns>
-	public delegate HappenTrigger? Create_RawTriggerFactory(string name, string[] args, RainWorldGame rwg, Happen ha);
+	public delegate HappenTrigger? Create_RawTriggerFactory(string name, ArgSet args, RainWorldGame rwg, Happen ha);
 	/// <summary>
 	/// Delegate for registering named triggers.
 	/// </summary>
 	/// <param name="args">Trigger arguments.</param>
 	/// <param name="rwg">Current RainWorldGame instance.</param>
 	/// <param name="ha">Happen the trigger is to be attached to.</param>
-	public delegate HappenTrigger? Create_NamedTriggerFactory(string[] args, RainWorldGame rwg, Happen ha);
+	public delegate HappenTrigger? Create_NamedTriggerFactory(ArgSet args, RainWorldGame rwg, Happen ha);
 	#endregion
 	#region API proper
 	/// <summary>
@@ -216,7 +217,7 @@ public static class API
 		StringComparer? comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
 
 		if (namedTriggers.ContainsKey(name)) { return false; }
-		HappenTrigger? newCb(string n, string[] args, RainWorldGame rwg, Happen ha)
+		HappenTrigger? newCb(string n, ArgSet args, RainWorldGame rwg, Happen ha)
 		{
 			if (comp.Compare(n, name) == 0) return fac(args, rwg, ha);
 			return null;

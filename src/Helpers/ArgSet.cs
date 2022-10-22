@@ -19,9 +19,9 @@ public sealed class ArgSet : IList<Arg>
 	{
 		for (int i = 0; i < rawargs.Length; i++)
 		{
-			Arg newarg = new(rawargs[i]);
+			Arg newarg = new(rawargs[i] ?? string.Empty);
 			_args.Add(newarg);
-			if (newarg .Name is not null) { _named.Add(newarg.Name, newarg); }
+			if (newarg.Name is not null) { _named.Add(newarg.Name, newarg); }
 		}
 	}
 	private readonly List<Arg> _args = new();
@@ -92,4 +92,9 @@ public sealed class ArgSet : IList<Arg>
 	#endregion ilist
 	#endregion interface;
 #pragma warning restore
+	/// <summary>
+	/// Creates a new ArgSet from a specified string array.
+	/// </summary>
+	/// <param name="raw"></param>
+	public static implicit operator ArgSet(string[] raw) => new ArgSet(raw);
 }
