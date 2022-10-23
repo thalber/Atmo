@@ -15,7 +15,7 @@ public static partial class HappenBuilding
 			}
 			catch (Exception ex)
 			{
-				inst.Plog.LogFatal($"HappenBuilding: Static init: " +
+				plog.LogFatal($"HappenBuilding: Static init: " +
 					$"failed to {initfun.Method}:" +
 					$"\n{ex}");
 			}
@@ -63,7 +63,7 @@ public static partial class HappenBuilding
 		{
 			if (args.Count < 2)
 			{
-				inst.Plog.LogWarning($"HappenBuilding: builtins: after trigger on {ha.name} needs name of the target trigger and delay!");
+				plog.LogWarning($"HappenBuilding: builtins: after trigger on {ha.name} needs name of the target trigger and delay!");
 				return null;
 			}
 			return new AfterOther(ha, args[0], args[1]);
@@ -98,13 +98,13 @@ public static partial class HappenBuilding
 		//todo: now works in HI. Breaks with warp.
 		if (args.Count == 0)
 		{
-			inst.Plog.LogError($"Happen {ha.name}: soundloop action: " +
+			plog.LogError($"Happen {ha.name}: soundloop action: " +
 				$"No arguments provided.");
 			return;
 		}
 		if (!TryParseEnum(args[0].Str, out SoundID soundid))
 		{
-			inst.Plog.LogError($"Happen {ha.name}: soundloop action: " +
+			plog.LogError($"Happen {ha.name}: soundloop action: " +
 				$"Invalid SoundID ({args[0]})");
 			return;
 		}
@@ -130,7 +130,7 @@ public static partial class HappenBuilding
 				}
 			}
 			if (!rm.BeingViewed) return;
-			inst.Plog.LogDebug($"{ha.name}: Need to create a new soundloop in {rm.abstractRoom.name}! {soundloops.GetHashCode()}");
+			plog.LogDebug($"{ha.name}: Need to create a new soundloop in {rm.abstractRoom.name}! {soundloops.GetHashCode()}");
 			DisembodiedLoopEmitter? newdle = rm.PlayDisembodiedLoop(soundid, vol.F32, pitch.F32, pan.F32);
 			newdle.requireActiveUpkeep = true;
 			newdle.alive = true;
@@ -158,14 +158,14 @@ public static partial class HappenBuilding
 	{
 		if (args.Count == 0)
 		{
-			inst.Plog.LogError($"Happen {ha.name}: sound action: " +
+			plog.LogError($"Happen {ha.name}: sound action: " +
 				$"No arguments provided.");
 			return;
 		}
 
 		if (!TryParseEnum(args[0].Str, out SoundID soundid))
 		{
-			inst.Plog.LogError($"Happen {ha.name}: sound action: " +
+			plog.LogError($"Happen {ha.name}: sound action: " +
 				$"Invalid SoundID ({args[0]})");
 			return;
 		}
@@ -208,7 +208,7 @@ public static partial class HappenBuilding
 #warning unfinished
 		if (args.Count == 0)
 		{
-			inst.Plog.LogWarning($"Happen {ha.name}: music action: " +
+			plog.LogWarning($"Happen {ha.name}: music action: " +
 			$"No arguments provided to Music action! won't do anything"); return;
 		}
 		Arg songname = args[0];
@@ -276,11 +276,11 @@ public static partial class HappenBuilding
 		Arg? onAbst = args["abst", "abstractupdate", "abstup"];
 		if (onInit is not null) ha.On_Init += (w) =>
 		{
-			inst.Plog.Log(sevVal, onInit.Str);
+			plog.Log(sevVal, onInit.Str);
 		};
 		if (onAbst is not null) ha.On_AbstUpdate += (abstr, t) =>
 		{
-			inst.Plog.Log(sevVal, $"\"{onAbst.Str}\":{abstr}:{t}");
+			plog.Log(sevVal, $"\"{onAbst.Str}\":{abstr}:{t}");
 		};
 		ha.On_CoreUpdate += (_) =>
 		{
@@ -376,7 +376,7 @@ public static partial class HappenBuilding
 				{
 					if (palA is not null) cam.ChangeMainPalette(palA.I32);
 					//if (palB is not null) cam.ChangeFadePalette(palB.I32);
-					inst.Plog.LogDebug("changing palette");
+					plog.LogDebug("changing palette");
 				}
 			}
 		};

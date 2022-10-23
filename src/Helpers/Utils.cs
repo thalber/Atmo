@@ -306,7 +306,7 @@ public static class Utils
 			var bf = ResourceBytes(resname, casm);
 			return bf is null ? null : enc.GetString(bf);
 		}
-		catch (Exception ee) { inst.Plog.LogError($"Error getting ER: {ee}"); return null; }
+		catch (Exception ee) { plog.LogError($"Error getting ER: {ee}"); return null; }
 	}
 	#endregion
 }

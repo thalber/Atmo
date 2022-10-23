@@ -221,8 +221,8 @@ public abstract partial class HappenTrigger
 			foreach (AbstractCreature? player in game.Players) if (rooms.Contains(player.Room.name))
 				{
 					visit = true;
-					//inst.Plog.LogDebug("Trip!");
-					//inst.Plog.LogDebug(inst.CurrentSet.GetRoomsForHappen(inst.CurrentSet.AllHappens.First(x => x.name == "hitest")).Aggregate(JoinWithComma));
+					//plog.LogDebug("Trip!");
+					//plog.LogDebug(inst.CurrentSet.GetRoomsForHappen(inst.CurrentSet.AllHappens.First(x => x.name == "hitest")).Aggregate(JoinWithComma));
 				}
 		}
 		public override bool ShouldRunUpdates()

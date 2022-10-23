@@ -209,25 +209,25 @@ public sealed class HappenSet
 					folder: IO.Path.Combine("Regions", world.name),
 					includeRoot: true);
 				var tarfile = new IO.FileInfo(tarpath);
-				inst.Plog.LogDebug($"Checking regpack {name} (path {tarpath})");
+				plog.LogDebug($"Checking regpack {name} (path {tarpath})");
 				if (tarfile.Exists)
 				{
-					inst.Plog.LogDebug("Found a .atmo file, reading a happenset...");
+					plog.LogDebug("Found a .atmo file, reading a happenset...");
 					HappenSet gathered = new(world, tarfile);
 					if (res is null) res = gathered;
 					else res += gathered;
 				}
 				else
 				{
-					inst.Plog.LogDebug("No XX.atmo file found.");
+					plog.LogDebug("No XX.atmo file found.");
 				}
 			}
-			inst.Plog.LogDebug(Stitch(res?.GetHappensForRoom("SU_C04").Select(x => x.name)));
+			plog.LogDebug(Stitch(res?.GetHappensForRoom("SU_C04").Select(x => x.name)));
 			return res;
 		}
 		catch (Exception ex)
 		{
-			inst.Plog.LogError($"Could not load event setup for {world.name}:\n{ex}");
+			plog.LogError($"Could not load event setup for {world.name}:\n{ex}");
 			return null;
 		}
 #endif
@@ -259,7 +259,7 @@ public sealed class HappenSet
 		res.AllHappens.AddRange(r.AllHappens);
 		foreach (Happen? ha in res.AllHappens)
 		{
-			inst.Plog.LogDebug($"{ha.name}: switching ownership");
+			plog.LogDebug($"{ha.name}: switching ownership");
 			ha.set = res;
 		}
 		return res;

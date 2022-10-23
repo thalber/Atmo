@@ -132,8 +132,8 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		triggers = list_triggers.ToArray();
 		HappenBuilding.NewEvent(this);
 
-		if (actions.Count is 0) inst.Plog.LogWarning($"Happen {this}: no actions! Possible missing 'WHAT:' clause");
-		if (conditions is null) inst.Plog.LogWarning($"Happen {this}: did not receive conditions! Possible missing 'WHEN:' clause");
+		if (actions.Count is 0) plog.LogWarning($"Happen {this}: no actions! Possible missing 'WHAT:' clause");
+		if (conditions is null) plog.LogWarning($"Happen {this}: did not receive conditions! Possible missing 'WHEN:' clause");
 	}
 	#region lifecycle cbs
 	internal void AbstUpdate(AbstractRoom absroom, int time)
@@ -147,7 +147,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			}
 			catch (Exception ex)
 			{
-				inst.Plog.LogError(ErrorMessage(lc_event.abstup, cb, ex));
+				plog.LogError(ErrorMessage(lc_event.abstup, cb, ex));
 				On_AbstUpdate -= cb;
 			}
 		}
@@ -168,7 +168,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			}
 			catch (Exception ex)
 			{
-				inst.Plog.LogError(ErrorMessage(lc_event.realup, cb, ex));
+				plog.LogError(ErrorMessage(lc_event.realup, cb, ex));
 				On_RealUpdate -= cb;
 			}
 		}
@@ -191,7 +191,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			}
 			catch (Exception ex)
 			{
-				inst.Plog.LogError(ErrorMessage(lc_event.init, cb, ex, error_response.none));
+				plog.LogError(ErrorMessage(lc_event.init, cb, ex, error_response.none));
 			}
 		}
 	}
@@ -211,7 +211,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			catch (Exception ex)
 			{
 				//todo: add a way to void a trigger
-				inst.Plog.LogError(ErrorMessage(
+				plog.LogError(ErrorMessage(
 					lc_event.triggerupdate,
 					triggers[tin].Update,
 					ex,
@@ -225,7 +225,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		}
 		catch (Exception ex)
 		{
-			inst.Plog.LogError(ErrorMessage(
+			plog.LogError(ErrorMessage(
 				lc_event.eval,
 				conditions is null ? null : conditions.Eval,
 				ex,
@@ -240,7 +240,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			}
 			catch (Exception ex)
 			{
-				inst.Plog.LogError(ErrorMessage(lc_event.coreup, cb, ex));
+				plog.LogError(ErrorMessage(lc_event.coreup, cb, ex));
 				On_CoreUpdate -= cb;
 			}
 		}

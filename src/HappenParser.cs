@@ -31,7 +31,7 @@ internal class HappenParser
 	#endregion fields
 	internal HappenParser(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
 	{
-		inst.Plog.LogDebug($"HappenParse: booting for file: {file.FullName}");
+		plog.LogDebug($"HappenParse: booting for file: {file.FullName}");
 		allLines = IO.File.ReadAllLines(file.FullName, Encoding.UTF8);
 		this.file = file;
 		this.set = set;
@@ -53,13 +53,13 @@ internal class HappenParser
 					if (group_que.Success)
 					{
 						cGroupName = cline.Substring(group_que.Length);
-						inst.Plog.LogDebug($"HappenParse: Beginning group block: {cGroupName}");
+						plog.LogDebug($"HappenParse: Beginning group block: {cGroupName}");
 						phase = ParsePhase.Group;
 					}
 					else if (happn_que.Success)
 					{
 						cHapp = new(cline.Substring(happn_que.Length));
-						inst.Plog.LogDebug($"HappenParse: Beginning happen block: {cHapp.name}");
+						plog.LogDebug($"HappenParse: Beginning happen block: {cHapp.name}");
 						phase = ParsePhase.Happen;
 
 					}
@@ -82,7 +82,7 @@ internal class HappenParser
 		}
 		catch (Exception ex)
 		{
-			inst.Plog.LogError($"HappenParse: Irrecoverable error:" +
+			plog.LogError($"HappenParse: Irrecoverable error:" +
 				$"\n{ex}" +
 				$"\nAborting");
 			aborted = true;
@@ -95,7 +95,7 @@ internal class HappenParser
 		TXT.Match ge;
 		if ((ge = LineMatchers[LineKind.GroupEnd].Match(cline)).Success && ge.Index == 0)
 		{
-			inst.Plog.LogDebug($"HappenParse: ending group: {cGroupName}. " +
+			plog.LogDebug($"HappenParse: ending group: {cGroupName}. " +
 				$"Regex patterns: {cGroupContents.matchers.Count}, " +
 				$"Literal rooms: {cGroupContents.rooms.Count}");
 			allGroupContents.Add(cGroupName, cGroupContents);
@@ -108,11 +108,11 @@ internal class HappenParser
 			try
 			{
 				cGroupContents.matchers.Add(new TXT.Regex(cline.Substring(2, cline.Length - 4)));
-				inst.Plog.LogDebug($"HappenParse: Created a regex matcher for: {cline}");
+				plog.LogDebug($"HappenParse: Created a regex matcher for: {cline}");
 			}
 			catch (Exception ex)
 			{
-				inst.Plog.LogWarning($"HappenParse: error creating a regular expression in group block!" +
+				plog.LogWarning($"HappenParse: error creating a regular expression in group block!" +
 					$"\n{ex}" +
 					$"\nSource line: {cline}");
 			}
@@ -137,7 +137,7 @@ internal class HappenParser
 				{
 				case LineKind.HappenWhere:
 					{
-						inst.Plog.LogDebug("HappenParse: Recognized WHERE clause");
+						plog.LogDebug("HappenParse: Recognized WHERE clause");
 						WhereOps c = WhereOps.Group;
 						string[]? items = TXT.Regex.Split(payload, "\\s+");
 						foreach (var i in items)
@@ -171,7 +171,7 @@ internal class HappenParser
 					break;
 				case LineKind.HappenWhat:
 					{
-						inst.Plog.LogDebug("HappenParse: Recognized WHAT clause");
+						plog.LogDebug("HappenParse: Recognized WHAT clause");
 						PredicateInlay.Token[]? tokens = PredicateInlay.Tokenize(payload).ToArray();
 						for (var i = 0; i < tokens.Length; i++)
 						{
@@ -189,20 +189,20 @@ internal class HappenParser
 				{
 					if (cHapp.conditions is not null)
 					{
-						inst.Plog.LogWarning("HappenParse: Duplicate WHERE clause! Skipping! (Did you forget to close a previous Happen with END HAPPEN?)");
+						plog.LogWarning("HappenParse: Duplicate WHERE clause! Skipping! (Did you forget to close a previous Happen with END HAPPEN?)");
 						break;
 					}
-					inst.Plog.LogDebug("HappenParse: Recognized WHEN clause");
+					plog.LogDebug("HappenParse: Recognized WHEN clause");
 					cHapp.conditions = new PredicateInlay(payload, null);
 				}
 				catch (Exception ex)
 				{
-					inst.Plog.LogError($"HappenParse: Error creating eval tree from a WHEN block for {cHapp.name}:\n{ex}");
+					plog.LogError($"HappenParse: Error creating eval tree from a WHEN block for {cHapp.name}:\n{ex}");
 					cHapp.conditions = null;
 				}
 				break;
 				case LineKind.HappenEnd:
-				inst.Plog.LogDebug("HappenParse: finishing a happen block");
+				plog.LogDebug("HappenParse: finishing a happen block");
 				retrievedHappens.Add(cHapp);
 				cHapp = default;
 				phase = ParsePhase.None;

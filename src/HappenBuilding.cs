@@ -22,7 +22,7 @@ public static partial class HappenBuilding
 			}
 			catch (Exception ex)
 			{
-				inst.Plog.LogError(
+				plog.LogError(
 					$"Happenbuild: NewEvent:" +
 					$"Error invoking happen factory {cb}//{cb?.Method.Name} for {happen}:" +
 					$"\n{ex}");
@@ -57,7 +57,7 @@ public static partial class HappenBuilding
 			}
 			catch (Exception ex)
 			{
-				inst.Plog.LogError(
+				plog.LogError(
 					$"Happenbuild: CreateTrigger: Error invoking trigger factory " +
 					$"{cb}//{cb?.Method.Name} for {id}({(args.Length == 0 ? string.Empty : args.Aggregate(Utils.JoinWithComma))}):" +
 					$"\n{ex}");
@@ -66,7 +66,7 @@ public static partial class HappenBuilding
 	finish:
 		if (res is null)
 		{
-			inst.Plog.LogWarning($"Failed to create a trigger! {id}, args: {(args.Length == 0 ? string.Empty : args.Aggregate(Utils.JoinWithComma))}. Replacing with a stub");
+			plog.LogWarning($"Failed to create a trigger! {id}, args: {(args.Length == 0 ? string.Empty : args.Aggregate(Utils.JoinWithComma))}. Replacing with a stub");
 			res = new Always();
 		}
 		return res;

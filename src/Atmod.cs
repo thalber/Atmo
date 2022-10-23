@@ -13,6 +13,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// Static singleton
 	/// </summary>
 	public static Atmod inst;
+	internal static LOG.ManualLogSource plog => inst.Logger;
 	/// <summary>
 	/// omg rain world reference
 	/// </summary>
@@ -20,12 +21,13 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <summary>
 	/// publicized logger
 	/// </summary>
-	internal BepInEx.Logging.ManualLogSource Plog => Logger;
+	//internal BepInEx.Logging.ManualLogSource Plog => Logger;
 	private bool setupRan = false;
 	/// <summary>
 	/// Currently active <see cref="HappenSet"/>. Null if not in session, if in arena session, or if failed to read from session.
 	/// </summary>
 	public HappenSet? CurrentSet { get; private set; }
+	//todo: make it smoothly work with region switching.
 	#endregion
 	/// <summary>
 	/// Applies hooks and sets <see cref="inst"/>.
