@@ -1,35 +1,67 @@
 ﻿namespace Atmo;
 /// <summary>
 /// Represents a set of Happens for a single region. Binds together room names, groups and happens.
+/// Binding is done using <see cref="TwoPools{TLeft, TRight}"/> sets, living in properties:
+/// <see cref="RoomsToGroups"/>, <see cref="GroupsToHappens"/>, <see cref="IncludeToHappens"/>, <see cref="ExcludeToHappens"/>.
+/// <para>
+/// To get happens that should be active in a room with a given name, see <seealso cref="GetHappensForRoom(string)"/>.
+/// To get rooms a happen should be active in, see <seealso cref="GetRoomsForHappen(Happen)"/>.
+/// </para>
 /// </summary>
 public sealed class HappenSet
 {
 	#region fields
-	internal readonly RainWorldGame rwg;
-	internal readonly World world;
-	internal TwoPools<string, string> RoomsToGroups = new();
-	internal TwoPools<string, Happen> GroupsToHappens = new();
-	internal TwoPools<string, Happen> SpecificIncludeToHappens = new();
-	internal TwoPools<string, Happen> SpecificExcludeToHappens = new();
-	internal readonly List<Happen> AllHappens = new();
+	/// <summary>
+	/// Game process instance this set is bound to.
+	/// </summary>
+	public readonly RainWorldGame game;
+	/// <summary>
+	/// The world this instance is created for.
+	/// </summary>
+	public readonly World world;
+	/// <summary>
+	/// Left pool contains room names, right pool contains group names.
+	/// </summary>
+	public TwoPools<string, string> RoomsToGroups { get; private set; } = new();
+	/// <summary>
+	/// Left pool contains group names, right pool contains happens.
+	/// </summary>
+	public TwoPools<string, Happen> GroupsToHappens { get; private set; } = new();
+	/// <summary>
+	/// Left pool conrains individual includes, right pool contains happens.
+	/// </summary>
+	public TwoPools<string, Happen> IncludeToHappens { get; private set; } = new();
+	/// <summary>
+	/// Left pool conrains individual excludes, right pool contains happens.
+	/// </summary>
+	public TwoPools<string, Happen> ExcludeToHappens { get; private set; } = new();
+	/// <summary>
+	/// Contains all owned happens
+	/// </summary>
+	public List<Happen> AllHappens { get; private set; } = new();
 	#endregion
-	private HappenSet(World world, IO.FileInfo? file = null)
+	/// <summary>
+	/// Creates a new instance. Reads from a file if provided.
+	/// </summary>
+	/// <param name="world">World to be bound to.</param>
+	/// <param name="file">File to read contents from. New instance stays blank if this is null.</param>
+	internal HappenSet(World world!!, IO.FileInfo? file = null)
 	{
 		this.world = world;
-		rwg = world.game;
+		game = world.game;
 		if (world is null || file is null) return;
-		HappenParser.Parse(file, this, rwg);
+		HappenParser.Parse(file, this, game);
 	}
 	/// <summary>
 	/// Yields all rooms a given happen should be active in.
 	/// </summary>
-	/// <param name="ha"></param>
-	/// <returns></returns>
-	public IEnumerable<string> GetRoomsForHappen(Happen ha)
+	/// <param name="ha">Happen to be checked. Must not be null.</param>
+	/// <returns>A set of room names for rooms the given happen should work in.</returns>
+	public IEnumerable<string> GetRoomsForHappen(Happen ha!!)
 	{
 		List<string> returned = new();
-		IEnumerable<string>? excludes = SpecificExcludeToHappens.IndexFromRight(ha);
-		IEnumerable<string>? includes = SpecificIncludeToHappens.IndexFromRight(ha);
+		IEnumerable<string>? excludes = ExcludeToHappens.IndexFromRight(ha);
+		IEnumerable<string>? includes = IncludeToHappens.IndexFromRight(ha);
 		foreach (var group in GroupsToHappens.IndexFromRight(ha))
 		{
 			foreach (var room in RoomsToGroups.IndexFromRight(group))
@@ -48,9 +80,9 @@ public sealed class HappenSet
 	/// <summary>
 	/// Yields all happens a given room should have active.
 	/// </summary>
-	/// <param name="roomname"></param>
-	/// <returns></returns>
-	public IEnumerable<Happen> GetHappensForRoom(string roomname)
+	/// <param name="roomname">Room name to check. Must not be null.</param>
+	/// <returns>A set of happens active for given room.</returns>
+	public IEnumerable<Happen> GetHappensForRoom(string roomname!!)
 	{
 		List<Happen> returned = new();
 		//goto _specific;
@@ -61,15 +93,15 @@ public sealed class HappenSet
 			foreach (Happen? ha in GroupsToHappens.IndexFromLeft(group))
 			{
 				//exclude the minused
-				if (SpecificExcludeToHappens.IndexFromRight(ha)
+				if (ExcludeToHappens.IndexFromRight(ha)
 					.Contains(roomname)) continue;
 				returned.Add(ha);
 				yield return ha;
 			}
 		}
 	_specific:
-		if (!SpecificIncludeToHappens.LeftContains(roomname)) yield break;
-		foreach (Happen? ha in SpecificIncludeToHappens.IndexFromLeft(roomname))
+		if (!IncludeToHappens.LeftContains(roomname)) yield break;
+		foreach (Happen? ha in IncludeToHappens.IndexFromLeft(roomname))
 		{
 			if (!returned.Contains(ha)) yield return ha;
 		}
@@ -78,37 +110,37 @@ public sealed class HappenSet
 	/// <summary>
 	/// Binds a given happen to a set of groups. Assumes that happen has already been added via <see cref="InsertHappens(IEnumerable{Happen})"/>.
 	/// </summary>
-	/// <param name="ha"></param>
-	/// <param name="groups"></param>
-	public void AddGrouping(Happen ha, IEnumerable<string> groups)
+	/// <param name="happen">The happen that should receive group links. Must not be null.</param>
+	/// <param name="groups">A set of groups to be bound to given happen. Must not be null.</param>
+	public void AddGrouping(Happen happen!!, IEnumerable<string> groups!!)
 	{
 		if (groups?.Count() is null or 0) return;
 		Dictionary<string, List<string>> ins = new();
 		foreach (var g in groups) { ins.Add(g, new(0)); }
 		InsertGroups(ins);
-		GroupsToHappens.AddLinksBulk(groups.Select(gr => new KeyValuePair<string, Happen>(gr, ha)));
+		GroupsToHappens.AddLinksBulk(groups.Select(gr => new KeyValuePair<string, Happen>(gr, happen)));
 	}
 	/// <summary>
-	/// Adds room excludes for a given happen. Assumes happen has already been added via <see cref="InsertHappens(IEnumerable{Happen})"/>
+	/// Adds room excludes for a given happen. In these rooms, the happen will be inactive regardless of grouping. Assumes happen has already been added via <see cref="InsertHappens(IEnumerable{Happen})"/>
 	/// </summary>
-	/// <param name="ha"></param>
-	/// <param name="excl"></param>
-	public void AddExcludes(Happen ha, IEnumerable<string> excl)
+	/// <param name="happen">A happen receiving excludes. Must not be null.</param>
+	/// <param name="excl">A set of room names to exclude. Must not be null.</param>
+	public void AddExcludes(Happen happen!!, IEnumerable<string> excl!!)
 	{
 		if (excl?.Count() is null or 0) return;
-		SpecificExcludeToHappens.InsertRangeLeft(excl);
-		foreach (var ex in excl) SpecificExcludeToHappens.AddLink(ex, ha);
+		ExcludeToHappens.InsertRangeLeft(excl);
+		foreach (var ex in excl) ExcludeToHappens.AddLink(ex, happen);
 	}
 	/// <summary>
-	/// Adds room includes for a given happen. Assumes happen has already been added via <see cref="InsertHappens(IEnumerable{Happen})"/>
+	/// Adds room includes for a given happen. In these rooms, the happen will be active regardless of grouping. Assumes happen has already been added via <see cref="InsertHappens(IEnumerable{Happen})"/>
 	/// </summary>
-	/// <param name="ha"></param>
-	/// <param name="incl"></param>
-	public void AddIncludes(Happen ha, IEnumerable<string> incl)
+	/// <param name="happen">A happen receiving includes. Must not be null.</param>
+	/// <param name="incl">A set of room names to include. Must not be null.</param>
+	public void AddIncludes(Happen happen!!, IEnumerable<string> incl!!)
 	{
 		if (incl?.Count() is null or 0) return;
-		SpecificIncludeToHappens.InsertRangeLeft(incl);
-		foreach (var @in in incl) SpecificIncludeToHappens.AddLink(@in, ha);
+		IncludeToHappens.InsertRangeLeft(incl);
+		foreach (var @in in incl) IncludeToHappens.AddLink(@in, happen);
 	}
 	/// <summary>
 	/// Adds a group with its contents.
@@ -125,15 +157,15 @@ public sealed class HappenSet
 		}
 	}
 	/// <summary>
-	/// Inserts a set of happens without binding them to anything.
+	/// Inserts a set of happens without binding them to any rooms.
 	/// </summary>
 	/// <param name="haps"></param>
 	public void InsertHappens(IEnumerable<Happen> haps)
 	{
 		AllHappens.AddRange(haps);
 		GroupsToHappens.InsertRangeRight(haps);
-		SpecificExcludeToHappens.InsertRangeRight(haps);
-		SpecificIncludeToHappens.InsertRangeRight(haps);
+		ExcludeToHappens.InsertRangeRight(haps);
+		IncludeToHappens.InsertRangeRight(haps);
 	}
 	#endregion
 	/// <summary>
@@ -148,7 +180,12 @@ public sealed class HappenSet
 		}
 	}
 	#region statics
-	internal static HappenSet? TryCreate(World world)
+	/// <summary>
+	/// Attempts to create a new happenSet for a given world. This checks all loaded CRS packs and merges together intersecting <c>.atmo</c> files.
+	/// </summary>
+	/// <param name="world">The world to create a happenSet for. Must not be null.</param>
+	/// <returns>A resulting HappenSet; null if there was no regpack with an .atmo file for given region, or if there was an error on creation.</returns>
+	public static HappenSet? TryCreate(World world!!)
 	{
 		HappenSet? res = null;
 #if REMIX
@@ -196,7 +233,7 @@ public sealed class HappenSet
 #endif
 	}
 	/// <summary>
-	/// Concatenates two instances together. Used when merging from several files.
+	/// Joins two instances together. Used when merging from several files.
 	/// </summary>
 	/// <param name="l"></param>
 	/// <param name="r"></param>
@@ -205,18 +242,18 @@ public sealed class HappenSet
 	{
 		HappenSet res = new(l.world ?? r.world)
 		{
-			SpecificIncludeToHappens = TwoPools<string, Happen>.Stitch(
-				l.SpecificIncludeToHappens,
-				r.SpecificIncludeToHappens),
+			IncludeToHappens = TwoPools<string, Happen>.Stitch(
+				l.IncludeToHappens,
+				r.IncludeToHappens),
 			RoomsToGroups = TwoPools<string, string>.Stitch(
 				l.RoomsToGroups,
 				r.RoomsToGroups),
 			GroupsToHappens = TwoPools<string, Happen>.Stitch(
 				l.GroupsToHappens,
 				r.GroupsToHappens),
-			SpecificExcludeToHappens = TwoPools<string, Happen>.Stitch(
-				l.SpecificExcludeToHappens,
-				r.SpecificExcludeToHappens),
+			ExcludeToHappens = TwoPools<string, Happen>.Stitch(
+				l.ExcludeToHappens,
+				r.ExcludeToHappens),
 		};
 		res.AllHappens.AddRange(l.AllHappens);
 		res.AllHappens.AddRange(r.AllHappens);

@@ -34,13 +34,6 @@ public sealed partial class Atmod : BaseUnityPlugin
 	{
 		try
 		{
-			string x = "eee";
-			Func<string, object> c;
-			object a = x switch
-			{
-				"eee" => (c = (x) => new() ).Invoke("eee"),
-			};
-
 			On.AbstractRoom.Update += RunHappensAbstUpd;
 			On.RainWorldGame.Update += DoBodyUpdates;
 			On.Room.Update += RunHappensRealUpd;
@@ -80,7 +73,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		orig(self);
 		if (CurrentSet is null) return;
 		if (self.pauseMenu != null) return;
-		foreach (var ha in CurrentSet.AllHappens)
+		foreach (Happen? ha in CurrentSet.AllHappens)
 		{
 			if (ha is null) continue;
 			try
@@ -103,8 +96,8 @@ public sealed partial class Atmod : BaseUnityPlugin
 	{
 		orig(self, timePassed);
 		if (CurrentSet is null) return;
-		var haps = CurrentSet.GetHappensForRoom(self.name);
-		foreach (var ha in haps)
+		IEnumerable<Happen>? haps = CurrentSet.GetHappensForRoom(self.name);
+		foreach (Happen? ha in haps)
 		{
 			if (ha is null) continue;
 			try
@@ -134,8 +127,8 @@ public sealed partial class Atmod : BaseUnityPlugin
 		orig(self);
 		//DBG.Stopwatch sw = DBG.Stopwatch.StartNew();
 		if (CurrentSet is null) return;
-		var haps = CurrentSet.GetHappensForRoom(self.abstractRoom.name);
-		foreach (var ha in haps)
+		IEnumerable<Happen>? haps = CurrentSet.GetHappensForRoom(self.abstractRoom.name);
+		foreach (Happen? ha in haps)
 		{
 			try
 			{
@@ -166,7 +159,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		}
 		if (rw is null || CurrentSet is null) return;
 		if (rw.processManager.currentMainLoop is RainWorldGame) return;
-		foreach (var proc in rw.processManager.sideProcesses) if (proc is RainWorldGame) return;
+		foreach (MainLoopProcess? proc in rw.processManager.sideProcesses) if (proc is RainWorldGame) return;
 		Logger.LogDebug("No RainWorldGame in processmanager, erasing currentset");
 		CurrentSet = null;
 	}
@@ -189,7 +182,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 			cleanup_logger.LogMessage("Spooling cleanup thread.");
 			System.Threading.ThreadPool.QueueUserWorkItem((_) =>
 			{
-				foreach (var t in typeof(Atmod).Assembly.GetTypes())
+				foreach (Type t in typeof(Atmod).Assembly.GetTypes())
 				{
 					try { t.CleanupStatic(); }
 					catch (Exception ex)

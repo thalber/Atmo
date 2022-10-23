@@ -54,7 +54,7 @@ public static partial class HappenBuilding
 				args.AtOr(4, true).Bool);
 		});
 		AddNamedTrigger(new[] { "karma", "onkarma" }, (args, rwg, ha) => new OnKarma(rwg, args));
-		AddNamedTrigger(new[] { "visited", "playervisited", "playervisit" }, (args, rwg, ha) => new AfterVisit(rwg, args));
+		AddNamedTrigger(new[] { "visit", "playervisited", "playervisit" }, (args, rwg, ha) => new AfterVisit(rwg, args));
 		AddNamedTrigger(new[] { "fry", "fryafter" }, (args, rwg, ha) =>
 		{
 			return new Fry(args.AtOr(0, 5f), args.AtOr(1, 10f));
@@ -94,6 +94,8 @@ public static partial class HappenBuilding
 	//Do not remove the warning directive.
 	private static void Make_SoundLoop(Happen ha, ArgSet args)
 	{
+		//does not work in HI (???). does not automatically get discontinued when leaving an affected room.
+		//todo: now works in HI. Breaks with warp.
 		if (args.Count == 0)
 		{
 			inst.Plog.LogError($"Happen {ha.name}: soundloop action: " +
@@ -110,44 +112,46 @@ public static partial class HappenBuilding
 			sid = args[0],
 			vol = args["vol", "volume"]?.F32 ?? 1f,
 			pitch = args["pitch"]?.F32 ?? 1f,
-			pan = args["pan"]?.F32 ?? 0f;
-		//smStep = args["smoothenstep", "step"]?.F32 ?? 0.05f,
-		//smLerp = args["smoothenlerp", "lerp"]?.F32 ?? 0.07f
-		;
+			pan = args["pan"]?.F32 ?? 0f,
+			limit = args["lim", "limit"]?.F32 ?? float.PositiveInfinity;
 		string lastSid = sid.Str;
+		int timeAlive = 0;
 		Dictionary<string, DisembodiedLoopEmitter> soundloops = new();//hashes = new();
 		ha.On_RealUpdate += (rm) =>
 		{
+			if (timeAlive > limit.F32 * 40f) return;
 			for (int i = 0; i < rm.updateList.Count; i++)
 			{
-				if (rm.updateList[i] is DisembodiedLoopEmitter dle && soundloops.ContainsValue(dle))
+				if (rm.BeingViewed && rm.updateList[i] is DisembodiedLoopEmitter dle && soundloops.ContainsValue(dle))
 				{
 					dle.soundStillPlaying = true;
 					dle.alive = true;
 					return;
 				}
 			}
-			inst.Plog.LogDebug("Need to create a new soundloop!");
+			if (!rm.BeingViewed) return;
+			inst.Plog.LogDebug($"{ha.name}: Need to create a new soundloop in {rm.abstractRoom.name}! {soundloops.GetHashCode()}");
 			DisembodiedLoopEmitter? newdle = rm.PlayDisembodiedLoop(soundid, vol.F32, pitch.F32, pan.F32);
-			newdle.requireActiveUpkeep = false;
+			newdle.requireActiveUpkeep = true;
 			newdle.alive = true;
 			newdle.soundStillPlaying = true;
 			soundloops.AddOrUpdate(rm.abstractRoom.name, newdle);
 		};
-		ha.On_AbstUpdate += (ar, t) =>
-		{
-			//clean up hashes from abstractized rooms
-			if (soundloops.TryGetValue(ar.name, out var here) && ar.realizedRoom is null) soundloops.Remove(ar.name);//here.Clear();
-		};
+		//ha.On_AbstUpdate += (ar, t) =>
+		//{
+		//	//clean up hashes from abstractized rooms
+		//	if (soundloops.TryGetValue(ar.name, out var here) && ar.realizedRoom is null) soundloops.Remove(ar.name);//here.Clear();
+		//};
 		ha.On_CoreUpdate += (rwg) =>
 		{
+			if (ha.Active) timeAlive++;
 			//lazy enum parsing
 			if (sid.Str != lastSid)
 			{
 				sid.GetEnum(out soundid);
 			}
 			lastSid = sid.Str;
-			if (!ha.Active) { foreach (var dsl in soundloops.Values) dsl.requireActiveUpkeep = true; soundloops.Clear(); }
+			if (!ha.Active) soundloops.Clear();
 		};
 	}
 	private static void Make_Sound(Happen ha, ArgSet args)
@@ -245,7 +249,7 @@ public static partial class HappenBuilding
 		Arg enabled = args.AtOr(0, true);
 		ha.On_Init += (w) =>
 		{
-			var dspd = w.game.GetStorySession?.saveState;//./deathPersistentSaveData;
+			SaveState? dspd = w.game.GetStorySession?.saveState;//./deathPersistentSaveData;
 			if (dspd is null) return;
 			dspd.theGlow = enabled.Bool;
 		};
@@ -255,7 +259,7 @@ public static partial class HappenBuilding
 		Arg enabled = args.AtOr(0, true);
 		ha.On_Init += (w) =>
 		{
-			var dspd = w.game.GetStorySession?.saveState.deathPersistentSaveData;
+			DeathPersistentSaveData? dspd = w.game.GetStorySession?.saveState.deathPersistentSaveData;
 			if (dspd is null) return;
 			dspd.theMark = enabled.Bool;
 		};
@@ -300,7 +304,7 @@ public static partial class HappenBuilding
 	{
 		ha.On_Init += (w) =>
 		{
-			var dpsd = w.game?.GetStorySession?.saveState?.deathPersistentSaveData;
+			DeathPersistentSaveData? dpsd = w.game?.GetStorySession?.saveState?.deathPersistentSaveData;
 			if (dpsd is null || w.game is null) return;
 			Arg ts = args.AtOr(0, 0);
 			int karma = dpsd.karma;
@@ -316,7 +320,7 @@ public static partial class HappenBuilding
 	{
 		ha.On_Init += (w) =>
 		{
-			var dpsd = w.game?.GetStorySession?.saveState?.deathPersistentSaveData;
+			DeathPersistentSaveData? dpsd = w.game?.GetStorySession?.saveState?.deathPersistentSaveData;
 			if (dpsd is null || w.game is null) return;
 			Arg ts = args.AtOr(0, 0);
 			var cap = dpsd.karmaCap;
@@ -337,7 +341,13 @@ public static partial class HappenBuilding
 			for (var i = 0; i < room.updateList.Count; i++)
 			{
 				UAD? uad = room.updateList[i];
-				if (uad is Player p) p.gravity = frac.F32;
+				if (uad is Player p)
+				{
+					foreach (BodyChunk? bc in p.bodyChunks)
+					{
+						bc.vel.y += frac.F32;
+					}
+				}
 			}
 		};
 	}

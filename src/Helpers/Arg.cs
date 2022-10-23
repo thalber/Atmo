@@ -129,8 +129,9 @@ public sealed class Arg
 		private set
 		{
 			if (IsVar) { _var.F32 = value; return; }
+
 			_f32 = value;
-			_i32 = (int)value;
+			_i32 = (value is float.PositiveInfinity or float.NegativeInfinity or float.NaN) ? 0 : (int)value;
 			_bool = value is not 0f;
 			_skipparse = true;
 			Str = value.ToString();
@@ -192,7 +193,6 @@ public sealed class Arg
 	/// <param name="linkage">Whether to check the provided string's structure, determining name and linking to a variable if needed. Off by default, for implicit casts</param>
 	public Arg(string orig!!, bool linkage = false)
 	{
-		//todo: add a variant that allows to construct from a string without checking structure?
 		_raw = orig;
 		_f32 = default;
 		_i32 = default;

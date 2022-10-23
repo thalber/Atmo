@@ -14,7 +14,7 @@ public static partial class HappenBuilding
 	internal static void NewEvent(Happen happen)
 	{
 		if (MNH_invl is null) return;
-		foreach (var cb in MNH_invl)
+		foreach (Create_RawHappenBuilder? cb in MNH_invl)
 		{
 			try
 			{
@@ -48,7 +48,7 @@ public static partial class HappenBuilding
 		//res = DefaultTrigger(id, args, rwg, owner);
 
 		if (MNT_invl is null) goto finish;
-		foreach (var cb in MNT_invl)
+		foreach (Create_RawTriggerFactory? cb in MNT_invl)
 		{
 			if (res is not null) break;
 			try

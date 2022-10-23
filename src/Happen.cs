@@ -125,7 +125,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		List<HappenTrigger> list_triggers = new();
 		conditions?.Populate((id, args) =>
 		{
-			var nt = HappenBuilding.CreateTrigger(id, args, game, this);
+			HappenTrigger? nt = HappenBuilding.CreateTrigger(id, args, game, this);
 			list_triggers.Add(nt);
 			return nt.ShouldRunUpdates;
 		});
@@ -227,7 +227,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		{
 			inst.Plog.LogError(ErrorMessage(
 				lc_event.eval,
-				conditions.Eval,
+				conditions is null ? null : conditions.Eval,
 				ex,
 				error_response.none));
 		}
@@ -363,7 +363,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		void_trigger
 	}
 	#endregion
-	private string ErrorMessage(lc_event where, Delegate cb, Exception ex, error_response resp = error_response.remove_cb)
+	private string ErrorMessage(lc_event where, Delegate? cb, Exception ex, error_response resp = error_response.remove_cb)
 	{
 		return $"Happen {this}: {where}: " +
 			$"Error on invoke {cb}//{cb?.Method}:" +

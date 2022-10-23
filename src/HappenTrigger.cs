@@ -209,7 +209,7 @@ public abstract partial class HappenTrigger
 	/// </summary>
 	public sealed class AfterVisit : NeedsRWG
 	{
-		private string[] rooms;
+		private readonly string[] rooms;
 		private bool visit = false;
 		public AfterVisit(RainWorldGame game, ArgSet roomnames) : base(game)
 		{
@@ -218,7 +218,12 @@ public abstract partial class HappenTrigger
 		public override void Update()
 		{
 			if (visit) return;
-			foreach (var player in game.Players) if (rooms.Contains(player.Room.name)) visit = true;
+			foreach (AbstractCreature? player in game.Players) if (rooms.Contains(player.Room.name))
+				{
+					visit = true;
+					//inst.Plog.LogDebug("Trip!");
+					//inst.Plog.LogDebug(inst.CurrentSet.GetRoomsForHappen(inst.CurrentSet.AllHappens.First(x => x.name == "hitest")).Aggregate(JoinWithComma));
+				}
 		}
 		public override bool ShouldRunUpdates()
 		{
@@ -317,7 +322,7 @@ public abstract partial class HappenTrigger
 	/// </summary>
 	public sealed class AfterDelay : NeedsRWG
 	{
-		private int delay;
+		private readonly int delay;
 		/// <summary>
 		/// Creates an instance with delay in set bounds.
 		/// </summary>
@@ -341,6 +346,36 @@ public abstract partial class HappenTrigger
 		{
 			return game.world.rainCycle.timer > delay;
 		}
+	}
+	/// <summary>
+	/// Activates if player count is within given value
+	/// </summary>
+	public sealed class OnPlayerCount : NeedsRWG
+	{
+		private readonly int[] accepted;
+		public OnPlayerCount(ArgSet args!!, RainWorldGame game!!) : base(game, null)
+		{
+			accepted = args.Select(x => (int)x).ToArray();
+		}
+		public override bool ShouldRunUpdates()
+			=> accepted.Contains(game.Players.Count);
+	}
+	/// <summary>
+	/// Only activates on a given difficulty.
+	/// </summary>
+	public sealed class OnDifficulty : NeedsRWG
+	{
+		private readonly bool enabled = false;
+		public OnDifficulty(ArgSet args!!, RainWorldGame game!!, Happen? ow = null) : base(game, ow)
+		{
+			foreach (Arg arg in args)
+			{
+				arg.GetEnum(out SlugcatStats.Name name);
+				if (name == game.GetStorySession.characterStats.name) enabled = true;		
+			}
+		}
+		public override bool ShouldRunUpdates()
+			=> enabled;//difficulties.Contains(game.GetStorySession.characterStats.name);
 	}
 #pragma warning restore CS1591
 	#endregion
