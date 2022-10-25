@@ -68,7 +68,14 @@ public static partial class HappenBuilding
 			}
 			return new AfterOther(ha, args[0], args[1]);
 		});
-		AddNamedTrigger(new[] { "delay", "ondelay" }, (args, rwg, ha) => new AfterVisit(rwg, args));
+		AddNamedTrigger(new[] { "delay", "ondelay" }, (args, rwg, ha) => {
+			return args.Count switch
+			{
+				< 1 => null,
+				1 => new AfterDelay(args[0], rwg),
+				> 2 => new AfterDelay(args[0], args[1], rwg)//throw new NotImplementedException(),
+			};
+		});
 		//todo: update docs to reflect shift to seconds in parameters rather than frames
 	}
 	private static void RegisterBuiltinActions()
