@@ -1,5 +1,4 @@
-﻿
-namespace Atmo;
+﻿namespace Atmo;
 /// <summary>
 /// A "World event": sealed class that carries custom code in form of callbacks. Every happen is read from within a <c>HAPPEN:...END HAPPEN</c> block in an .ATMO file. The following example block:
 /// <para>
@@ -130,7 +129,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			return nt.ShouldRunUpdates;
 		});
 		triggers = list_triggers.ToArray();
-		HappenBuilding.NewEvent(this);
+		HappenBuilding.NewHappen(this);
 
 		if (actions.Count is 0) plog.LogWarning($"Happen {this}: no actions! Possible missing 'WHAT:' clause");
 		if (conditions is null) plog.LogWarning($"Happen {this}: did not receive conditions! Possible missing 'WHEN:' clause");

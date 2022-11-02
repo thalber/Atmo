@@ -11,7 +11,7 @@ public static partial class HappenBuilding
 	/// Populates a happen with callbacks. Called automatically by the constructor.
 	/// </summary>
 	/// <param name="happen"></param>
-	internal static void NewEvent(Happen happen)
+	internal static void NewHappen(Happen happen)
 	{
 		if (MNH_invl is null) return;
 		foreach (Create_RawHappenBuilder? cb in MNH_invl)
