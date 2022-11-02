@@ -209,7 +209,6 @@ public static class Utils
 	{
 		return coll is null || coll.Count() is 0 ? string.Empty : coll.Aggregate(JoinWithComma);
 	}
-
 	public static bool TryParseEnum<T>(string str, out T result)
 		where T : Enum
 	{

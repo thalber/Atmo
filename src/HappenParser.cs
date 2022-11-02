@@ -284,7 +284,6 @@ internal class HappenParser
 	#endregion
 	internal static void Parse(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
 	{
-		//todo: subregions as groups
 		HappenParser p = new(file, set, rwg);
 		for (var i = 0; i < p.allLines.Length; i++)
 		{

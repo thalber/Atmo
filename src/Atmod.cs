@@ -146,7 +146,6 @@ public sealed partial class Atmod : BaseUnityPlugin
 			}
 		}
 	}
-	//todo: make sure everything works with region switching
 	#endregion lifecycle
 	/// <summary>
 	/// Cleans up set if not ingame.
