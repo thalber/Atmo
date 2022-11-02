@@ -51,6 +51,17 @@ public sealed class HappenSet
 		game = world.game;
 		if (world is null || file is null) return;
 		HappenParser.Parse(file, this, game);
+		//subregions as groups
+		Dictionary<string, List<string>> subContents = new();
+
+		foreach (string sub in world.region.subRegions)
+		{
+			int index = world.region.subRegions.IndexOf(sub);
+			subContents.Add(sub, world.abstractRooms
+				.Where(x => x.subRegion == index)
+				.Select(x => x.name).ToList());
+		}
+		InsertGroups(subContents);
 	}
 	/// <summary>
 	/// Yields all rooms a given happen should be active in.
@@ -141,6 +152,19 @@ public sealed class HappenSet
 		if (incl?.Count() is null or 0) return;
 		IncludeToHappens.InsertRangeLeft(incl);
 		foreach (var @in in incl) IncludeToHappens.AddLink(@in, happen);
+	}
+	/// <summary>
+	/// Inserts a single group.
+	/// </summary>
+	/// <param name="group"></param>
+	/// <param name="rooms"></param>
+	public void InsertGroup(string group, IEnumerable<string> rooms)
+	{
+		RoomsToGroups.InsertRight(group);
+		GroupsToHappens.InsertLeft(group);
+		RoomsToGroups.InsertRangeLeft(rooms);
+		RoomsToGroups.AddLinksBulk(rooms.Select(x => new KeyValuePair<string, string>(group, x)));
+		//foreach (var room in rooms) { RoomsToGroups.AddLink() }
 	}
 	/// <summary>
 	/// Adds a group with its contents.
