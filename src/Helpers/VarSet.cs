@@ -43,19 +43,20 @@ internal class VarSet
 		SerDict res = new();
 		Arg _def = Defarg;
 		NamedVars tdict = DictForSection(section);
-		foreach (KeyValuePair<string, Arg> kvp in tdict)
+		foreach ((string name, Arg var)in tdict)
 		{
-			if (kvp.Value.Equals(_def)) continue;
-			res.Add(kvp.Key, kvp.Value._str);
+			if (var.Equals(_def)) continue;
+			res.Add(name, var._str);
 		}
 		return res;
 	}
-	internal void FillFrom(SerDict dict, DataSection section)
+	internal void FillFrom(SerDict? dict, DataSection section)
 	{
 		NamedVars tdict = DictForSection(section);
 		tdict.Clear();
-		foreach (KeyValuePair<string, object> kvp in dict) {
-			tdict.Add(kvp.Key, kvp.Value.ToString());
+		if (dict is null) return;
+		foreach ((string name, object val) in dict) {
+			tdict.Add(name, val.ToString());
 		}
 	}
 	private NamedVars DictForSection(DataSection sec) => sec switch

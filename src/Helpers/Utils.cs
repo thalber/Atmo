@@ -316,7 +316,6 @@ public static class Utils
 		}
 		catch (Exception ee) { plog.LogError($"Error getting ER: {ee}"); return null; }
 	}
-
 	public record struct VT<T1, T2>(
 		T1 a,
 		T2 b,
@@ -361,7 +360,13 @@ public static class Utils
 	{
 		public override string ToString() 
 			=> $"{name} {{ {nameA} = {a}, {nameB} = {b}, {nameC} = {c} }}";
-	}	
+	}
+
+	public static void Deconstruct<TKey, TVal>(this KeyValuePair<TKey, TVal> kvp, out TKey k, out TVal v)
+	{
+		k = kvp.Key;
+		v = kvp.Value;
+	}
 	//public record struct VT<T1, T2, T3, T4>(T1 a, T2 b, T3 c, T4 d);
 	#endregion
 }

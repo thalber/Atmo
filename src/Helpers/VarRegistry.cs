@@ -1,6 +1,4 @@
-﻿using static Atmo.Helpers.VarSet;
-
-using SerDict = System.Collections.Generic.Dictionary<string, object>;
+﻿using SerDict = System.Collections.Generic.Dictionary<string, object>;
 using NamedVars = System.Collections.Generic.Dictionary<string, Atmo.Helpers.Arg>;
 using Save = Atmo.Helpers.Utils.VT<int, int>;
 
@@ -34,9 +32,13 @@ public static class VarRegistry
 		plog.LogDebug("Clear VarRegistry hooks");
 		On.SaveState.LoadGame -= ReadNormal;
 		On.SaveState.SaveToString -= WriteNormal;
+
 		On.DeathPersistentSaveData.ctor -= RegDPSD;
 		On.DeathPersistentSaveData.FromString -= ReadPers;
 		On.DeathPersistentSaveData.SaveToString -= WritePers;
+
+		On.PlayerProgression.WipeAll -= WipeAll;
+		On.PlayerProgression.WipeSaveState -= WipeSavestate;
 	}
 	internal static void Init()
 	{
@@ -44,9 +46,51 @@ public static class VarRegistry
 		plog.LogDebug("Init VarRegistry hooks");
 		On.SaveState.LoadGame += ReadNormal;
 		On.SaveState.SaveToString += WriteNormal;
+
 		On.DeathPersistentSaveData.ctor += RegDPSD;
 		On.DeathPersistentSaveData.FromString += ReadPers;
 		On.DeathPersistentSaveData.SaveToString += WritePers;
+
+		On.PlayerProgression.WipeAll += WipeAll;
+		On.PlayerProgression.WipeSaveState += WipeSavestate;
+	}
+
+	private static void WipeSavestate(On.PlayerProgression.orig_WipeSaveState orig, PlayerProgression self, int saveStateNumber)
+	{
+		Save save = default;
+		try
+		{
+			save = MakeSD(CurrentSaveslot ?? -1, saveStateNumber);
+			plog.LogDebug($"Wiping data for save {save}");
+			EraseData(save);
+		}
+		catch (Exception ex)
+		{
+			plog.LogError(ErrorMessage(Site.HookWipe, $"Failed to wipe saveslot {save}", ex));
+		}
+		orig(self, saveStateNumber);
+	}
+	private static void WipeAll(On.PlayerProgression.orig_WipeAll orig, PlayerProgression self)
+	{
+		int ss = CurrentSaveslot ?? -1;
+		try
+		{
+			plog.LogDebug($"Wiping data for slot {ss}");
+			foreach ((Save save, VarSet set) in VarsPerSave)
+			{
+				if (save.a != ss) continue;
+				EraseData(save);
+				foreach (DataSection sec in Enum.GetValues(typeof(DataSection)))
+				{
+					set.FillFrom(null, sec);
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			plog.LogError(ErrorMessage(Site.HookWipe, $"Failed to wipe all saves for slot {ss}", ex));
+		}
+		orig(self);
 	}
 
 	private static void RegDPSD(
@@ -57,7 +101,6 @@ public static class VarRegistry
 		orig(self, slugcat);
 		DPSD_Slug.Add(self.GetHashCode(), slugcat);
 	}
-
 	private static void ReadPers(
 		On.DeathPersistentSaveData.orig_FromString orig,
 		DeathPersistentSaveData self,
@@ -89,7 +132,6 @@ public static class VarRegistry
 		}
 		orig(self, s);
 	}
-
 	private static string WritePers(
 		On.DeathPersistentSaveData.orig_SaveToString orig,
 		DeathPersistentSaveData self,
@@ -231,6 +273,21 @@ public static class VarRegistry
 			return false;
 		}
 	}
+	internal static void EraseData(in Save save)
+	{
+		foreach (DataSection sec in Enum.GetValues(typeof(DataSection)))
+		{
+			try
+			{
+				IO.FileInfo fi = new(SaveFile(save, sec));
+				if (fi.Exists) fi.Delete();
+			}
+			catch (IO.IOException ex)
+			{
+				plog.LogError(ErrorMessage(Site.WipeData, $"Error erasing file for {save}", ex));
+			}
+		}
+	}
 	internal static VarSet VarsForSave(Save save)
 		=> VarsPerSave.AddIfNone_Get(save, () => new(save));
 	internal static string SaveFolder(in Save save)
@@ -255,9 +312,11 @@ public static class VarRegistry
 	private enum Site
 	{
 		ReadData,
+		WipeData,
 		WriteData,
-		HookPersistent,
+		HookWipe,
 		HookNormal,
+		HookPersistent,
 	}
 	#endregion
 }
