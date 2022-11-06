@@ -4,7 +4,7 @@ using Save = Atmo.Helpers.Utils.VT<int, int>;
 
 namespace Atmo.Helpers;
 /// <summary>
-/// Provides 
+/// Allows accessing a pool of variables, global or save-specific.
 /// </summary>
 public static class VarRegistry
 {
@@ -39,11 +39,18 @@ public static class VarRegistry
 
 		On.PlayerProgression.WipeAll -= WipeAll;
 		On.PlayerProgression.WipeSaveState -= WipeSavestate;
+
+		foreach (int slot in VarsGlobal.Keys)
+		{
+			WriteGlobal(slot);
+		}
 	}
 	internal static void Init()
 	{
 		//todo: globals ser
 		plog.LogDebug("Init VarRegistry hooks");
+
+
 		On.SaveState.LoadGame += ReadNormal;
 		On.SaveState.SaveToString += WriteNormal;
 
@@ -54,7 +61,6 @@ public static class VarRegistry
 		On.PlayerProgression.WipeAll += WipeAll;
 		On.PlayerProgression.WipeSaveState += WipeSavestate;
 	}
-
 	private static void WipeSavestate(On.PlayerProgression.orig_WipeSaveState orig, PlayerProgression self, int saveStateNumber)
 	{
 		Save save = default;
@@ -232,13 +238,52 @@ public static class VarRegistry
 		{
 			name = name.Substring(PREFIX_GLOBAL.Length);
 			return VarsGlobal
-				.AddIfNone_Get(saveslot, () => new())
+				.AddIfNone_Get(saveslot, () => ReadGlobal(saveslot))
 				.AddIfNone_Get(name, () => Defarg);
 		}
 		Save save = MakeSD(saveslot, character);
 		return VarsPerSave
 			.AddIfNone_Get(save, () => new(save))
 			.GetVar(name);
+	}
+	#region filemanip
+	internal static NamedVars ReadGlobal(int slot)
+	{
+		NamedVars res = new();
+		IO.FileInfo fi = new(GlobalFile(slot));
+		if (!fi.Exists) return res;
+		try
+		{
+			using IO.StreamReader reader = fi.OpenText();
+			SerDict json = reader.ReadToEnd().dictionaryFromJson();
+			foreach ((string name, object val) in json)
+			{
+				res.Add(name, val?.ToString() ?? string.Empty);
+			}
+		}
+		catch (IO.IOException ex)
+		{
+			plog.LogError(ErrorMessage(Site.ReadData, $"Could not read global vars for slot {slot}", ex));
+		}
+		return res;
+	}
+	internal static void WriteGlobal(int slot)
+	{
+		IO.DirectoryInfo dir = new(SaveFolder(new(slot, -1)));
+		IO.FileInfo fi = new (GlobalFile(slot));
+		try
+		{
+			if (!dir.Exists) dir.Create();
+			fi.Refresh();
+			NamedVars dict = VarsGlobal.AddIfNone_Get(slot, () => new());
+
+			using IO.StreamWriter writer = fi.CreateText();
+			writer.Write(Json.Serialize(dict));
+		}
+		catch (IO.IOException ex)
+		{
+			plog.LogError(ErrorMessage(Site.WriteData, $"Could not write global vars for slot {slot}", ex));
+		}
 	}
 	internal static SerDict? TryReadData(Save save, DataSection section)
 	{
@@ -288,12 +333,16 @@ public static class VarRegistry
 			}
 		}
 	}
+	#endregion filemanip
+	#region pathbuild
 	internal static VarSet VarsForSave(Save save)
 		=> VarsPerSave.AddIfNone_Get(save, () => new(save));
 	internal static string SaveFolder(in Save save)
 		=> CombinePath(RootFolderDirectory(), "UserData", "Atmo", $"{save.a}");
 	internal static string SaveFile(in Save save, DataSection section)
-		=> CombinePath(SaveFolder(save), $"{save.b}_{section}.txt");
+		=> CombinePath(SaveFolder(save), $"{save.b}_{section}.json");
+	internal static string GlobalFile(int slot) => CombinePath(SaveFolder(new(slot, -1)), "global.json");
+	#endregion pathbuild
 	internal static Save MakeSD(int slot, int @char)
 	{
 		using (_ = new Save.Names("SaveData", "slot", "char"))
@@ -301,7 +350,7 @@ public static class VarRegistry
 	}
 	private static string ErrorMessage(Site site, string message, Exception? ex)
 		=> $"{nameof(VarRegistry)}: {site}: {message}\nException: {ex?.ToString() ?? "NULL"}";
-	#endregion
+	#endregion methods
 	#region nested
 	internal enum DataSection
 	{
