@@ -146,7 +146,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			}
 			catch (Exception ex)
 			{
-				plog.LogError(ErrorMessage(lc_event.abstup, cb, ex));
+				plog.LogError(ErrorMessage(site.abstup, cb, ex));
 				On_AbstUpdate -= cb;
 			}
 		}
@@ -167,7 +167,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			}
 			catch (Exception ex)
 			{
-				plog.LogError(ErrorMessage(lc_event.realup, cb, ex));
+				plog.LogError(ErrorMessage(site.realup, cb, ex));
 				On_RealUpdate -= cb;
 			}
 		}
@@ -190,7 +190,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			}
 			catch (Exception ex)
 			{
-				plog.LogError(ErrorMessage(lc_event.init, cb, ex, error_response.none));
+				plog.LogError(ErrorMessage(site.init, cb, ex, Response.none));
 			}
 		}
 	}
@@ -211,10 +211,10 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			{
 				//todo: add a way to void a trigger
 				plog.LogError(ErrorMessage(
-					lc_event.triggerupdate,
+					site.triggerupdate,
 					triggers[tin].Update,
 					ex,
-					error_response.none));
+					Response.none));
 			}
 		}
 		try
@@ -225,10 +225,10 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		catch (Exception ex)
 		{
 			plog.LogError(ErrorMessage(
-				lc_event.eval,
+				site.eval,
 				conditions is null ? null : conditions.Eval,
 				ex,
-				error_response.none));
+				Response.none));
 		}
 		if (On_CoreUpdate is null) return;
 		foreach (API.lc_CoreUpdate cb in On_CoreUpdate.GetInvocationList())
@@ -239,7 +239,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			}
 			catch (Exception ex)
 			{
-				plog.LogError(ErrorMessage(lc_event.coreup, cb, ex));
+				plog.LogError(ErrorMessage(site.coreup, cb, ex));
 				On_CoreUpdate -= cb;
 			}
 		}
@@ -346,7 +346,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		/// </summary>
 		public int samples_eval;
 	}
-	private enum lc_event
+	private enum site
 	{
 		abstup,
 		realup,
@@ -355,23 +355,23 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		eval,
 		triggerupdate,
 	}
-	private enum error_response
+	private enum Response
 	{
 		none,
 		remove_cb,
 		void_trigger
 	}
 	#endregion
-	private string ErrorMessage(lc_event where, Delegate? cb, Exception ex, error_response resp = error_response.remove_cb)
+	private string ErrorMessage(site where, Delegate? cb, Exception ex, Response resp = Response.remove_cb)
 	{
 		return $"Happen {this}: {where}: " +
 			$"Error on invoke {cb}//{cb?.Method}:" +
 			$"\n{ex}" +
 			$"\nAction taken: " + resp switch
 			{
-				error_response.none => "none.",
-				error_response.remove_cb => "removing problematic callback.",
-				error_response.void_trigger => "voiding trigger.",
+				Response.none => "none.",
+				Response.remove_cb => "removing problematic callback.",
+				Response.void_trigger => "voiding trigger.",
 				_ => "???",
 			};
 	}

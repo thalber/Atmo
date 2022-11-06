@@ -287,7 +287,6 @@ public sealed class HappenSet
 			ha.set = res;
 		}
 		return res;
-		//throw new NotImplementedException();
 	}
 	#endregion statics
 }

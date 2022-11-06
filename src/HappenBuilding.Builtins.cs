@@ -73,7 +73,7 @@ public static partial class HappenBuilding
 			{
 				< 1 => null,
 				1 => new AfterDelay(args[0], rwg),
-				> 2 => new AfterDelay(args[0], args[1], rwg)//throw new NotImplementedException(),
+				> 2 => new AfterDelay(args[0], args[1], rwg)
 			};
 		});
 		//todo: update docs to reflect shift to seconds in parameters rather than frames

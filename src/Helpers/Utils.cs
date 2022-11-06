@@ -27,7 +27,20 @@ public static class Utils
 		if (index >= arr.Count || index < 0) return def;
 		return arr[index];
 	}
-
+	public static Tval AddIfNone_Get<Tkey, Tval>(
+		this IDictionary<Tkey, Tval> dict, 
+		Tkey key, 
+		Func<Tval> defval)
+		//where Tval : new(string)
+	{
+		if (dict.TryGetValue(key, out Tval oldVal)) { return oldVal; }
+		else
+		{
+			Tval def = defval();
+			dict.Add(key, def);
+			return def;
+		}
+	}
 	public static void RightShift(this System.Collections.BitArray arr)
 	{
 		for (var i = arr.Count - 2; i >= 0; i--)
@@ -248,31 +261,27 @@ public static class Utils
 		if (dict.ContainsKey(key)) dict[key] = val;
 		else dict.Add(key, val);
 	}
-	public static string JoinWithComma(string x, string y)
-	{
-		return $"{x}, {y}";
-	}
-
-	public static IntRect ConstructIR(IntVector2 p1, IntVector2 p2)
-	{
-		return new(Min(p1.x, p2.x), Min(p1.y, p2.y), Max(p1.x, p2.x), Max(p1.y, p2.y));
-	}
-
-	public static string CombinePath(params string[] parts)
-	{
-		return parts.Aggregate(IO.Path.Combine);
-	}
-
-	public static RainWorld CRW => UnityEngine.Object.FindObjectOfType<RainWorld>();
-	public static CreatureTemplate GetCreatureTemplate(CreatureTemplate.Type t)
-	{
-		return StaticWorld.creatureTemplates[(int)t];
-	}
-
+	public static string JoinWithComma(string x, string y) 
+		=> $"{x}, {y}";
+	public static IntRect ConstructIR(IntVector2 p1, IntVector2 p2) 
+		=> new(Min(p1.x, p2.x), Min(p1.y, p2.y), Max(p1.x, p2.x), Max(p1.y, p2.y));
+	public static string CombinePath(params string[] parts) 
+		=> parts.Aggregate(IO.Path.Combine);
+	public static RainWorld CRW 
+		=> UnityEngine.Object.FindObjectOfType<RainWorld>();
+	public static CreatureTemplate GetCreatureTemplate(CreatureTemplate.Type t) 
+		=> StaticWorld.creatureTemplates[(int)t];
 	public static Vector2 MiddleOfRoom(this Room rm)
+		=> new((float)rm.PixelWidth * 0.5f, (float)rm.PixelHeight * 0.5f);
+#nullable enable
+	public static T? FindSubProcess<T>(this ProcessManager manager)
+		where T : MainLoopProcess
 	{
-		return new((float)rm.PixelWidth * 0.5f, (float)rm.PixelHeight * 0.5f);
+		if (manager.currentMainLoop is T tmain) return tmain;
+		foreach (MainLoopProcess sideprocess in manager.sideProcesses) if (sideprocess is T tside) return tside;
+		return null;
 	}
+#nullable disable
 
 	/// <summary>
 	/// Gets bytes from ER of an assembly.
@@ -307,6 +316,53 @@ public static class Utils
 		}
 		catch (Exception ee) { plog.LogError($"Error getting ER: {ee}"); return null; }
 	}
+
+	public record struct VT<T1, T2>(
+		T1 a,
+		T2 b,
+		string name,
+		string nameA,
+		string nameB)
+	{
+		public VT(T1 _a, T2 _b) : this(_a, _b, defName ?? "VT", defAName ?? "a", defBName ?? "b")
+		{
+
+		}
+		public override string ToString() 
+			=> $"{name} {{ {nameA} = {a}, {nameB} = {b} }}";
+		private static string defName = "VT";
+		private static string defAName = "a";
+		private static string defBName = "b";
+		public struct Names : IDisposable
+		{
+			public Names(string defname, string defaname, string defbname)
+			{
+				defName = defname;
+				defAName = defaname;
+				defBName = defbname;
+			}
+
+			public void Dispose()
+			{
+				defName = null;
+				defAName = null;
+				defBName = null;
+			}
+		}
+	}
+	public record struct VT<T1, T2, T3>(
+		T1 a,
+		T2 b,
+		T3 c,
+		string name!! = "VT",
+		string nameA!! = "a",
+		string nameB!! = "b",
+		string nameC!! = "c")
+	{
+		public override string ToString() 
+			=> $"{name} {{ {nameA} = {a}, {nameB} = {b}, {nameC} = {c} }}";
+	}	
+	//public record struct VT<T1, T2, T3, T4>(T1 a, T2 b, T3 c, T4 d);
 	#endregion
 }
 #pragma warning restore CS1591

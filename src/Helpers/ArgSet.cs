@@ -82,7 +82,6 @@ public sealed class ArgSet : IList<Arg>
 		=> _args.IndexOf(item);
 	public void Insert(int index, Arg item)
 		=> _args.Insert(index, item);
-
 	public bool Remove(Arg item)
 		=> _args.Remove(item);
 	public void RemoveAt(int index) 
@@ -95,5 +94,5 @@ public sealed class ArgSet : IList<Arg>
 	/// Creates a new ArgSet from a specified string array.
 	/// </summary>
 	/// <param name="raw"></param>
-	public static implicit operator ArgSet(string[] raw) => new ArgSet(raw);
+	public static implicit operator ArgSet(string[] raw) => new(raw);
 }

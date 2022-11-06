@@ -12,21 +12,27 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <summary>
 	/// Static singleton
 	/// </summary>
-	public static Atmod inst;
-	internal static LOG.ManualLogSource plog => inst.Logger;
-	/// <summary>
-	/// omg rain world reference
-	/// </summary>
-	public RainWorld? rw;
+	public static Atmod inst { get; private set; }
 	/// <summary>
 	/// publicized logger
 	/// </summary>
-	//internal BepInEx.Logging.ManualLogSource Plog => Logger;
+	internal static LOG.ManualLogSource plog => inst.Logger;
+	internal static int? CurrentSaveslot => inst.RW?.options?.saveSlot;
+	internal static int? CurrentCharacter
+		=> (int?)
+		inst.RW?.
+		processManager.FindSubProcess<RainWorldGame>()?
+		.GetStorySession?
+		.characterStats.name;
 	private bool setupRan = false;
 	/// <summary>
 	/// Currently active <see cref="HappenSet"/>. Null if not in session, if in arena session, or if failed to read from session.
 	/// </summary>
 	public HappenSet? CurrentSet { get; private set; }
+	/// <summary>
+	/// Reference to current RainWorld vanilla object.
+	/// </summary>
+	public RainWorld? RW { get; private set; }
 	//todo: make it smoothly work with region switching.
 	#endregion
 	/// <summary>
@@ -34,24 +40,82 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// </summary>
 	public void OnEnable()
 	{
+		inst = this;
 		try
 		{
 			On.AbstractRoom.Update += RunHappensAbstUpd;
 			On.RainWorldGame.Update += DoBodyUpdates;
 			On.Room.Update += RunHappensRealUpd;
 			On.World.LoadWorld += FetchHappenSet;
+			VarRegistry.Init();
 			HappenBuilding.InitBuiltins();
 		}
 		catch (Exception ex)
 		{
 			Logger.LogFatal($"Error on enable!\n{ex}");
 		}
+	}
+	/// <summary>
+	/// Undoes hooks and spins up a static cleanup member cleanup procedure.
+	/// </summary>
+	public void OnDisable()
+	{
+		try
+		{
+			//On.World.ctor -= FetchHappenSet;
+			On.Room.Update -= RunHappensRealUpd;
+			On.RainWorldGame.Update -= DoBodyUpdates;
+			On.AbstractRoom.Update -= RunHappensAbstUpd;
+			On.World.LoadWorld -= FetchHappenSet;
+			VarRegistry.Clear();
+
+			BepInEx.Logging.ManualLogSource? cleanup_logger =
+				BepInEx.Logging.Logger.CreateLogSource("Atmo_Purge");
+			System.Diagnostics.Stopwatch sw = new();
+			sw.Start();
+			cleanup_logger.LogMessage("Spooling cleanup thread.");
+			System.Threading.ThreadPool.QueueUserWorkItem((_) =>
+			{
+				foreach (Type t in typeof(Atmod).Assembly.GetTypes())
+				{
+					try { t.CleanupStatic(); }
+					catch (Exception ex)
+					{
+						cleanup_logger.LogError($"{t}: Error cleaning up static fields:" +
+							$"\n{ex}");
+					}
+				}
+				sw.Stop();
+				cleanup_logger.LogMessage($"Finished statics cleanup: {sw.Elapsed}");
+			});
+		}
+		catch (Exception ex)
+		{
+			Logger.LogFatal($"Error on disable!\n{ex}");
+		}
 		finally
 		{
-			inst = this;
+			inst = null;
 		}
 	}
-	#region lifecycle
+	/// <summary>
+	/// Cleans up set if not ingame.
+	/// </summary>
+	public void Update()
+	{
+		RW ??= FindObjectOfType<RainWorld>();
+		if (!setupRan && RW is not null)
+		{
+			//maybe put something here
+			setupRan = true;
+		}
+		if (RW is null || CurrentSet is null) return;
+		if (RW.processManager.currentMainLoop is RainWorldGame) return;
+		foreach (MainLoopProcess? proc in RW.processManager.sideProcesses) if (proc is RainWorldGame) return;
+		Logger.LogDebug("No RainWorldGame in processmanager, erasing currentset");
+		CurrentSet = null;
+	}
+	#region lifecycle hooks
 	private void FetchHappenSet(On.World.orig_LoadWorld orig, World self, int slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates)
 	{
 		orig(self, slugcatNumber, abstractRoomsList, swarmRooms, shelters, gates);
@@ -146,63 +210,5 @@ public sealed partial class Atmod : BaseUnityPlugin
 			}
 		}
 	}
-	#endregion lifecycle
-	/// <summary>
-	/// Cleans up set if not ingame.
-	/// </summary>
-	public void Update()
-	{
-		rw ??= FindObjectOfType<RainWorld>();
-		if (!setupRan && rw is not null)
-		{
-			//maybe put something here
-			setupRan = true;
-		}
-		if (rw is null || CurrentSet is null) return;
-		if (rw.processManager.currentMainLoop is RainWorldGame) return;
-		foreach (MainLoopProcess? proc in rw.processManager.sideProcesses) if (proc is RainWorldGame) return;
-		Logger.LogDebug("No RainWorldGame in processmanager, erasing currentset");
-		CurrentSet = null;
-	}
-	/// <summary>
-	/// Undoes hooks and spins up a static cleanup member cleanup procedure.
-	/// </summary>
-	public void OnDisable()
-	{
-		try
-		{
-			//On.World.ctor -= FetchHappenSet;
-			On.Room.Update -= RunHappensRealUpd;
-			On.RainWorldGame.Update -= DoBodyUpdates;
-			On.AbstractRoom.Update -= RunHappensAbstUpd;
-			On.World.LoadWorld -= FetchHappenSet;
-			BepInEx.Logging.ManualLogSource? cleanup_logger = 
-				BepInEx.Logging.Logger.CreateLogSource("Atmo_Purge");
-			System.Diagnostics.Stopwatch sw = new();
-			sw.Start();
-			cleanup_logger.LogMessage("Spooling cleanup thread.");
-			System.Threading.ThreadPool.QueueUserWorkItem((_) =>
-			{
-				foreach (Type t in typeof(Atmod).Assembly.GetTypes())
-				{
-					try { t.CleanupStatic(); }
-					catch (Exception ex)
-					{
-						cleanup_logger.LogError($"{t}: Error cleaning up static fields:" +
-							$"\n{ex}");
-					}
-				}
-				sw.Stop();
-				cleanup_logger.LogMessage($"Finished statics cleanup: {sw.Elapsed}");
-			});
-		}
-		catch (Exception ex)
-		{
-			Logger.LogFatal($"Error on disable!\n{ex}");
-		}
-		finally
-		{
-			inst = null;
-		}
-	}
+	#endregion lifecycle hooks
 }
