@@ -68,12 +68,13 @@ public static partial class HappenBuilding
 			}
 			return new AfterOther(ha, args[0], args[1]);
 		});
-		AddNamedTrigger(new[] { "delay", "ondelay" }, (args, rwg, ha) => {
+		AddNamedTrigger(new[] { "delay", "ondelay" }, (args, rwg, ha) =>
+		{
 			return args.Count switch
 			{
 				< 1 => null,
 				1 => new AfterDelay(args[0], rwg),
-				> 2 => new AfterDelay(args[0], args[1], rwg)
+				> 1 => new AfterDelay(args[0], args[1], rwg)
 			};
 		});
 		//todo: update docs to reflect shift to seconds in parameters rather than frames
@@ -91,6 +92,7 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "glow", "theglow" }, Make_Glow);
 		AddNamedAction(new[] { "raintimer", "setraintimer" }, Make_SetRainTimer);
 		AddNamedAction(new[] { "palette", "changepalette" }, Make_ChangePalette);
+		AddNamedAction(new[] { "setvar", "setvariable" }, Make_SetVar);
 		//AddNamedAction(new[] { "music", "playmusic" }, Make_PlayMusic);
 		//AddNamedAction()
 	}
@@ -142,7 +144,7 @@ public static partial class HappenBuilding
 			newdle.requireActiveUpkeep = true;
 			newdle.alive = true;
 			newdle.soundStillPlaying = true;
-			soundloops.AddOrUpdate(rm.abstractRoom.name, newdle);
+			soundloops.Set(rm.abstractRoom.name, newdle);
 		};
 		//ha.On_AbstUpdate += (ar, t) =>
 		//{
@@ -274,7 +276,7 @@ public static partial class HappenBuilding
 	private static void Make_LogCall(Happen ha, ArgSet args)
 	{
 		//todo: revisit when variable support is here
-		List<string> output = new();
+		//List<string> output = new();
 		Arg sev = args["sev", "severity"] ?? new Arg(LOG.LogLevel.Message.ToString());
 		sev.GetEnum(out LOG.LogLevel sevVal);
 		string lastSev = sev.Str;
@@ -283,11 +285,11 @@ public static partial class HappenBuilding
 		Arg? onAbst = args["abst", "abstractupdate", "abstup"];
 		if (onInit is not null) ha.On_Init += (w) =>
 		{
-			plog.Log(sevVal, onInit.Str);
+			plog.Log(sevVal, $"{ha.name}:\"{onInit.Str}\"");
 		};
 		if (onAbst is not null) ha.On_AbstUpdate += (abstr, t) =>
 		{
-			plog.Log(sevVal, $"\"{onAbst.Str}\":{abstr}:{t}");
+			plog.Log(sevVal, $"{ha.name}:\"{onAbst.Str}\":{abstr.name}:{t}");
 		};
 		ha.On_CoreUpdate += (_) =>
 		{
@@ -394,6 +396,19 @@ public static partial class HappenBuilding
 				{
 					lastRoomPerCam[i] = rwg.cameras[i].room.abstractRoom.name;
 				}
+		};
+	}
+
+	private static void Make_SetVar(Happen ha, ArgSet args)
+	{
+		Arg argn = args.AtOr(0, "testvar"),
+			argv = args.AtOr(1, "TESTVALUE");
+		ha.On_Init += (_) =>
+		{
+			Arg target = VarRegistry.GetVar(argn.Str, CurrentSaveslot ?? 0, CurrentCharacter ?? 0);
+			plog.LogDebug($"pre-set: {target}");
+			target.Str = argv.Str;
+			plog.LogDebug($"Set variable {target}");
 		};
 	}
 	#endregion
