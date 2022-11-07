@@ -18,13 +18,13 @@ namespace Atmo.Helpers;
 /// for given name, current slot and current character. 
 /// </para>
 /// </summary>
-public static class VarRegistry
+public static partial class VarRegistry
 {
 	#region fields / consts / props
 	/// <summary>
 	/// <see cref="DeathPersistentSaveData"/> hash to slugcat number.
 	/// </summary>
-	private readonly static Dictionary<int, int> DPSD_Slug = new();
+	private static readonly Dictionary<int, int> DPSD_Slug = new();
 	internal const string PREFIX_GLOBAL = "g_";
 	internal const string PREFIX_PERSISTENT = "p_";
 	internal static Arg Defarg => string.Empty;
@@ -35,8 +35,7 @@ public static class VarRegistry
 	/// <summary>
 	/// Global vars per saveslot. key is saveslot number
 	/// </summary>
-	internal static readonly Dictionary<int, NamedVars> VarsGlobal = new();
-	//todo: special variables for internals
+	internal static readonly Dictionary<int, NamedVars> VarsGlobal = new();\
 	#endregion
 	#region lifecycle
 	internal static void Clear()
@@ -44,6 +43,8 @@ public static class VarRegistry
 		plog.LogDebug("Clear VarRegistry hooks");
 		try
 		{
+			On.RainCycle.ctor -= TrackCycleLength;
+
 			On.SaveState.LoadGame -= ReadNormal;
 			On.SaveState.SaveToString -= WriteNormal;
 
@@ -63,12 +64,16 @@ public static class VarRegistry
 			plog.LogFatal(ErrorMessage(Site.Clear, "Unhandled exception", ex));
 		}
 	}
+
 	internal static void Init()
 	{
 		//todo: globals ser test
 		plog.LogDebug("Init VarRegistry hooks");
 		try
 		{
+			FillBuiltins();
+
+			On.RainCycle.ctor += TrackCycleLength;
 
 			On.SaveState.LoadGame += ReadNormal;
 			On.SaveState.SaveToString += WriteNormal;
@@ -86,7 +91,22 @@ public static class VarRegistry
 		}
 
 	}
-	private static void WipeSavestate(On.PlayerProgression.orig_WipeSaveState orig, PlayerProgression self, int saveStateNumber)
+
+	private static void TrackCycleLength(
+		On.RainCycle.orig_ctor orig,
+		RainCycle self,
+		World world,
+		float minutes)
+	{
+		orig(self, world, minutes);
+		BuiltinVars[BIVar.cycletime].F32 = minutes * 60f;
+		plog.LogDebug($"Setting $cycletime to {BuiltinVars[BIVar.cycletime]}");
+	}
+
+	private static void WipeSavestate(
+		On.PlayerProgression.orig_WipeSaveState orig,
+		PlayerProgression self,
+		int saveStateNumber)
 	{
 		Save save = default;
 		try
@@ -101,7 +121,9 @@ public static class VarRegistry
 		}
 		orig(self, saveStateNumber);
 	}
-	private static void WipeAll(On.PlayerProgression.orig_WipeAll orig, PlayerProgression self)
+	private static void WipeAll(
+		On.PlayerProgression.orig_WipeAll orig,
+		PlayerProgression self)
 	{
 		int ss = CurrentSaveslot ?? -1;
 		try
@@ -179,7 +201,7 @@ public static class VarRegistry
 			}
 			Save save = MakeSD(ss.Value, DPSD_Slug[self.GetHashCode()]);
 			plog.LogDebug($"Attempting to write persistent vars for {save}");
-			var data = VarsPerSave
+			SerDict? data = VarsPerSave
 				.AddIfNone_Get(save, () => new(save))
 				.GetSer(DataSection.Normal);
 			TryWriteData(save, DataSection.Persistent, data);
@@ -236,7 +258,7 @@ public static class VarRegistry
 				goto done;
 			}
 			Save save = MakeSD(ss.Value, self.saveStateNumber);
-			var data = VarsPerSave
+			SerDict? data = VarsPerSave
 				.AddIfNone_Get(save, () => new(save))
 				.GetSer(DataSection.Normal);
 			TryWriteData(save, DataSection.Normal, data);
@@ -279,9 +301,13 @@ public static class VarRegistry
 	/// <param name="saveslot">Save slot to look up data from (<see cref="RainWorld"/>.options.saveSlot for current)</param>
 	/// <param name="character">Current character. 0 for survivor, 1 for monk, 2 for hunter.</param>
 	/// <returns>Variable requested; if there was no variable with given name before, GetVar creates a blank one from an empty string.</returns>
-#warning fucking hell it's index dependent and will do weird shit if custom characters are turned on and off
 	public static Arg GetVar(string name!!, int saveslot, int character = -1)
 	{
+		Arg? res;
+		if ((res = GetBuiltin(name)) is not null)
+		{
+			return res;
+		}
 		if (name.StartsWith(PREFIX_GLOBAL))
 		{
 			name = name.Substring(PREFIX_GLOBAL.Length);
@@ -389,13 +415,11 @@ public static class VarRegistry
 		=> CombinePath(RootFolderDirectory(), "UserData", "Atmo", $"{save.a}");
 	internal static string SaveFile(in Save save, DataSection section)
 		=> CombinePath(SaveFolder(save), $"{SlugName(save.b)}_{section}.json");
-	internal static string GlobalFile(int slot) => CombinePath(SaveFolder(new(slot, -1)), "global.json");
+	internal static string GlobalFile(int slot) 
+		=> CombinePath(SaveFolder(new(slot, -1)), "global.json");
 	#endregion pathbuild
-	internal static Save MakeSD(int slot, int @char)
-	{
-		//using (_ = new Save.Names("SaveData", "slot", "char"))
-		return new(slot, @char, "SaveData", "slot", "char");
-	}
+	internal static Save MakeSD(int slot, int @char) 
+		=> new(slot, @char, "SaveData", "slot", "char");
 	private static string ErrorMessage(Site site, string message, Exception? ex)
 		=> $"{nameof(VarRegistry)}: {site}: {message}\nException: {ex?.ToString() ?? "NULL"}";
 	#endregion methods

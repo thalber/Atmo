@@ -212,55 +212,14 @@ public static partial class HappenBuilding
 			lastSid = sid.Str;
 		};
 	}
-	private static void Make_PlayMusic(Happen ha, ArgSet args)
-	{
-#warning unfinished
-		if (args.Count == 0)
-		{
-			plog.LogWarning($"Happen {ha.name}: music action: " +
-			$"No arguments provided to Music action! won't do anything"); return;
-		}
-		Arg songname = args[0];
-		float
-			prio = 0.5f,
-			maxthreat = 1f,
-			vol = 0.3f;
-		int
-			roomsrange = -1,
-			rest = 5;
-
-		MusicEvent mev = new();
-		for (var i = 1; i < args.Count; i++)
-		{
-			var spl = ((string)args[i]).Split('=');
-			if (spl.Length != 2) continue;
-			switch (spl[0].ToLower())
-			{
-			case "prio":
-			case "priority":
-			float.TryParse(spl[1], out prio);
-			break;
-			case "maxthreat":
-			float.TryParse(spl[1], out maxthreat);
-			break;
-			case "vol":
-			float.TryParse(spl[1], out vol);
-			break;
-			}
-		}
-		ha.On_Init += (w) =>
-		{
-			w.game.manager.musicPlayer?.GameRequestsSong(mev);
-		};
-	}
 	private static void Make_Glow(Happen ha, ArgSet args)
 	{
 		Arg enabled = args.AtOr(0, true);
 		ha.On_Init += (w) =>
 		{
-			SaveState? dspd = w.game.GetStorySession?.saveState;//./deathPersistentSaveData;
-			if (dspd is null) return;
-			dspd.theGlow = enabled.Bool;
+			SaveState? ss = w.game.GetStorySession?.saveState;//./deathPersistentSaveData;
+			if (ss is null) return;
+			ss.theGlow = enabled.Bool;
 		};
 	}
 	private static void Make_Mark(Happen ha, ArgSet args)

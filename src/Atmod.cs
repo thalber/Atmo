@@ -1,14 +1,28 @@
 ﻿using BepInEx;
 
+using VREG = Atmo.Helpers.VarRegistry;
+
 namespace Atmo;
 
 /// <summary>
 /// Main plugin class.
 /// </summary>
-[BepInPlugin("thalber.atmod", "Atmo", "0.4")]
+[BepInPlugin(Id, DName, Ver)]
 public sealed partial class Atmod : BaseUnityPlugin
 {
-	#region fields
+	#region field/const/prop
+	/// <summary>
+	/// Mod version
+	/// </summary>
+	public const string Ver = "0.5";
+	/// <summary>
+	/// Mod UID
+	/// </summary>
+	public const string Id = "thalber.atmod";
+	/// <summary>
+	/// Mod display name
+	/// </summary>
+	public const string DName = "Atmo";
 	/// <summary>
 	/// Static singleton
 	/// </summary>
@@ -52,7 +66,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 			On.Room.Update += RunHappensRealUpd;
 			On.World.LoadWorld += FetchHappenSet;
 			On.OverWorld.LoadFirstWorld += SetTempSSN;
-			VarRegistry.Init();
+			VREG.Init();
 			HappenBuilding.InitBuiltins();
 		}
 		catch (Exception ex)
@@ -81,7 +95,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 			On.AbstractRoom.Update -= RunHappensAbstUpd;
 			On.World.LoadWorld -= FetchHappenSet;
 			On.OverWorld.LoadFirstWorld -= SetTempSSN;
-			VarRegistry.Clear();
+			VREG.Clear();
 
 			BepInEx.Logging.ManualLogSource? cleanup_logger =
 				BepInEx.Logging.Logger.CreateLogSource("Atmo_Purge");
@@ -108,7 +122,8 @@ public sealed partial class Atmod : BaseUnityPlugin
 					}
 				}
 				sw.Stop();
-				string aggregator(string x, string y) => $"{x}\n\t{y}";
+
+				static string aggregator(string x, string y) => $"{x}\n\t{y}";
 				cleanup_logger.LogDebug($"Finished statics cleanup: {sw.Elapsed}." +
 					$"\nSuccessfully cleared: {success.Stitch(aggregator)}" +
 					$"\nErrored on: {failure.Stitch(aggregator)}");
@@ -124,7 +139,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		}
 	}
 	/// <summary>
-	/// Cleans up set if not ingame.
+	/// Cleans up set if not ingame, updates some builtin variables.
 	/// </summary>
 	public void Update()
 	{
@@ -134,6 +149,9 @@ public sealed partial class Atmod : BaseUnityPlugin
 			//maybe put something here
 			setupRan = true;
 		}
+		VREG.BuiltinVars[VREG.BIVar.time].Str = DateTime.Now.ToString();
+		VREG.BuiltinVars[VREG.BIVar.utctime].Str = DateTime.UtcNow.ToString();
+
 		if (RW is null || CurrentSet is null) return;
 		if (RW.processManager.currentMainLoop is RainWorldGame) return;
 		foreach (MainLoopProcess? proc in RW.processManager.sideProcesses) if (proc is RainWorldGame) return;

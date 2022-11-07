@@ -39,7 +39,8 @@
 /// </summary>
 public sealed class Arg : IEquatable<Arg>
 {
-	private bool _skipparse;
+	private bool _skipparse = false;
+	private bool _readonly = false;
 	private ArgType _dt = ArgType.STR;
 	internal Arg? _var;
 	internal string _raw;
@@ -61,18 +62,18 @@ public sealed class Arg : IEquatable<Arg>
 		if (falseStrings.Contains(_str.ToLower())) _bool = false;
 		DataType = ArgType.STR;
 	}
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
 	#region convert
 	/// <summary>
 	/// Raw string previously used to create the argument. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.STR"/>.
 	/// </summary>
 	public string Raw
 	{
-		get => IsVar ? _var.Raw : _raw;
+		get => _var?.Raw ?? _raw;
 		set
 		{
+			if (_readonly) return;
 			if (value is null) throw new ArgumentNullException(nameof(value));
-			if (IsVar) { _var.Raw = value; return; }
+			if (_var is not null) { _var.Raw = value; return; }
 			_raw = value;
 			Name = null;
 			var splPoint = _raw.IndexOf('=');
@@ -114,10 +115,11 @@ public sealed class Arg : IEquatable<Arg>
 	/// </summary>
 	public string Str
 	{
-		get => IsVar ? _var.Str : _str;
+		get => _var?.Str ?? _str;
 		set
 		{
-			if (IsVar) { _var.Str = value; }
+			if (_readonly) return;
+			if (_var is not null) { _var.Str = value; }
 			else
 			{
 				_str = value;
@@ -131,10 +133,11 @@ public sealed class Arg : IEquatable<Arg>
 	/// </summary>
 	public int I32
 	{
-		get => IsVar ? _var.I32 : _i32;
+		get => _var?.I32 ?? _i32;
 		set
 		{
-			if (IsVar) { _var.I32 = value; return; }
+			if (_readonly) return;
+			if (_var is not null) { _var.I32 = value; return; }
 			_skipparse = true;
 			_i32 = value;
 			_f32 = value;
@@ -148,11 +151,11 @@ public sealed class Arg : IEquatable<Arg>
 	/// </summary>
 	public float F32
 	{
-		get => IsVar ? _var.F32 : _f32;
+		get => _var?._f32 ?? _f32;
 		set
 		{
-			if (IsVar) { _var.F32 = value; return; }
-
+			if (_readonly) return;
+			if (_var is not null) { _var.F32 = value; return; }
 			_f32 = value;
 			_i32 = (value is float.PositiveInfinity or float.NegativeInfinity or float.NaN) ? 0 : (int)value;
 			_bool = value is not 0f;
@@ -166,10 +169,11 @@ public sealed class Arg : IEquatable<Arg>
 	/// </summary>
 	public bool Bool
 	{
-		get => IsVar ? _var.Bool : _bool;
+		get => _var?.Bool ?? _bool;
 		set
 		{
-			if (IsVar) { _var.Bool = value; return; }
+			if (_readonly) return;
+			if (_var is not null) { _var.Bool = value; return; }
 			_bool = value;
 			_i32 = value ? 1 : 0;
 			_f32 = value ? 1 : 0;
@@ -185,6 +189,11 @@ public sealed class Arg : IEquatable<Arg>
 	public void GetEnum<T>(out T? value)
 		where T : Enum
 	{
+		if (_var is not null)
+		{
+			_var.GetEnum(out value);
+			return;
+		}
 		if (TryParseEnum(Str, out value)) { return; }
 		value = (T)Convert.ChangeType(I32, Enum.GetUnderlyingType(typeof(T)));
 	}
@@ -196,6 +205,8 @@ public sealed class Arg : IEquatable<Arg>
 	public void SetEnum<T>(in T value)
 		where T : Enum
 	{
+		if (_readonly) return;
+		if (_var is not null) { _var.SetEnum(value); return; }
 		_str = value.ToString();
 		I32 = (int)Convert.ChangeType(value, typeof(int));
 	}
@@ -207,13 +218,14 @@ public sealed class Arg : IEquatable<Arg>
 	/// <summary>
 	/// Indicates whether this instance is linked to a variable. If yes, all property accessors will lead to associated variable, and the instance's internal state will be ignored.
 	/// </summary>
+	// internally (inside properties) replaced with individual checks to eliminate compiler warnings.
 	public bool IsVar => _var is not null;
 	/// <summary>
 	/// Indicates what data type was this instance's contents filled from.
 	/// </summary>
 	public ArgType DataType
 	{
-		get => IsVar ? _var.DataType : _dt;
+		get => _var?.DataType ?? _dt;
 		private set
 		{
 			if (IsVar) return;
@@ -221,7 +233,6 @@ public sealed class Arg : IEquatable<Arg>
 		}
 	}
 	//todo: allow changing names?
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
 	#region general
 	/// <summary>
 	/// Compares against another instance. Uses raw contents of <see cref="Str"/> for comparison.
@@ -270,6 +281,19 @@ public sealed class Arg : IEquatable<Arg>
 			_ => Str,
 		}} }}");
 		return sb.ToString();
+	}
+	/// <summary>
+	/// Returns a new read-only Arg, wrapping around the current one.
+	/// </summary>
+	public Arg Wrap => new Arg(this).MakeReadOnly();
+	/// <summary>
+	/// Makes current instance read-only. Not undoable.
+	/// </summary>
+	/// <returns></returns>
+	internal Arg MakeReadOnly()
+	{
+		_readonly = true;
+		return this;
 	}
 	#endregion
 	#region ctors

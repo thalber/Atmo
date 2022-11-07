@@ -12,7 +12,6 @@ namespace Atmo.Helpers;
 /// </summary>
 internal class VarSet
 {
-	//todo: add clearing
 	#region fields
 	private readonly NamedVars persistent = new();
 	private readonly NamedVars normal = new();
