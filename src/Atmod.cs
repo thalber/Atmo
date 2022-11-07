@@ -12,18 +12,22 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <summary>
 	/// Static singleton
 	/// </summary>
+#pragma warning disable CS8618
 	public static Atmod inst { get; private set; }
+#pragma warning restore CS8618
 	/// <summary>
 	/// publicized logger
 	/// </summary>
 	internal static LOG.ManualLogSource plog => inst.Logger;
+	private static int? _tempSSN;
 	internal static int? CurrentSaveslot => inst.RW?.options?.saveSlot;
 	internal static int? CurrentCharacter
 		=> (int?)
 		inst.RW?.
 		processManager.FindSubProcess<RainWorldGame>()?
 		.GetStorySession?
-		.characterStats.name;
+		.characterStats.name
+		?? _tempSSN;
 	private bool setupRan = false;
 	/// <summary>
 	/// Currently active <see cref="HappenSet"/>. Null if not in session, if in arena session, or if failed to read from session.
@@ -47,6 +51,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 			On.RainWorldGame.Update += DoBodyUpdates;
 			On.Room.Update += RunHappensRealUpd;
 			On.World.LoadWorld += FetchHappenSet;
+			On.OverWorld.LoadFirstWorld += SetTempSSN;
 			VarRegistry.Init();
 			HappenBuilding.InitBuiltins();
 		}
@@ -55,6 +60,14 @@ public sealed partial class Atmod : BaseUnityPlugin
 			Logger.LogFatal($"Error on enable!\n{ex}");
 		}
 	}
+
+	private void SetTempSSN(On.OverWorld.orig_LoadFirstWorld orig, OverWorld self)
+	{
+		_tempSSN = self.PlayerCharacterNumber;
+		orig(self);
+		_tempSSN = null;
+	}
+
 	/// <summary>
 	/// Undoes hooks and spins up a static cleanup member cleanup procedure.
 	/// </summary>
@@ -67,6 +80,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 			On.RainWorldGame.Update -= DoBodyUpdates;
 			On.AbstractRoom.Update -= RunHappensAbstUpd;
 			On.World.LoadWorld -= FetchHappenSet;
+			On.OverWorld.LoadFirstWorld -= SetTempSSN;
 			VarRegistry.Clear();
 
 			BepInEx.Logging.ManualLogSource? cleanup_logger =
@@ -76,17 +90,28 @@ public sealed partial class Atmod : BaseUnityPlugin
 			cleanup_logger.LogMessage("Spooling cleanup thread.");
 			System.Threading.ThreadPool.QueueUserWorkItem((_) =>
 			{
+				List<string> success = new();
+				List<string> failure = new();
 				foreach (Type t in typeof(Atmod).Assembly.GetTypes())
 				{
-					try { t.CleanupStatic(); }
+					try
+					{
+						VT<List<string>, List<string>> res = t.CleanupStatic();
+						success.AddRange(res.a);
+						failure.AddRange(res.b);
+					}
 					catch (Exception ex)
 					{
-						cleanup_logger.LogError($"{t}: Error cleaning up static fields:" +
+						cleanup_logger
+						.LogError($"{t}: Unhandled Error cleaning up static fields:" +
 							$"\n{ex}");
 					}
 				}
 				sw.Stop();
-				cleanup_logger.LogMessage($"Finished statics cleanup: {sw.Elapsed}");
+				string aggregator(string x, string y) => $"{x}\n\t{y}";
+				cleanup_logger.LogDebug($"Finished statics cleanup: {sw.Elapsed}." +
+					$"\nSuccessfully cleared: {success.Stitch(aggregator)}" +
+					$"\nErrored on: {failure.Stitch(aggregator)}");
 			});
 		}
 		catch (Exception ex)
