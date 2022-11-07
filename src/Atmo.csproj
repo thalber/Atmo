@@ -20,11 +20,13 @@
 		<DebugType>embedded</DebugType>
 		<TreatWarningsAsErrors>False</TreatWarningsAsErrors>
 		<WarningsAsErrors>$(WarningsAsErrors);NU1605;</WarningsAsErrors>
+		<DefineConstants>$(DefineConstants)TRACE;ATMO</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<DebugType>embedded</DebugType>
 		<TreatWarningsAsErrors>False</TreatWarningsAsErrors>
 		<WarningsAsErrors>$(WarningsAsErrors);NU1605;</WarningsAsErrors>
+		<DefineConstants>$(DefineConstants)TRACE;ATMO</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -51,6 +53,9 @@
 		</Reference>
 		<Reference Include="lib/MonoMod.Utils.dll">
 			<Private>False</Private>
+		</Reference>
+		<Reference Include="SlugBase">
+		  <HintPath>lib\SlugBase.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
