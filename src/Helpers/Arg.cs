@@ -85,6 +85,7 @@ public sealed class Arg : IEquatable<Arg>
 			{
 				var ss = CurrentSaveslot;
 				var ch = CurrentCharacter;
+				plog.LogDebug($"Linking variable {value}: {ss}, {ch}");
 				if (ss is null)
 				{
 					plog.LogError($"Impossible to link variable! {value}: could not find RainWorldGame.");
@@ -181,7 +182,7 @@ public sealed class Arg : IEquatable<Arg>
 	/// </summary>
 	/// <typeparam name="T">Type of the enum.</typeparam>
 	/// <param name="value">Out param. Contains resulting enum value.</param>
-	public void GetEnum<T>(out T value)
+	public void GetEnum<T>(out T? value)
 		where T : Enum
 	{
 		if (TryParseEnum(Str, out value)) { return; }

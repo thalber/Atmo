@@ -179,7 +179,7 @@ internal class HappenParser
 							if (tok.type == PredicateInlay.TokenType.Word)
 							{
 								PredicateInlay.Leaf leaf = PredicateInlay.MakeLeaf(tokens, in i) ?? new();
-								cHapp.actions.AddOrUpdate(leaf.funcName, leaf.args);
+								cHapp.actions.Set(leaf.funcName, leaf.args);
 							}
 						}
 					}

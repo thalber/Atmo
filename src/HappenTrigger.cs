@@ -33,7 +33,7 @@ public abstract partial class HappenTrigger
 	/// <returns></returns>
 	public abstract bool ShouldRunUpdates();
 	/// <summary>
-	/// Called every <see cref="Happen.CoreUpdate(RainWorldGame)"/>, *once* every frame. Override this to do your frame-persistent logic.
+	/// Called every <see cref="Happen.CoreUpdate"/>, *once* every frame. Override this to do your frame-persistent logic.
 	/// </summary>
 	public virtual void Update() { }
 	/// <summary>

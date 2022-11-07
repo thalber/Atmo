@@ -246,7 +246,10 @@ public sealed class HappenSet
 					plog.LogDebug("No XX.atmo file found.");
 				}
 			}
-			plog.LogDebug(Stitch(res?.GetHappensForRoom("SU_C04").Select(x => x.name)));
+			plog.LogDebug(res?
+				.GetHappensForRoom("SU_C04")
+				.Select(x => x.name)
+				.Stitch());
 			return res;
 		}
 		catch (Exception ex)
