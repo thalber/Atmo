@@ -5,6 +5,18 @@ using Save = Atmo.Helpers.Utils.VT<int, int>;
 namespace Atmo.Helpers;
 /// <summary>
 /// Allows accessing a pool of variables, global or save-specific.
+/// You can use <see cref="GetVar(string, int, int)"/> to fetch variables by name.
+/// Variables are returned as <see cref="Arg"/>s (NOTE: they may be mutable!
+/// Be careful not to mess the values up, especially if you are requesting
+/// a variable made by someone else). Use 'p_' prefix to look for a death-persistent variable,
+/// and 'g_' prefix to look for a global variable.
+/// <seealso cref="GetVar(string, int, int)"/> for more details on fetching, prefixes 
+/// and some examples.
+/// <para>
+/// <see cref="VarRegistry"/>'s primary purpose is being used by arguments in .atmo files
+/// written like '$varname'. Doing that will automatically call <see cref="GetVar"/> 
+/// for given name, current slot and current character. 
+/// </para>
 /// </summary>
 public static class VarRegistry
 {
@@ -30,36 +42,49 @@ public static class VarRegistry
 	internal static void Clear()
 	{
 		plog.LogDebug("Clear VarRegistry hooks");
-		On.SaveState.LoadGame -= ReadNormal;
-		On.SaveState.SaveToString -= WriteNormal;
-
-		On.DeathPersistentSaveData.ctor -= RegDPSD;
-		On.DeathPersistentSaveData.FromString -= ReadPers;
-		On.DeathPersistentSaveData.SaveToString -= WritePers;
-
-		On.PlayerProgression.WipeAll -= WipeAll;
-		On.PlayerProgression.WipeSaveState -= WipeSavestate;
-
-		foreach (int slot in VarsGlobal.Keys)
+		try
 		{
-			WriteGlobal(slot);
+			On.SaveState.LoadGame -= ReadNormal;
+			On.SaveState.SaveToString -= WriteNormal;
+
+			On.DeathPersistentSaveData.ctor -= RegDPSD;
+			On.DeathPersistentSaveData.FromString -= ReadPers;
+			On.DeathPersistentSaveData.SaveToString -= WritePers;
+
+			On.PlayerProgression.WipeAll -= WipeAll;
+			On.PlayerProgression.WipeSaveState -= WipeSavestate;
+			foreach (int slot in VarsGlobal.Keys)
+			{
+				WriteGlobal(slot);
+			}
+		}
+		catch (Exception ex)
+		{
+			plog.LogFatal(ErrorMessage(Site.Clear, "Unhandled exception", ex));
 		}
 	}
 	internal static void Init()
 	{
-		//todo: globals ser
+		//todo: globals ser test
 		plog.LogDebug("Init VarRegistry hooks");
+		try
+		{
 
+			On.SaveState.LoadGame += ReadNormal;
+			On.SaveState.SaveToString += WriteNormal;
 
-		On.SaveState.LoadGame += ReadNormal;
-		On.SaveState.SaveToString += WriteNormal;
+			On.DeathPersistentSaveData.ctor += RegDPSD;
+			On.DeathPersistentSaveData.FromString += ReadPers;
+			On.DeathPersistentSaveData.SaveToString += WritePers;
 
-		On.DeathPersistentSaveData.ctor += RegDPSD;
-		On.DeathPersistentSaveData.FromString += ReadPers;
-		On.DeathPersistentSaveData.SaveToString += WritePers;
+			On.PlayerProgression.WipeAll += WipeAll;
+			On.PlayerProgression.WipeSaveState += WipeSavestate;
+		}
+		catch (Exception ex)
+		{
+			plog.LogFatal(ErrorMessage(Site.Init, "Unhandled exception", ex));
+		}
 
-		On.PlayerProgression.WipeAll += WipeAll;
-		On.PlayerProgression.WipeSaveState += WipeSavestate;
 	}
 	private static void WipeSavestate(On.PlayerProgression.orig_WipeSaveState orig, PlayerProgression self, int saveStateNumber)
 	{
@@ -167,31 +192,6 @@ public static class VarRegistry
 		return orig(self, saveAsIfPlayerDied, saveAsIfPlayerQuit);
 	}
 
-	private static string WriteNormal(
-		On.SaveState.orig_SaveToString orig,
-		SaveState self)
-	{
-		try
-		{
-			int? ss = CurrentSaveslot;
-			if (ss is null)
-			{
-				plog.LogError(ErrorMessage(Site.HookNormal, "Could not find current saveslot", null));
-				goto done;
-			}
-			Save save = MakeSD(ss.Value, self.saveStateNumber);
-			var data = VarsPerSave
-				.AddIfNone_Get(save, () => new(save))
-				.GetSer(DataSection.Normal);
-			TryWriteData(save, DataSection.Normal, data);
-		}
-		catch (Exception ex)
-		{
-			plog.LogError(ErrorMessage(Site.HookNormal, "Error on write", ex));
-		}
-	done:
-		return orig(self);
-	}
 	private static void ReadNormal(
 		On.SaveState.orig_LoadGame orig,
 		SaveState self,
@@ -223,15 +223,63 @@ public static class VarRegistry
 			plog.LogError(ErrorMessage(Site.HookNormal, "Error on read", ex));
 		}
 	}
+	private static string WriteNormal(
+		On.SaveState.orig_SaveToString orig,
+		SaveState self)
+	{
+		try
+		{
+			int? ss = CurrentSaveslot;
+			if (ss is null)
+			{
+				plog.LogError(ErrorMessage(Site.HookNormal, "Could not find current saveslot", null));
+				goto done;
+			}
+			Save save = MakeSD(ss.Value, self.saveStateNumber);
+			var data = VarsPerSave
+				.AddIfNone_Get(save, () => new(save))
+				.GetSer(DataSection.Normal);
+			TryWriteData(save, DataSection.Normal, data);
+		}
+		catch (Exception ex)
+		{
+			plog.LogError(ErrorMessage(Site.HookNormal, "Error on write", ex));
+		}
+	done:
+		return orig(self);
+	}
 	#endregion
 	#region methods
 	/// <summary>
-	/// Fetches a stored variable. Creates a new one if does not exist. Looks up 
+	/// Fetches a stored variable. Creates a new one if does not exist. You can use prefixes to request death-persistent and global variables. Some examples:
+	/// <para>
+	/// <code>
+	///	<see cref="VarRegistry"/>.GetVar("flag0", 0, 2)
+	/// </code>
+	/// will try fetching variable named "flag0" for saveslot 0 (first) for hunter (character 2). 
+	/// Normal variables for a save are reset if you wipe character progress or the entire saveslot;
+	/// <code>
+	/// <see cref="VarRegistry"/>.GetVar("p_flag1", 1, 2)
+	/// </code>
+	/// will try fetching a *death-persistent* (saved with the same sort of persistence as
+	/// flags indicating whether you visited echoes, finished the game, etc) variable 
+	/// named "flag1" for saveslot 1 (second) for hunter (character 2).
+	/// Persistent variables for a save are reset if you wipe character progress
+	/// or the entire saveslot;
+	/// <code>
+	/// <see cref="VarRegistry"/>.GetVar("g_flag2", 1)
+	/// </code>
+	/// will try searching for a *global* variable called "flag2" for saveslot 1 (second).
+	/// Global variables are exempt from data resets [for now, are you sure they should be?].
+	/// Global variables are shared between all characters on a given slot,
+	/// and will also be usable in arena should Atmo ever support arena.
+	/// </para>
 	/// </summary>
-	/// <param name="name"></param>
-	/// <param name="saveslot"></param>
-	/// <param name="character"></param>
-	/// <returns></returns>
+	/// <param name="name">Name of the variable, with prefix if needed. Must not be null.</param>
+	/// <param name="saveslot">Save slot to look up data from (<see cref="RainWorld"/>.options.saveSlot for current)</param>
+	/// <param name="character">Current character. 0 for survivor, 1 for monk, 2 for hunter.</param>
+	/// <returns>Variable requested; if there was no variable with given name before, GetVar creates a blank one from an empty string.</returns>
+#warning fucking hell it's index dependent and will do weird shit if custom characters are turned on and off
 	public static Arg GetVar(string name!!, int saveslot, int character = -1)
 	{
 		if (name.StartsWith(PREFIX_GLOBAL))
@@ -270,7 +318,7 @@ public static class VarRegistry
 	internal static void WriteGlobal(int slot)
 	{
 		IO.DirectoryInfo dir = new(SaveFolder(new(slot, -1)));
-		IO.FileInfo fi = new (GlobalFile(slot));
+		IO.FileInfo fi = new(GlobalFile(slot));
 		try
 		{
 			if (!dir.Exists) dir.Create();
@@ -340,13 +388,13 @@ public static class VarRegistry
 	internal static string SaveFolder(in Save save)
 		=> CombinePath(RootFolderDirectory(), "UserData", "Atmo", $"{save.a}");
 	internal static string SaveFile(in Save save, DataSection section)
-		=> CombinePath(SaveFolder(save), $"{save.b}_{section}.json");
+		=> CombinePath(SaveFolder(save), $"{SlugName(save.b)}_{section}.json");
 	internal static string GlobalFile(int slot) => CombinePath(SaveFolder(new(slot, -1)), "global.json");
 	#endregion pathbuild
 	internal static Save MakeSD(int slot, int @char)
 	{
-		using (_ = new Save.Names("SaveData", "slot", "char"))
-			return new(slot, @char, "SaveData", "slot", "char");
+		//using (_ = new Save.Names("SaveData", "slot", "char"))
+		return new(slot, @char, "SaveData", "slot", "char");
 	}
 	private static string ErrorMessage(Site site, string message, Exception? ex)
 		=> $"{nameof(VarRegistry)}: {site}: {message}\nException: {ex?.ToString() ?? "NULL"}";
@@ -366,6 +414,8 @@ public static class VarRegistry
 		HookWipe,
 		HookNormal,
 		HookPersistent,
+		Init,
+		Clear
 	}
 	#endregion
 }
