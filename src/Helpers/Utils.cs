@@ -529,9 +529,6 @@ public static class Utils
 	/// <summary>
 	/// ArgNullEx throw helper.
 	/// </summary>
-	/// <param name="item"></param>
-	/// <param name="name"></param>
-	/// <exception cref="ArgumentNullException"></exception>
 	public static void BangBang(object? item, string name)
 	{
 		if (item is null) throw new ArgumentNullException(name);

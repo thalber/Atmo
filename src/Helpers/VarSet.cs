@@ -45,7 +45,7 @@ internal class VarSet
 		foreach ((string name, Arg var)in tdict)
 		{
 			if (var.Equals(_def)) continue;
-			res.Add(name, var._str);
+			res.Add(name, var.Str);
 		}
 		return res;
 	}

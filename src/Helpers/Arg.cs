@@ -37,17 +37,17 @@
 /// </list>
 /// </para>
 /// </summary>
-public sealed class Arg : IEquatable<Arg>
+public sealed class Arg : IEquatable<Arg>, IConvertible
 {
 	private bool _skipparse = false;
 	private bool _readonly = false;
 	private ArgType _dt = ArgType.STR;
-	internal Arg? _var;
-	internal string _raw;
-	internal string _str;
-	internal int _i32;
-	internal float _f32;
-	internal bool _bool;
+	private Arg? _var;
+	private string _raw;
+	private string _str;
+	private int _i32;
+	private float _f32;
+	private bool _bool;
 	/// <summary>
 	/// Parses contents of <see cref="_str"/> to fill other fields. Sets <see cref="DataType"/> to <see cref="ArgType.STR"/>.
 	/// </summary>
@@ -209,6 +209,42 @@ public sealed class Arg : IEquatable<Arg>
 		_str = value.ToString();
 		I32 = (int)Convert.ChangeType(value, typeof(int));
 	}
+	#region iconv
+	TypeCode IConvertible.GetTypeCode()
+		=> TypeCode.Object;
+	bool IConvertible.ToBoolean(IFormatProvider provider)
+		=> Bool;
+	char IConvertible.ToChar(IFormatProvider provider)
+		=> (char)I32;
+	sbyte IConvertible.ToSByte(IFormatProvider provider)
+		=> (sbyte)I32;
+	byte IConvertible.ToByte(IFormatProvider provider)
+		=> (byte)I32;
+	short IConvertible.ToInt16(IFormatProvider provider)
+		=> (short)I32;
+	ushort IConvertible.ToUInt16(IFormatProvider provider)
+		=> (ushort)I32;
+	int IConvertible.ToInt32(IFormatProvider provider)
+		=> I32;
+	uint IConvertible.ToUInt32(IFormatProvider provider)
+		=> (uint)I32;
+	long IConvertible.ToInt64(IFormatProvider provider)
+		=> (long)I32;
+	ulong IConvertible.ToUInt64(IFormatProvider provider)
+		=> (ulong)I32;
+	float IConvertible.ToSingle(IFormatProvider provider)
+		=> (float)F32;
+	double IConvertible.ToDouble(IFormatProvider provider)
+		=> (double)F32;
+	decimal IConvertible.ToDecimal(IFormatProvider provider)
+		=> (decimal)F32;
+	DateTime IConvertible.ToDateTime(IFormatProvider provider)
+		=> throw new InvalidCastException();
+	string IConvertible.ToString(IFormatProvider provider)
+		=> ToString();
+	object IConvertible.ToType(Type conversionType, IFormatProvider provider)
+		=> throw new NotImplementedException();
+	#endregion iconv
 	#endregion convert
 	/// <summary>
 	/// Name of the argument; null if unnamed.
