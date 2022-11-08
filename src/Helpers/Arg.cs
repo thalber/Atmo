@@ -270,15 +270,16 @@ public sealed class Arg : IEquatable<Arg>
 			sb.Append($"(var){{{_var}}}");
 			return sb.ToString();
 		}
-		sb.Append($": {{ {DataType}: {DataType switch
+		sb.Append(string.Format("{{ {0} : {1} }}", DataType, DataType switch
 		{
 			ArgType.F32 => F32,
 			ArgType.I32 => I32,
 			ArgType.STR => Str,
 			ArgType.ENUM => $"{Str} / {I32}",
 			ArgType.BOOL => Bool,
-			_ => Str,
-		}} }}");
+			_ => Str
+		}));
+
 		return sb.ToString();
 	}
 	/// <summary>
@@ -301,8 +302,9 @@ public sealed class Arg : IEquatable<Arg>
 	/// </summary>
 	/// <param name="orig">String to create argument from. Named arguments receive "name=value" type strings here. Can not be null.</param>
 	/// <param name="linkage">Whether to check the provided string's structure, determining name and linking to a variable if needed. Off by default, for implicit casts</param>
-	public Arg(string orig!!, bool linkage = false)
+	public Arg(string orig, bool linkage = false)
 	{
+		BangBang(orig, nameof(orig));
 		_raw = orig;
 		_f32 = default;
 		_i32 = default;
@@ -350,8 +352,9 @@ public sealed class Arg : IEquatable<Arg>
 	/// </summary>
 	/// <param name="val">Another arg instance that serves as a variable. Must not be null.</param>
 	/// <param name="name">Name of the new instance.</param>
-	public Arg(Arg val!!, string? name = null)
+	public Arg(Arg val, string? name = null)
 	{
+		BangBang(val, nameof(val));
 		_var = val;
 		Name = name;
 		_raw = _str = string.Empty;

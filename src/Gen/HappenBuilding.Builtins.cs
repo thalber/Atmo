@@ -42,8 +42,11 @@ public static partial class HappenBuilding
 		AddNamedTrigger(new[] { "delay", "ondelay" }, TMake_Delay);
 		AddNamedTrigger(new[] { "playercount" }, TMake_PlayerCount);
 		AddNamedTrigger(new[] { "difficulty", "ondifficulty" }, TMake_Difficulty);
-		//todo: update docs to reflect shift to seconds in parameters rather than frames
+		//todo: update docs. like a lot
 	}
+	/// <summary>
+	/// Creates a trigger that is active based on difficulty. 
+	/// </summary>
 	private static HappenTrigger? TMake_Difficulty(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
 		bool enabled = false;
@@ -57,6 +60,9 @@ public static partial class HappenBuilding
 			On_ShouldRunUpdates = () => enabled,
 		};
 	}
+	/// <summary>
+	/// Creates a trigger that is active on given player counts.
+	/// </summary>
 	private static HappenTrigger? TMake_PlayerCount(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
 		int[] accepted = args.Select(x => (int)x).ToArray();
@@ -65,19 +71,27 @@ public static partial class HappenBuilding
 			On_ShouldRunUpdates = () => accepted.Contains(rwg.Players.Count)
 		};
 	}
+	/// <summary>
+	/// Creates a new trigger that is active after set delay (in seconds). If one argument is given, the delay is static. If two+ arguments are given, delay is randomly selected between them. Returns null if zero args.
+	/// </summary>
 	private static HappenTrigger? TMake_Delay(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
-		int delay = args.Count switch
+		int? delay = args.Count switch
 		{
-			< 1 => args.AtOr(0, 0).I32,
+			< 1 => null,
 			1 => (int)(args[0].F32 * 40f),
 			> 1 => RND.Range((int?)(args.AtOr(0, 0f)?.F32 * 40f) ?? 0, (int?)(args.AtOr(1, 2400f)?.F32 * 40f) ?? 2400)
 		};
+		if (delay is null) return null;
 		return new EventfulTrigger()
 		{
 			On_ShouldRunUpdates = () => rwg.world.rainCycle.timer > delay
 		};
 	}
+	/// <summary>
+	/// Creates a trigger that is active after another happen. First argument is target happen, second is delay in seconds.
+	/// </summary>
+	/// <returns>Null if no arguments.</returns>
 	private static HappenTrigger? TMake_AfterOther(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
 		if (args.Count < 2)
@@ -133,6 +147,10 @@ public static partial class HappenBuilding
 			On_ShouldRunUpdates = () => amActive,
 		};
 	}
+	/// <summary>
+	/// Creates a trigger that is active, but turns off if the happen stays on for too long.
+	/// </summary>
+	/// <returns></returns>
 	private static HappenTrigger? TMake_Fry(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
 		int limit = (int)(args.AtOr(0, 10f).F32 * 40f);
@@ -288,7 +306,7 @@ public static partial class HappenBuilding
 	private static void Make_SoundLoop(Happen ha, ArgSet args)
 	{
 		//does not work in HI (???). does not automatically get discontinued when leaving an affected room.
-		//todo: now works in HI. Breaks with warp.
+		//Breaks with warp.
 		if (args.Count == 0)
 		{
 			plog.LogError($"Happen {ha.name}: soundloop action: " +
@@ -512,7 +530,7 @@ public static partial class HappenBuilding
 	}
 	private static void Make_ChangePalette(Happen ha, ArgSet args)
 	{
-		//todo: support for fade palettes?
+		//todo: support for fade palettes? make sure they dont fuck with rain
 		Arg? palA = args.AtOr(0, 15);//["palA", "A", "1"];
 		string[] lastRoomPerCam = null;
 		ha.On_RealUpdate += (rm) =>

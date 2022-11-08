@@ -48,8 +48,9 @@ public sealed class HappenSet
 	/// </summary>
 	/// <param name="world">World to be bound to.</param>
 	/// <param name="file">File to read contents from. New instance stays blank if this is null.</param>
-	internal HappenSet(World world!!, IO.FileInfo? file = null)
+	internal HappenSet(World world, IO.FileInfo? file = null)
 	{
+		BangBang(world, nameof(world));
 		this.world = world;
 		game = world.game;
 		if (world is null || file is null) return;
@@ -71,8 +72,9 @@ public sealed class HappenSet
 	/// </summary>
 	/// <param name="ha">Happen to be checked. Must not be null.</param>
 	/// <returns>A set of room names for rooms the given happen should work in.</returns>
-	public IEnumerable<string> GetRoomsForHappen(Happen ha!!)
+	public IEnumerable<string> GetRoomsForHappen(Happen ha)
 	{
+		BangBang(ha, nameof(ha));
 		List<string> returned = new();
 		IEnumerable<string>? excludes = ExcludeToHappens.IndexFromRight(ha);
 		IEnumerable<string>? includes = IncludeToHappens.IndexFromRight(ha);
@@ -96,8 +98,9 @@ public sealed class HappenSet
 	/// </summary>
 	/// <param name="roomname">Room name to check. Must not be null.</param>
 	/// <returns>A set of happens active for given room.</returns>
-	public IEnumerable<Happen> GetHappensForRoom(string roomname!!)
+	public IEnumerable<Happen> GetHappensForRoom(string roomname)
 	{
+		BangBang(roomname, nameof(roomname));
 		List<Happen> returned = new();
 		//goto _specific;
 		if (!RoomsToGroups.LeftContains(roomname)) goto _specific;
@@ -126,8 +129,10 @@ public sealed class HappenSet
 	/// </summary>
 	/// <param name="happen">The happen that should receive group links. Must not be null.</param>
 	/// <param name="groups">A set of groups to be bound to given happen. Must not be null.</param>
-	public void AddGrouping(Happen happen!!, IEnumerable<string> groups!!)
+	public void AddGrouping(Happen happen, IEnumerable<string> groups)
 	{
+		BangBang(happen, nameof(happen));
+		BangBang(groups, nameof(groups));
 		if (groups?.Count() is null or 0) return;
 		Dictionary<string, List<string>> ins = new();
 		foreach (var g in groups) { ins.Add(g, new(0)); }
@@ -139,8 +144,10 @@ public sealed class HappenSet
 	/// </summary>
 	/// <param name="happen">A happen receiving excludes. Must not be null.</param>
 	/// <param name="excl">A set of room names to exclude. Must not be null.</param>
-	public void AddExcludes(Happen happen!!, IEnumerable<string> excl!!)
+	public void AddExcludes(Happen happen, IEnumerable<string> excl)
 	{
+		BangBang(happen, nameof(happen));
+		BangBang(excl, nameof(excl));
 		if (excl?.Count() is null or 0) return;
 		ExcludeToHappens.InsertRangeLeft(excl);
 		foreach (var ex in excl) ExcludeToHappens.AddLink(ex, happen);
@@ -150,8 +157,10 @@ public sealed class HappenSet
 	/// </summary>
 	/// <param name="happen">A happen receiving includes. Must not be null.</param>
 	/// <param name="incl">A set of room names to include. Must not be null.</param>
-	public void AddIncludes(Happen happen!!, IEnumerable<string> incl!!)
+	public void AddIncludes(Happen happen, IEnumerable<string> incl)
 	{
+		BangBang(happen, nameof(happen));
+		BangBang(incl, nameof(incl));
 		if (incl?.Count() is null or 0) return;
 		IncludeToHappens.InsertRangeLeft(incl);
 		foreach (var @in in incl) IncludeToHappens.AddLink(@in, happen);
@@ -212,8 +221,9 @@ public sealed class HappenSet
 	/// </summary>
 	/// <param name="world">The world to create a happenSet for. Must not be null.</param>
 	/// <returns>A resulting HappenSet; null if there was no regpack with an .atmo file for given region, or if there was an error on creation.</returns>
-	public static HappenSet? TryCreate(World world!!)
+	public static HappenSet? TryCreate(World world)
 	{
+		BangBang(world, nameof(world));
 		HappenSet? res = null;
 #if REMIX
         throw new NotImplementedException("REMIX behaviour is not implemented yet!");

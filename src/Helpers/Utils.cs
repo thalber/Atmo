@@ -27,13 +27,15 @@ public static class Utils
     /// <param name="index">Target index</param>
     /// <param name="def">Default value</param>
     /// <returns></returns>
-    public static T AtOr<T>(this IList<T> arr!!, int index, T def)
+    public static T AtOr<T>(this IList<T> arr, int index, T def)
     {
+		BangBang(arr, nameof(arr));
         if (index >= arr.Count || index < 0) return def;
         return arr[index];
     }
-    public static char? Get(this StringBuilder sb!!, int index)
+    public static char? Get(this StringBuilder sb, int index)
     {
+		BangBang(sb, nameof(sb));
         if (index >= sb.Length || index < 0) return null;
         return sb[index];
     }
@@ -47,10 +49,12 @@ public static class Utils
     /// <param name="defval">Default value callback. Executed if item is not found; its return is added to the dictionary, then returned from the extension method.</param>
     /// <returns>Resulting item.</returns>
     public static Tval AddIfNone_Get<Tkey, Tval>(
-        this IDictionary<Tkey, Tval> dict!!,
-        Tkey key!!,
+        this IDictionary<Tkey, Tval> dict,
+        Tkey key,
         Func<Tval> defval)
     {
+		BangBang(dict, nameof(dict));
+		if (key is not ValueType) BangBang(key, nameof(key));
         if (dict.TryGetValue(key, out Tval oldVal)) { return oldVal; }
         else
         {
@@ -58,6 +62,7 @@ public static class Utils
             dict.Add(key, def);
             return def;
         }
+
     }
     /// <summary>
     /// Shifts contents of a BitArray one position to the right.
@@ -351,23 +356,27 @@ public static class Utils
     /// <returns></returns>
     public static string JoinWithComma(string x, string y)
         => $"{x}, {y}";
-    /// <summary>
-    /// Stitches a given collection with, returns an empty string if empty.
-    /// </summary>
-    /// <param name="coll"></param>
-    /// <param name="aggregator">Aggregator function. <see cref="JoinWithComma"/> by default.</param>
-    /// <returns>Resulting string.</returns>
-    public static string Stitch(
-        this IEnumerable<string> coll!!,
-        Func<string, string, string>? aggregator = null)
-        => coll is null || coll.Count() is 0 ? string.Empty : coll.Aggregate(aggregator ?? JoinWithComma);
-    /// <summary>
-    /// Creates an <see cref="IntRect"/> from two corner points.
-    /// </summary>
-    /// <param name="p1"></param>
-    /// <param name="p2"></param>
-    /// <returns></returns>
-    public static IntRect ConstructIR(IntVector2 p1, IntVector2 p2)
+	/// <summary>
+	/// Stitches a given collection with, returns an empty string if empty.
+	/// </summary>
+	/// <param name="coll"></param>
+	/// <param name="aggregator">Aggregator function. <see cref="JoinWithComma"/> by default.</param>
+	/// <returns>Resulting string.</returns>
+	public static string Stitch(
+		this IEnumerable<string> coll,
+		Func<string, string, string>? aggregator = null)
+	{
+		BangBang(coll, nameof(coll));
+		return coll is null || coll.Count() is 0 ? string.Empty : coll.Aggregate(aggregator ?? JoinWithComma);
+	}
+
+	/// <summary>
+	/// Creates an <see cref="IntRect"/> from two corner points.
+	/// </summary>
+	/// <param name="p1"></param>
+	/// <param name="p2"></param>
+	/// <returns></returns>
+	public static IntRect ConstructIR(IntVector2 p1, IntVector2 p2)
         => new(Min(p1.x, p2.x), Min(p1.y, p2.y), Max(p1.x, p2.x), Max(p1.y, p2.y));
     /// <summary>
     /// <see cref="IO.Path.Combine"/> but params.
@@ -394,9 +403,10 @@ public static class Utils
     /// <typeparam name="T">Type of subprocess.</typeparam>
     /// <param name="manager">must not be null.</param>
     /// <returns>Found subprocess; null if none.</returns>
-    public static T? FindSubProcess<T>(this ProcessManager manager!!)
+    public static T? FindSubProcess<T>(this ProcessManager manager)
         where T : MainLoopProcess
     {
+		BangBang(manager, nameof(manager));
         if (manager.currentMainLoop is T tmain) return tmain;
         foreach (MainLoopProcess sideprocess in manager.sideProcesses) if (sideprocess is T tside) return tside;
         return null;
@@ -516,13 +526,24 @@ public static class Utils
         k = kvp.Key;
         v = kvp.Value;
     }
+	/// <summary>
+	/// ArgNullEx throw helper.
+	/// </summary>
+	/// <param name="item"></param>
+	/// <param name="name"></param>
+	/// <exception cref="ArgumentNullException"></exception>
+	public static void BangBang(object? item, string name)
+	{
+		if (item is null) throw new ArgumentNullException(name);
+	}
 
 #if ATMO //atmo-specific things
     internal static void DbgVerbose(
-        this LOG.ManualLogSource logger!!,
+        this LOG.ManualLogSource logger,
         object data,
         LOG.LogLevel sev = BepInEx.Logging.LogLevel.Debug)
     {
+		BangBang(logger, nameof(logger));
         if (log_verbose?.Value ?? false) logger.Log(sev, data);
     }
     internal static void LogFrameTime(
@@ -583,8 +604,9 @@ public static class Utils
     }
     private static string SlugName_WrapSB(int slugNumber)
         => SlugBase.PlayerManager.GetCustomPlayer(slugNumber)?.Name ?? SlugNotFound;
-    internal static string ApplyEscapes(this string str!!)
+    internal static string ApplyEscapes(this string str)
     {
+		BangBang(str, nameof(str));
         StringBuilder sb = new(str);
         for (int i = sb.Length - 1; i >= 0; i--)
         {

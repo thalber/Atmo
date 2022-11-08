@@ -294,8 +294,9 @@ public static partial class VarRegistry
 	/// <param name="saveslot">Save slot to look up data from (<see cref="RainWorld"/>.options.saveSlot for current)</param>
 	/// <param name="character">Current character. 0 for survivor, 1 for monk, 2 for hunter.</param>
 	/// <returns>Variable requested; if there was no variable with given name before, GetVar creates a blank one from an empty string.</returns>
-	public static Arg GetVar(string name!!, int saveslot, int character = -1)
+	public static Arg GetVar(string name, int saveslot, int character = -1)
 	{
+		BangBang(name, nameof(name));
 		Arg? res;
 		if ((res = GetBuiltin(name)) is not null)
 		{

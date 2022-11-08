@@ -52,7 +52,10 @@ public abstract partial class HappenTrigger
 		/// </summary>
 		/// <param name="game">Current game instance for state access.</param>
 		/// <param name="ow"></param>
-		public NeedsRWG(RainWorldGame game!!, Happen? ow = null) : base(ow) { this.game = game; }
+		public NeedsRWG(RainWorldGame game, Happen? ow = null) : base(ow) {
+			BangBang(game, nameof(game));
+			this.game = game; 
+		}
 		/// <summary>
 		/// The required rain world instance.
 		/// </summary>

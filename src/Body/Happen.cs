@@ -118,9 +118,11 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// <param name="game">Current game instance. Must not be null.</param>
 	public Happen(
 		HappenConfig cfg,
-		HappenSet owner!!,
-		RainWorldGame game!!)
+		HappenSet owner,
+		RainWorldGame game)
 	{
+		BangBang(owner, nameof(owner));
+		BangBang(game, nameof(game));
 		set = owner;
 		name = cfg.name;
 		this.game = game;
@@ -319,9 +321,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	public override string ToString()
 	{
 		return $"{name}" +
-			$"[{(actions.Count == 0
-				? string.Empty
-				: actions.Select(x => $"{x.Key}").Aggregate(JoinWithComma))}]" +
+			$"[{(actions.Count == 0 ? string.Empty : actions.Select(x => $"{x.Key}").Aggregate(JoinWithComma))}]" +
 			$"({triggers.Length} triggers)";
 	}
 	#endregion

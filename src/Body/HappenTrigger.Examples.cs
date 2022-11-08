@@ -295,8 +295,10 @@ public partial class HappenTrigger
 	public sealed class OnPlayerCount : NeedsRWG
 	{
 		private readonly int[] accepted;
-		public OnPlayerCount(ArgSet args!!, RainWorldGame game!!) : base(game, null)
+		public OnPlayerCount(ArgSet args, RainWorldGame game) : base(game, null)
 		{
+			BangBang(args, nameof(args));
+			BangBang(game, nameof(game));
 			accepted = args.Select(x => (int)x).ToArray();
 		}
 		public override bool ShouldRunUpdates()
@@ -309,8 +311,10 @@ public partial class HappenTrigger
 	public sealed class OnDifficulty : NeedsRWG
 	{
 		private readonly bool enabled = false;
-		public OnDifficulty(ArgSet args!!, RainWorldGame game!!, Happen? ow = null) : base(game, ow)
+		public OnDifficulty(ArgSet args, RainWorldGame game, Happen? ow = null) : base(game, ow)
 		{
+			BangBang(args, nameof(args));
+			BangBang(game, nameof(game));
 			foreach (Arg arg in args)
 			{
 				arg.GetEnum(out SlugcatStats.Name name);
