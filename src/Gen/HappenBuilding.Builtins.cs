@@ -42,6 +42,9 @@ public static partial class HappenBuilding
 		AddNamedTrigger(new[] { "delay", "ondelay" }, TMake_Delay);
 		AddNamedTrigger(new[] { "playercount" }, TMake_PlayerCount);
 		AddNamedTrigger(new[] { "difficulty", "ondifficulty" }, TMake_Difficulty);
+		AddNamedTrigger(new[] { "vareq", "variableequal", "variableeq" }, TMake_VarEq);
+		AddNamedTrigger(new[] { "varne", "varnot", "varnotequal" }, TMake_VarNe);
+		AddNamedTrigger(new[] { "varmatch", "variablematch", "variableregex", "varregex" }, TMake_VarMatch);
 		//todo: update docs. like a lot
 	}
 	/// <summary>
@@ -148,7 +151,7 @@ public static partial class HappenBuilding
 		};
 	}
 	/// <summary>
-	/// Creates a trigger that is active, but turns off if the happen stays on for too long.
+	/// Creates a trigger that is active, but turns off for a while if the happen stays on for too long. First argument is max tolerable time, second is time it takes to recover.
 	/// </summary>
 	/// <returns></returns>
 	private static HappenTrigger? TMake_Fry(ArgSet args, RainWorldGame rwg, Happen ha)
@@ -175,6 +178,9 @@ public static partial class HappenBuilding
 			On_ShouldRunUpdates = () => active
 		};
 	}
+	/// <summary>
+	/// Creates a trigger that activates once player visits one of the provided rooms.
+	/// </summary>
 	private static HappenTrigger? TMake_Visit(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
 		string[] rooms = args.Select(x => x.Str).ToArray();
@@ -194,6 +200,9 @@ public static partial class HappenBuilding
 
 		//return new AfterVisit(game, args);
 	}
+	/// <summary>
+	/// Creates a trigger that flickers on and off. Arguments are: min time on, max time on, min time off, max time off, start active (yes/no)
+	/// </summary>
 	private static HappenTrigger? TMake_Flicker(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
 		int minOn = args.AtOr(0, 5.0f).I32,
@@ -218,11 +227,17 @@ public static partial class HappenBuilding
 			};
 		}
 	}
+	/// <summary>
+	/// Creates a trigger that is always active.
+	/// </summary>
 	private static HappenTrigger? TMake_Always(ArgSet args, RainWorldGame rwg, Happen ha)
 		=> new EventfulTrigger()
 		{
 			On_ShouldRunUpdates = () => true
 		};
+	/// <summary>
+	/// Creates a trigger that is active each cycle with a given chance (default 50%)
+	/// </summary>
 	private static HappenTrigger? TMake_Maybe(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
 		bool yes = RND.value < args.AtOr(0, 0.5f).F32;
@@ -231,6 +246,9 @@ public static partial class HappenBuilding
 			On_ShouldRunUpdates = () => yes,
 		};
 	}
+	/// <summary>
+	/// Creates a trigger that is active at given karma levels.
+	/// </summary>
 	private static HappenTrigger? TMake_OnKarma(ArgSet args, RainWorldGame rwg, Happen _)
 	{
 		List<int> levels = new();
@@ -251,6 +269,9 @@ public static partial class HappenBuilding
 				=> levels.Contains((rwg.Players[0].realizedCreature as Player)?.Karma ?? 0)
 		};
 	}
+	/// <summary>
+	/// Creates a trigger that is active before rain, with an optional delay (in seconds).
+	/// </summary>
 	private static HappenTrigger? TMake_UntilRain(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
 		int delay = (int?)(args.AtOr(0, 0)?.F32 * 40) ?? 0;
@@ -260,6 +281,9 @@ public static partial class HappenBuilding
 			=> rwg.world.rainCycle.TimeUntilRain + delay >= 0
 		};
 	}
+	/// <summary>
+	/// Creates a trigger that is active after rain, with an optional delay (in seconds).
+	/// </summary>
 	private static HappenTrigger? TMake_AfterRain(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
 		int delay = (int?)(args.AtOr(0, 0)?.F32 * 40) ?? 0;
@@ -269,6 +293,9 @@ public static partial class HappenBuilding
 			=> rwg.world.rainCycle.TimeUntilRain + delay <= 0
 		};
 	}
+	/// <summary>
+	/// Creates a trigger that activates once every X frames.
+	/// </summary>
 	private static HappenTrigger? TMake_EveryX(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
 		int period = args.AtOr(0, 10).I32,
@@ -278,6 +305,67 @@ public static partial class HappenBuilding
 		{
 			On_Update = () => { if (--counter < 0) counter = period; },
 			On_ShouldRunUpdates = () => { return counter == 0; }
+		};
+	}
+	/// <summary>
+	/// Creates a trigger that checks variable's equality against a given value. First argument is variable name, second is value to check against.
+	/// </summary>
+	private static HappenTrigger? TMake_VarEq(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		if (args.Count < 2) return null;
+		Arg tar = VarRegistry.GetVar(args[0].Str, CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
+		Arg val = args[1];
+		return new EventfulTrigger()
+		{
+			On_ShouldRunUpdates = () => tar.Str == val.Str,
+		};
+	}
+	/// <summary>
+	/// Creates a trigger that checks a variable's inequality against a given value. First argument is variable name, second is value to check against.
+	/// </summary>
+	public static HappenTrigger? TMake_VarNe(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		if (args.Count < 2) return null;
+		Arg tar = VarRegistry.GetVar(args[0].Str, CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
+		Arg val = args[1];
+		return new EventfulTrigger()
+		{
+			On_ShouldRunUpdates = () => tar.Str != val.Str,
+		};
+	}
+	/// <summary>
+	/// Creates a trigger that checks variable's match against a given regex. Responds to changing values.
+	/// </summary>
+	private static HappenTrigger? TMake_VarMatch(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		if (args.Count < 2) return null;
+		Arg tar = VarRegistry.GetVar(args[0].Str, CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
+		Arg val = args[1];
+		TXT.Regex? matcher = null;
+		string? prev_val = null;
+
+		return new EventfulTrigger()
+		{
+			On_Update = () =>
+			{
+				try
+				{
+					if (prev_val != val.Str)
+					{
+						matcher = new(val.Str);
+						prev_val = val.Str;
+					}
+				}
+				catch (Exception ex)
+				{
+					plog.LogWarning($"Error creating a regex from variable input \"{val.Str}\": {ex.Message}");
+					matcher = null;
+				}
+			},
+			On_ShouldRunUpdates = () =>
+			{
+				return matcher?.IsMatch(tar.Str) ?? false;
+			}
 		};
 	}
 	#endregion
