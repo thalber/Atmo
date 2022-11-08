@@ -1,6 +1,6 @@
 ﻿using Atmo.Body;
 using static Atmo.API;
-using static Atmo.HappenTrigger;
+using static Atmo.Body.HappenTrigger;
 using static UnityEngine.Mathf;
 
 namespace Atmo.Gen;
@@ -23,6 +23,10 @@ public static partial class HappenBuilding
 		}
 	}
 	#region triggers
+#warning contributor notice: triggers
+	//Place your trigger classes here.
+	//Don't forget to register them in HappenBuilding.RegisterDefaultTriggers as well.
+	//Do not remove the warning directive.
 	private static void RegisterBuiltinTriggers()
 	{
 		AddNamedTrigger(new[] { "always" }, TMake_Always);

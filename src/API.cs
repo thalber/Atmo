@@ -8,9 +8,9 @@ namespace Atmo;
 /// <list type="bullet">
 /// <item><see cref="AddNamedAction"/> overloads: attach behaviour to happens that have a specific action name in their WHAT clause;</item>
 /// <item><see cref="AddNamedTrigger"/> overloads: attach a factory callback that creates a trigger that matches specified name(s);</item>
-/// <item><see cref="EV_MakeNewHappen"/> and <see cref="EV_MakeNewTrigger"/> events: directly attach callbacks without name checking.</item>
+/// <item><see cref="EV_MakeNewHappen"/> and <see cref="EV_MakeNewTrigger"/> events: directly attach callbacks without builtin name checking.</item>
 /// </list>
-/// See also: <seealso cref="Happen"/> for core lifecycle logic, <seealso cref="HappenTrigger"/> for how conditions work.
+/// See also: <seealso cref="Happen"/> for core lifecycle logic, <seealso cref="HappenTrigger"/> for how conditions work, <seealso cref="HappenSet"/> for additional info on how happens are composed.
 /// </summary>
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
 public static class API

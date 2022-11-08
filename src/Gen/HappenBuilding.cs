@@ -1,6 +1,6 @@
 ﻿using Atmo.Body;
 using static Atmo.API;
-using static Atmo.HappenTrigger;
+using static Atmo.Body.HappenTrigger;
 
 namespace Atmo.Gen;
 /// <summary>

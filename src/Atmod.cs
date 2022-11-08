@@ -3,12 +3,15 @@ using Atmo.Gen;
 using BepInEx;
 
 using CFG = BepInEx.Configuration;
-using VREG = Atmo.Helpers.VarRegistry;
+//using VREG = Atmo.Helpers.VarRegistry;
 
 namespace Atmo;
 
 /// <summary>
-/// Main plugin class.
+/// Atmo is a scripting layer mod targeted at region makers. This is the main plugin class.
+/// <para>
+/// To interact with the mod, see <seealso cref="API"/>. For internal details, see <seealso cref="Atmo.Gen"/> and <seealso cref="Atmo.Body"/> namespace contents.
+/// </para>
 /// </summary>
 [BepInPlugin(Id, DName, Ver)]
 public sealed partial class Atmod : BaseUnityPlugin
@@ -74,7 +77,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 			On.Room.Update += RunHappensRealUpd;
 			On.World.LoadWorld += FetchHappenSet;
 			On.OverWorld.LoadFirstWorld += SetTempSSN;
-			VREG.Init();
+			VarRegistry.Init();
 			HappenBuilding.InitBuiltins();
 		}
 		catch (Exception ex)
@@ -96,7 +99,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 			On.AbstractRoom.Update -= RunHappensAbstUpd;
 			On.World.LoadWorld -= FetchHappenSet;
 			On.OverWorld.LoadFirstWorld -= SetTempSSN;
-			VREG.Clear();
+			VarRegistry.Clear();
 
 			LOG.ManualLogSource? cleanup_logger =
 				LOG.Logger.CreateLogSource("Atmo_Purge");
@@ -157,8 +160,8 @@ public sealed partial class Atmod : BaseUnityPlugin
 			//maybe put something here
 			setupRan = true;
 		}
-		VREG.BuiltinVars[VREG.BIVar.time].Str = DateTime.Now.ToString();
-		VREG.BuiltinVars[VREG.BIVar.utctime].Str = DateTime.UtcNow.ToString();
+		VarRegistry.BuiltinVars[VarRegistry.BIVar.time].Str = DateTime.Now.ToString();
+		VarRegistry.BuiltinVars[VarRegistry.BIVar.utctime].Str = DateTime.UtcNow.ToString();
 
 		if (RW is null || CurrentSet is null) return;
 		if (RW.processManager.currentMainLoop is RainWorldGame) return;
