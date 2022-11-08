@@ -1,4 +1,6 @@
-﻿namespace Atmo;
+﻿using Atmo.Gen;
+
+namespace Atmo.Body;
 /// <summary>
 /// A "World event": sealed class that carries custom code in form of callbacks. Every happen is read from within a <c>HAPPEN:...END HAPPEN</c> block in an .ATMO file. The following example block:
 /// <para>
@@ -262,7 +264,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// <returns></returns>
 	public Perf PerfRecord()
 	{
-		Perf perf = new ()
+		Perf perf = new()
 		{
 			name = name,
 			samples_eval = haeval_readings.Count,
@@ -319,7 +321,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		return $"{name}" +
 			$"[{(actions.Count == 0
 				? string.Empty
-				: actions.Select(x => $"{x.Key}").Aggregate(Utils.JoinWithComma))}]" +
+				: actions.Select(x => $"{x.Key}").Aggregate(JoinWithComma))}]" +
 			$"({triggers.Length} triggers)";
 	}
 	#endregion

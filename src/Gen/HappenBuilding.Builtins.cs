@@ -1,8 +1,9 @@
-﻿using static Atmo.API;
+﻿using Atmo.Body;
+using static Atmo.API;
 using static Atmo.HappenTrigger;
 using static UnityEngine.Mathf;
 
-namespace Atmo;
+namespace Atmo.Gen;
 public static partial class HappenBuilding
 {
 	internal static void InitBuiltins()
@@ -21,64 +22,245 @@ public static partial class HappenBuilding
 			}
 		}
 	}
+	#region triggers
 	private static void RegisterBuiltinTriggers()
 	{
-		AddNamedTrigger(new[] { "always" }, (args, rwg, ha) => new Always());
-		AddNamedTrigger(new[] { "untilrain", "beforerain" }, (args, rwg, ha) =>
-		{
-			//float.TryParse(args.AtOr(0, "0"), out var delay);
-			return new BeforeRain(rwg, ha, args.AtOr(0, 0f));
-		});
-		AddNamedTrigger(new[] { "afterrain" }, (args, rwg, ha) =>
-		{
-			//float.TryParse(args.AtOr(0, "0"), out var delay);
-			return new AfterRain(rwg, ha, args.AtOr(0, 0f));
-		});
-		AddNamedTrigger(new[] { "everyx", "every" }, (args, rwg, ha) =>
-		{
-			//float.TryParse(args.AtOr(0, "4"), out var period);
-			return new EveryX(args.AtOr(0, 4f), ha);
-		});
-		AddNamedTrigger(new[] { "maybe", "chance" }, (args, rwg, ha) =>
-		{
-			//float.TryParse(args.AtOr(0, "0.5"), out var ch);
-			return new Maybe(args.AtOr(0, 0.5f));
-		});
-		AddNamedTrigger(new[] { "flicker" }, (args, rwg, ha) =>
-		{
-			return new Flicker(
-				args.AtOr(0, 5.0f),
-				args.AtOr(1, 5.0f),
-				args.AtOr(2, 5.0f),
-				args.AtOr(3, 5.0f),
-				args.AtOr(4, true).Bool);
-		});
-		AddNamedTrigger(new[] { "karma", "onkarma" }, (args, rwg, ha) => new OnKarma(rwg, args));
-		AddNamedTrigger(new[] { "visit", "playervisited", "playervisit" }, (args, rwg, ha) => new AfterVisit(rwg, args));
-		AddNamedTrigger(new[] { "fry", "fryafter" }, (args, rwg, ha) =>
-		{
-			return new Fry(args.AtOr(0, 5f), args.AtOr(1, 10f));
-		});
-		AddNamedTrigger(new[] { "after", "afterother" }, (args, rwg, ha) =>
-		{
-			if (args.Count < 2)
-			{
-				plog.LogWarning($"HappenBuilding: builtins: after trigger on {ha.name} needs name of the target trigger and delay!");
-				return null;
-			}
-			return new AfterOther(ha, args[0], args[1]);
-		});
-		AddNamedTrigger(new[] { "delay", "ondelay" }, (args, rwg, ha) =>
-		{
-			return args.Count switch
-			{
-				< 1 => null,
-				1 => new AfterDelay(args[0], rwg),
-				> 1 => new AfterDelay(args[0], args[1], rwg)
-			};
-		});
+		AddNamedTrigger(new[] { "always" }, TMake_Always);
+		AddNamedTrigger(new[] { "untilrain", "beforerain" }, TMake_UntilRain);
+		AddNamedTrigger(new[] { "afterrain" }, TMake_AfterRain);
+		AddNamedTrigger(new[] { "everyx", "every" }, TMake_EveryX);
+		AddNamedTrigger(new[] { "maybe", "chance" }, TMake_Maybe);
+		AddNamedTrigger(new[] { "flicker" }, TMake_Flicker);
+		AddNamedTrigger(new[] { "karma", "onkarma" }, TMake_OnKarma);
+		AddNamedTrigger(new[] { "visit", "playervisited", "playervisit" }, TMake_Visit);
+		AddNamedTrigger(new[] { "fry", "fryafter" }, TMake_Fry);
+		AddNamedTrigger(new[] { "after", "afterother" }, TMake_AfterOther);
+		AddNamedTrigger(new[] { "delay", "ondelay" }, TMake_Delay);
+		AddNamedTrigger(new[] { "playercount" }, TMake_PlayerCount);
+		AddNamedTrigger(new[] { "difficulty", "ondifficulty" }, TMake_Difficulty);
 		//todo: update docs to reflect shift to seconds in parameters rather than frames
 	}
+	private static HappenTrigger? TMake_Difficulty(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		bool enabled = false;
+		foreach (Arg arg in args)
+		{
+			arg.GetEnum(out SlugcatStats.Name name);
+			if (name == rwg.GetStorySession.characterStats.name) enabled = true;
+		}
+		return new EventfulTrigger()
+		{
+			On_ShouldRunUpdates = () => enabled,
+		};
+	}
+	private static HappenTrigger? TMake_PlayerCount(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		int[] accepted = args.Select(x => (int)x).ToArray();
+		return new EventfulTrigger()
+		{
+			On_ShouldRunUpdates = () => accepted.Contains(rwg.Players.Count)
+		};
+	}
+	private static HappenTrigger? TMake_Delay(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		int delay = args.Count switch
+		{
+			< 1 => args.AtOr(0, 0).I32,
+			1 => (int)(args[0].F32 * 40f),
+			> 1 => RND.Range((int?)(args.AtOr(0, 0f)?.F32 * 40f) ?? 0, (int?)(args.AtOr(1, 2400f)?.F32 * 40f) ?? 2400)
+		};
+		return new EventfulTrigger()
+		{
+			On_ShouldRunUpdates = () => rwg.world.rainCycle.timer > delay
+		};
+	}
+	private static HappenTrigger? TMake_AfterOther(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		if (args.Count < 2)
+		{
+			plog.LogWarning($"HappenBuilding: builtins: after trigger on {ha.name} needs name of the target trigger and delay!");
+			return null;
+		}
+		Happen? tar = null;
+		string tarname = args.AtOr(0, "none").Str;
+		int delay = (int?)(args.AtOr(1, 3f).F32 * 40) ?? 40;
+		bool tarWasOn = false;
+		bool amActive = false;
+		List<int> switchOn = new();
+		List<int> switchOff = new();
+
+		return new EventfulTrigger()
+		{
+			On_Update = () =>
+			{
+				tar ??= ha?.set.AllHappens.FirstOrDefault(x => x.name == tarname);
+				if (tar is null) return;
+				if (tar.Active != tarWasOn)
+				{
+					if (tar.Active)
+					{
+						switchOn.Add(delay);
+					}
+					else
+					{
+						switchOff.Add(delay);
+					}
+				}
+				for (var i = 0; i < switchOn.Count; i++)
+				{
+					switchOn[i]--;
+				}
+				if (switchOn.FirstOrDefault() < 0)
+				{
+					switchOn.RemoveAt(0);
+					amActive = true;
+				}
+				for (var i = 0; i < switchOff.Count; i++)
+				{
+					switchOff[i]--;
+				}
+				if (switchOff.FirstOrDefault() < 0)
+				{
+					switchOff.RemoveAt(0);
+					amActive = false;
+				}
+				tarWasOn = tar.Active;
+			},
+			On_ShouldRunUpdates = () => amActive,
+		};
+	}
+	private static HappenTrigger? TMake_Fry(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		int limit = (int)(args.AtOr(0, 10f).F32 * 40f);
+		int cd = (int)(args.AtOr(1, 15f).F32 * 40f);
+		int counter = 0;
+		bool active = true;
+		return new EventfulTrigger()
+		{
+			On_EvalResults = (res) =>
+			{
+				if (active)
+				{
+					if (res) counter++; else { counter = 0; }
+					if (counter > limit) { active = false; counter = cd; }
+				}
+				else
+				{
+					counter--;
+					if (counter == 0) { active = true; counter = 0; }
+				}
+			},
+			On_ShouldRunUpdates = () => active
+		};
+	}
+	private static HappenTrigger? TMake_Visit(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		string[] rooms = args.Select(x => x.Str).ToArray();
+		bool visit = false;
+		return new EventfulTrigger()
+		{
+			On_Update = () =>
+			{
+				if (visit) return;
+				foreach (AbstractCreature? player in rwg.Players) if (rooms.Contains(player.Room.name))
+					{
+						visit = true;
+					}
+			},
+			On_ShouldRunUpdates = () => visit
+		};
+
+		//return new AfterVisit(game, args);
+	}
+	private static HappenTrigger? TMake_Flicker(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		int minOn = args.AtOr(0, 5.0f).I32,
+			maxOn = args.AtOr(1, 5.0f).I32,
+			minOff = args.AtOr(2, 5.0f).I32,
+			maxOff = args.AtOr(3, 5.0f).I32;
+		bool on = args.AtOr(4, true).Bool;
+		int counter = 0;
+
+		return new EventfulTrigger()
+		{
+			On_Update = () => { if (counter-- < 0) ResetCounter(!on); },
+			On_ShouldRunUpdates = () => on,
+		};
+		void ResetCounter(bool next)
+		{
+			on = next;
+			counter = on switch
+			{
+				true => RND.Range(minOn, maxOn),
+				false => RND.Range(minOff, maxOff),
+			};
+		}
+	}
+	private static HappenTrigger? TMake_Always(ArgSet args, RainWorldGame rwg, Happen ha)
+		=> new EventfulTrigger()
+		{
+			On_ShouldRunUpdates = () => true
+		};
+	private static HappenTrigger? TMake_Maybe(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		bool yes = RND.value < args.AtOr(0, 0.5f).F32;
+		return new EventfulTrigger()
+		{
+			On_ShouldRunUpdates = () => yes,
+		};
+	}
+	private static HappenTrigger? TMake_OnKarma(ArgSet args, RainWorldGame rwg, Happen _)
+	{
+		List<int> levels = new();
+		foreach (Arg op in args)
+		{
+			if (int.TryParse(op.Str, out var r)) levels.Add(r);
+			var spl = TXT.Regex.Split(op.Str, "\\s*-\\s*");
+			if (spl.Length == 2)
+			{
+				int.TryParse(spl[0], out var min);
+				int.TryParse(spl[1], out var max);
+				for (var i = min; i <= max; i++) if (!levels.Contains(i)) levels.Add(i);
+			}
+		}
+		return new EventfulTrigger()
+		{
+			On_ShouldRunUpdates = ()
+				=> levels.Contains((rwg.Players[0].realizedCreature as Player)?.Karma ?? 0)
+		};
+	}
+	private static HappenTrigger? TMake_UntilRain(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		int delay = (int?)(args.AtOr(0, 0)?.F32 * 40) ?? 0;
+		return new EventfulTrigger()
+		{
+			On_ShouldRunUpdates = ()
+			=> rwg.world.rainCycle.TimeUntilRain + delay >= 0
+		};
+	}
+	private static HappenTrigger? TMake_AfterRain(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		int delay = (int?)(args.AtOr(0, 0)?.F32 * 40) ?? 0;
+		return new EventfulTrigger()
+		{
+			On_ShouldRunUpdates = ()
+			=> rwg.world.rainCycle.TimeUntilRain + delay <= 0
+		};
+	}
+	private static HappenTrigger? TMake_EveryX(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		int period = args.AtOr(0, 10).I32,
+			counter = 0;// ?? 10;
+
+		return new EventfulTrigger()
+		{
+			On_Update = () => { if (--counter < 0) counter = period; },
+			On_ShouldRunUpdates = () => { return counter == 0; }
+		};
+	}
+	#endregion
+	#region actions
+#warning contributor notice: actions
 	private static void RegisterBuiltinActions()
 	{
 		AddNamedAction(new[] { "playergrav", "playergravity" }, Make_Playergrav);
@@ -96,8 +278,6 @@ public static partial class HappenBuilding
 		//AddNamedAction(new[] { "music", "playmusic" }, Make_PlayMusic);
 		//AddNamedAction()
 	}
-	#region actions
-#warning contributor notice: actions
 	//add your custom actions in methods here
 	//Use methods with the same structure. Don't forget to also add them to the inst method above.
 	//Do not remove the warning directive.
@@ -357,7 +537,6 @@ public static partial class HappenBuilding
 				}
 		};
 	}
-
 	private static void Make_SetVar(Happen ha, ArgSet args)
 	{
 		Arg argn = args.AtOr(0, "testvar"),

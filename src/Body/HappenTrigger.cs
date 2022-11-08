@@ -1,8 +1,10 @@
-﻿namespace Atmo;
+﻿using Atmo.Body;
+
+namespace Atmo;
 /// <summary>
-/// Base class for triggers. Triggers determine when happens are allowed to run; They are composed into a <see cref="PredicateInlay"/> instance, that acts as a logical expression tree.
+/// Base class for triggers. Triggers determine when happens are allowed to run; They are composed into a <see cref="PredicateInlay"/> instance, that acts as a logical expression tree. Derive from this class to define your custom trigger to be used in <see cref="API.AddNamedTrigger"/> overloads, or use the event-driven child <see cref="EventfulTrigger"/> if you prefer composition with callbacks here as well.
 /// <para>
-/// This expression: <code> WHEN: (maybe 0.7 OR karma 1 2 3) AND fry 25 5 </code> will be turned into a set of happentrigger children:
+/// This expression: <code> WHEN: (maybe 0.7 OR karma 1 2 3) AND fry 25 5 </code> will be turned into a set of happentrigger children that do the following:
 /// <list type="number">
 /// <item>A <see cref="Maybe"/>, that takes argument 0.7. Each cycle, this will either be active with 70% chance, or inactive with 30% chance.</item>
 /// <item>A <see cref="OnKarma"/>, that is active when the player's current karma is 1, 2 or 3.</item>
@@ -13,6 +15,7 @@
 /// <para>
 /// Note that <see cref="PredicateInlay.Eval"/> can short-circuit, so some of the triggers may not receive a call to their <see cref="ShouldRunUpdates"/> every frame. In this example, evaluation starts with Maybe, then goes on to Karma. If at least one of them is true, Fry gets evaluated; if they are both false, expression short-circuits, and Fry is not evaluated.
 /// </para>
+/// NOTICE: As of now, all trigger children mentioned in above example are deprecated and serve only as examples. For builtins, <see cref="EventfulTrigger"/> is used instead.
 /// </summary>
 public abstract partial class HappenTrigger
 {
@@ -28,7 +31,7 @@ public abstract partial class HappenTrigger
 	/// <param name="ow">The happen instance that owns this trigger. Can be null.</param>
 	public HappenTrigger(Happen? ow = null) { owner = ow; }
 	/// <summary>
-	/// Answers if a trigger is currently ready. This can be called up to once per frame.
+	/// Answers if a trigger is currently ready. This may be called up to once per frame.
 	/// </summary>
 	/// <returns></returns>
 	public abstract bool ShouldRunUpdates();
@@ -64,24 +67,12 @@ public abstract partial class HappenTrigger
 		protected readonly RainWorldGame game;
 	}
 	/// <summary>
-	/// Sample trigger, Always true.
-	/// </summary>
-	public sealed class Always : HappenTrigger
-	{
-		public Always() : base(null)
-		{
-		}
-		public override bool ShouldRunUpdates()
-		{
-			return true;
-		}
-	}
-	/// <summary>
 	/// Sample trigger, works after rain starts. Supports an optional delay (in seconds.)
 	/// <para>
 	/// Example use: <code></code>
 	/// </para>
 	/// </summary>
+	[Obsolete("Replaced with EventfulTrigger variant.")]
 	public sealed class AfterRain : NeedsRWG
 	{
 		public AfterRain(RainWorldGame game, Happen ow, Arg? delay = null) : base(game, ow)
@@ -97,6 +88,7 @@ public abstract partial class HappenTrigger
 	/// <summary>
 	/// Sample trigger, true until rain starts. Supports an optional delay.
 	/// </summary>
+	[Obsolete("Replaced with EventfulTrigger variant.")]
 	public sealed class BeforeRain : NeedsRWG
 	{
 		public BeforeRain(RainWorldGame game, Happen ow, Arg? delay = null) : base(game, ow)
@@ -112,6 +104,7 @@ public abstract partial class HappenTrigger
 	/// <summary>
 	/// Sample trigger, fires every X frames.
 	/// </summary>
+	[Obsolete("Replaced with EventfulTrigger variant.")]
 	public sealed class EveryX : HappenTrigger
 	{
 		public EveryX(Arg x, Happen ow) : base(ow)
@@ -133,6 +126,7 @@ public abstract partial class HappenTrigger
 	/// <summary>
 	/// Upon instantiation, rolls with given chance. If successful, stays on always.
 	/// </summary>
+	[Obsolete("Replaced with EventfulTrigger variant.")]
 	public sealed class Maybe : HappenTrigger
 	{
 		public Maybe(Arg chance)
@@ -145,6 +139,7 @@ public abstract partial class HappenTrigger
 	/// <summary>
 	/// Turns on and off periodically.
 	/// </summary>
+	[Obsolete("Replaced with EventfulTrigger variant.")]
 	public sealed class Flicker : HappenTrigger
 	{
 		private readonly int minOn;
@@ -181,6 +176,7 @@ public abstract partial class HappenTrigger
 	/// <summary>
 	/// Requires specific karma levels
 	/// </summary>
+	[Obsolete("Replaced with EventfulTrigger variant.")]
 	public sealed class OnKarma : NeedsRWG
 	{
 		private readonly List<int> levels = new();
@@ -207,6 +203,7 @@ public abstract partial class HappenTrigger
 	/// <summary>
 	/// Activates after any player visits a specific set of rooms.
 	/// </summary>
+	[Obsolete("Replaced with EventfulTrigger variant.")]
 	public sealed class AfterVisit : NeedsRWG
 	{
 		private readonly string[] rooms;
@@ -231,6 +228,7 @@ public abstract partial class HappenTrigger
 	/// <summary>
 	/// Fries and goes inactive for a duration if the happen stays on for too long.
 	/// </summary>
+	[Obsolete("Replaced with EventfulTrigger variant.")]
 	public sealed class Fry : HappenTrigger
 	{
 		private readonly int limit;
@@ -262,16 +260,16 @@ public abstract partial class HappenTrigger
 	/// <summary>
 	/// Activates after another event is tripped, with a customizeable spinup/spindown delay.
 	/// </summary>
+	[Obsolete("Replaced with EventfulTrigger variant.")]
 	public sealed class AfterOther : HappenTrigger
 	{
-		internal Happen tar;
-		//internal readonly System.Collections.BitArray inertia;
-		internal readonly string tarname;
-		internal readonly int delay;
+		internal Happen? tar;
+		internal string tarname;
+		internal int delay;
 		internal bool tarWasOn;
 		internal bool amActive;
-		internal readonly List<int> switchOn = new();
-		internal readonly List<int> switchOff = new();
+		internal List<int> switchOn = new();
+		internal List<int> switchOff = new();
 		public AfterOther(Happen owner, Arg tarname, Arg delay) : base(owner)
 		{
 			this.delay = (int?)(delay.F32 * 40) ?? 40;
@@ -318,6 +316,7 @@ public abstract partial class HappenTrigger
 	/// <summary>
 	/// Activates after a set delay.
 	/// </summary>
+	[Obsolete("Replaced with EventfulTrigger variant.")]
 	public sealed class AfterDelay : NeedsRWG
 	{
 		private readonly int delay;
@@ -348,6 +347,7 @@ public abstract partial class HappenTrigger
 	/// <summary>
 	/// Activates if player count is within given value
 	/// </summary>
+	[Obsolete("Replaced with EventfulTrigger variant.")]
 	public sealed class OnPlayerCount : NeedsRWG
 	{
 		private readonly int[] accepted;
@@ -361,6 +361,7 @@ public abstract partial class HappenTrigger
 	/// <summary>
 	/// Only activates on a given difficulty.
 	/// </summary>
+	[Obsolete("Replaced with EventfulTrigger variant.")]
 	public sealed class OnDifficulty : NeedsRWG
 	{
 		private readonly bool enabled = false;
@@ -376,5 +377,49 @@ public abstract partial class HappenTrigger
 			=> enabled;//difficulties.Contains(game.GetStorySession.characterStats.name);
 	}
 #pragma warning restore CS1591
+
+	/// <summary>
+	/// An event-driven trigger. Does not inherit <see cref="NeedsRWG"/>, intended to be used with lambdas and local capture for state access. The following example's factory uses that to create an instance that will, every frame, roll a number between 0 and 5, and the trigger will be active if it rolled 0 that frame:
+	/// <code>
+	/// <see cref="API.Create_NamedTriggerFactory"/> fac = (args, game, happ) =>
+	///	{
+	///		int x = 6;
+	///		int c = 0;
+	///		return new <see cref="EventfulTrigger"/>()
+	///		{
+	///			On_Update = 
+	///				() => { c = <see cref="UnityEngine.Random"/>.Range(0, x); },
+	///			On_ShouldRunUpdates =
+	///				() => c is 0,
+	///		};
+	///	}
+	/// </code>
+	/// <see cref="EventfulTrigger.ShouldRunUpdates"/> defaults to false if callback is null.
+	/// </summary>
+	public sealed class EventfulTrigger : HappenTrigger
+	{
+		/// <summary>
+		/// Attach to this to fill in the behaviour of <see cref="EvalResults(bool)"/>.
+		/// </summary>
+		public Action<bool>? On_EvalResults;
+		/// <summary>
+		/// Attach to this to fill in the behaviour of <see cref="Update"/>.
+		/// </summary>
+		public Action? On_Update;
+		/// <summary>
+		/// Attach to this to fill in the behaviour of <see cref="ShouldRunUpdates"/>. False if null.
+		/// </summary>
+		public Func<bool>? On_ShouldRunUpdates;
+		/// <inheritdoc/>
+		public override void EvalResults(bool res) 
+			=> On_EvalResults?.Invoke(res);
+		/// <inheritdoc/>
+		public override void Update() 
+			=> On_Update?.Invoke();
+		/// <inheritdoc/>
+		public override bool ShouldRunUpdates() 
+			=> On_ShouldRunUpdates?.Invoke() ?? false;
+	}
 	#endregion
+
 }

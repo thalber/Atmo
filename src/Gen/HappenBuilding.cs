@@ -1,7 +1,8 @@
-﻿using static Atmo.API;
+﻿using Atmo.Body;
+using static Atmo.API;
 using static Atmo.HappenTrigger;
 
-namespace Atmo;
+namespace Atmo.Gen;
 /// <summary>
 /// Manages happens' initialization and builtin behaviours.
 /// </summary>
@@ -66,8 +67,8 @@ public static partial class HappenBuilding
 	finish:
 		if (res is null)
 		{
-			plog.LogWarning($"Failed to create a trigger! {id}, args: {(args.Length == 0 ? string.Empty : args.Aggregate(Utils.JoinWithComma))}. Replacing with a stub");
-			res = new Always();
+			plog.LogWarning($"Failed to create a trigger! {id}, args: {(args.Length == 0 ? string.Empty : args.Aggregate(JoinWithComma))}. Replacing with a stub");
+			res = new EventfulTrigger() { On_ShouldRunUpdates = () => true };
 		}
 		return res;
 	}

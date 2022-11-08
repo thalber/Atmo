@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Atmo.Body;
 
 namespace Atmo.Helpers;
 
@@ -28,11 +29,8 @@ public sealed class ArgSet : IList<Arg>
 		for (int i = 0; i < rawargs.Length; i++)
 		{
 			Arg newarg = new(
-				rawargs[i]?
-				//todo: mention escapes in docs
-					.Replace("\\q", "'")
-					.Replace("\\t", "\t")
-					.Replace("\\n", "\n")
+				//todo: fix escapes, then mention escapes in docs
+				rawargs[i]?.ApplyEscapes()
 				?? string.Empty,
 				linkage);
 			_args.Add(newarg);

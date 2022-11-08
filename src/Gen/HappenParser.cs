@@ -1,6 +1,7 @@
 ﻿using System.Text;
+using Atmo.Body;
 
-namespace Atmo;
+namespace Atmo.Gen;
 internal class HappenParser
 {
 	//god this is a mess
@@ -49,35 +50,35 @@ internal class HappenParser
 			switch (phase)
 			{
 			case ParsePhase.None:
+			{
+				if (group_que.Success)
 				{
-					if (group_que.Success)
-					{
-						cGroupName = cline.Substring(group_que.Length);
-						plog.DbgVerbose($"HappenParse: Beginning group block: {cGroupName}");
-						phase = ParsePhase.Group;
-					}
-					else if (happn_que.Success)
-					{
-						cHapp = new(cline.Substring(happn_que.Length));
-						plog.DbgVerbose($"HappenParse: Beginning happen block: {cHapp.name}");
-						phase = ParsePhase.Happen;
+					cGroupName = cline.Substring(group_que.Length);
+					plog.DbgVerbose($"HappenParse: Beginning group block: {cGroupName}");
+					phase = ParsePhase.Group;
+				}
+				else if (happn_que.Success)
+				{
+					cHapp = new(cline.Substring(happn_que.Length));
+					plog.DbgVerbose($"HappenParse: Beginning happen block: {cHapp.name}");
+					phase = ParsePhase.Happen;
 
-					}
 				}
-				break;
-			case ParsePhase.Group:
-				{
-					ParseGroup();
-				}
-				break;
-			case ParsePhase.Happen:
-				{
-					ParseHappen();
-					//ParseHappen(cl, ref currentHappen, retrievedHappens, ref phase);
-				}
-				break;
-			default:
+			}
 			break;
+			case ParsePhase.Group:
+			{
+				ParseGroup();
+			}
+			break;
+			case ParsePhase.Happen:
+			{
+				ParseHappen();
+				//ParseHappen(cl, ref currentHappen, retrievedHappens, ref phase);
+			}
+			break;
+			default:
+				break;
 			}
 		}
 		catch (Exception ex)
@@ -136,79 +137,79 @@ internal class HappenParser
 				switch (prop)
 				{
 				case LineKind.HappenWhere:
+				{
+					plog.DbgVerbose("HappenParse: Recognized WHERE clause");
+					WhereOps c = WhereOps.Group;
+					string[]? items = TXT.Regex.Split(payload, "\\s+");
+					foreach (var i in items)
 					{
-						plog.DbgVerbose("HappenParse: Recognized WHERE clause");
-						WhereOps c = WhereOps.Group;
-						string[]? items = TXT.Regex.Split(payload, "\\s+");
-						foreach (var i in items)
+						if (i.Length == 0) continue;
+						switch (i)
 						{
-							if (i.Length == 0) continue;
-							switch (i)
-							{
-							case "+":
+						case "+":
 							c = WhereOps.Include; break;
-							case "-":
+						case "-":
 							c = WhereOps.Exclude; break;
-							case "*":
+						case "*":
 							c = WhereOps.Group; break;
-							default:
+						default:
 							switch (c)
 							{
 							case WhereOps.Group:
-							cHapp.groups.Add(i);
-							break;
+								cHapp.groups.Add(i);
+								break;
 							case WhereOps.Include:
-							cHapp.include.Add(i);
-							break;
+								cHapp.include.Add(i);
+								break;
 							case WhereOps.Exclude:
-							cHapp.exclude.Add(i);
-							break;
+								cHapp.exclude.Add(i);
+								break;
 							}
 							break;
-							}
 						}
 					}
-					break;
+				}
+				break;
 				case LineKind.HappenWhat:
+				{
+					plog.DbgVerbose("HappenParse: Recognized WHAT clause");
+					PredicateInlay.Token[]? tokens = PredicateInlay.Tokenize(payload).ToArray();
+					for (var i = 0; i < tokens.Length; i++)
 					{
-						plog.DbgVerbose("HappenParse: Recognized WHAT clause");
-						PredicateInlay.Token[]? tokens = PredicateInlay.Tokenize(payload).ToArray();
-						for (var i = 0; i < tokens.Length; i++)
+						PredicateInlay.Token tok = tokens[i];
+						if (tok.type == PredicateInlay.TokenType.Word)
 						{
-							PredicateInlay.Token tok = tokens[i];
-							if (tok.type == PredicateInlay.TokenType.Word)
-							{
-								PredicateInlay.Leaf leaf = PredicateInlay.MakeLeaf(tokens, in i) ?? new();
-								cHapp.actions.Set(leaf.funcName, leaf.args);
-							}
+							PredicateInlay.Leaf leaf = PredicateInlay.MakeLeaf(tokens, in i) ?? new();
+							cHapp.actions.Set(leaf.funcName, leaf.args);
 						}
 					}
-					break;
+				}
+				break;
 				case LineKind.HappenWhen:
-				try
-				{
-					if (cHapp.conditions is not null)
+					try
 					{
-						plog.LogWarning("HappenParse: Duplicate WHEN clause! Skipping! (Did you forget to close a previous Happen with END HAPPEN?)");
-						break;
+						if (cHapp.conditions is not null)
+						{
+							plog.LogWarning("HappenParse: Duplicate WHEN clause! Skipping! (Did you forget to close a previous Happen with END HAPPEN?)");
+							break;
+						}
+						plog.DbgVerbose("HappenParse: Recognized WHEN clause");
+						cHapp.conditions = new PredicateInlay(payload, null);
 					}
-					plog.DbgVerbose("HappenParse: Recognized WHEN clause");
-					cHapp.conditions = new PredicateInlay(payload, null);
-				}
-				catch (Exception ex)
-				{
-					plog.LogError($"HappenParse: Error creating eval tree from a WHEN block for {cHapp.name}:\n{ex}");
-					cHapp.conditions = null;
-				}
-				break;
+					catch (Exception ex)
+					{
+						plog.LogError($"HappenParse: Error creating eval tree from a WHEN block for {cHapp.name}:\n{ex}");
+						cHapp.conditions = null;
+					}
+					break;
 				case LineKind.HappenEnd:
-				plog.DbgVerbose("HappenParse: finishing a happen block");
-				retrievedHappens.Add(cHapp);
-				cHapp = default;
-				phase = ParsePhase.None;
-				break;
+					plog.DbgVerbose("HappenParse: finishing a happen block");
+					retrievedHappens.Add(cHapp);
+					cHapp = default;
+					phase = ParsePhase.None;
+					break;
 				default:
-				break;
+					break;
 				}
 				break;
 			}

@@ -1,4 +1,6 @@
-﻿namespace Atmo;
+﻿using Atmo.Body;
+
+namespace Atmo;
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
 /// <summary>
 /// Static class for user API. You will likely be interacting with the mod from here.

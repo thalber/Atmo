@@ -1,4 +1,6 @@
-﻿using BepInEx;
+﻿using Atmo.Body;
+using Atmo.Gen;
+using BepInEx;
 
 using CFG = BepInEx.Configuration;
 using VREG = Atmo.Helpers.VarRegistry;
@@ -65,8 +67,6 @@ public sealed partial class Atmod : BaseUnityPlugin
 		inst = this;
 
 		log_verbose = Config.Bind(CFG_LOGGING, "verbose", true, "Enable more verbose logging. Can create clutter.");
-
-
 		try
 		{
 			On.AbstractRoom.Update += RunHappensAbstUpd;

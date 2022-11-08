@@ -1,4 +1,6 @@
-﻿namespace Atmo;
+﻿using Atmo.Gen;
+
+namespace Atmo.Body;
 
 /// <summary>
 /// Represents data accumulated by a <see cref="HappenParser"/> for a singular happen.

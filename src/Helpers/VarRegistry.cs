@@ -67,7 +67,6 @@ public static partial class VarRegistry
 
 	internal static void Init()
 	{
-		//todo: globals ser test
 		plog.LogDebug("Init VarRegistry hooks");
 		try
 		{
