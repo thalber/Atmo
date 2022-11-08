@@ -19,7 +19,7 @@ HAPPEN: AlarmShake
 //groups + include rooms - exclude rooms
 WHERE: Inside + room3 - room4
 // Actions. Each action is a word, followed by optional literals that act as parameters for the action / word.
-// String literals are enclosed in ' single quotes.
+// String literals are enclosed in ' single quotes. If you need a single quote inside your string, use \q. If you need to avoid this, double-escape (\\q).
 WHAT: PlaySound 'Alarm1' Shake 0.5
 // Activation conditions. You can connect them with () parens,
 // !&^| boolean math operators or NOT AND XOR OR word equivalents

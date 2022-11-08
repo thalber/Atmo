@@ -28,6 +28,11 @@
 		<WarningsAsErrors>$(WarningsAsErrors);NU1605;</WarningsAsErrors>
 		<DefineConstants>$(DefineConstants)TRACE;ATMO</DefineConstants>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="lib\**" />
+	  <EmbeddedResource Remove="lib\**" />
+	  <None Remove="lib\**" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Reference Include="lib/BepInEx.dll">

@@ -38,7 +38,7 @@ public static partial class HappenBuilding
 	/// <param name="args">Optional arguments</param>
 	/// <param name="rwg">game instance</param>
 	/// <param name="owner">Happen that requests the trigger.</param>
-	/// <returns>Resulting trigger; an <see cref="Always"/> if something went wrong.</returns>
+	/// <returns>Resulting trigger; an always-active trigger if something went wrong.</returns>
 	internal static HappenTrigger CreateTrigger(
 		string id,
 		string[] args,
@@ -60,14 +60,14 @@ public static partial class HappenBuilding
 			{
 				plog.LogError(
 					$"Happenbuild: CreateTrigger: Error invoking trigger factory " +
-					$"{cb}//{cb?.Method.Name} for {id}({(args.Length == 0 ? string.Empty : args.Aggregate(Utils.JoinWithComma))}):" +
+					$"{cb}//{cb?.Method.Name} for {id}({args.Stitch()}):" +
 					$"\n{ex}");
 			}
 		}
 	finish:
 		if (res is null)
 		{
-			plog.LogWarning($"Failed to create a trigger! {id}, args: {(args.Length == 0 ? string.Empty : args.Aggregate(JoinWithComma))}. Replacing with a stub");
+			plog.LogWarning($"Failed to create a trigger! {id}, args: {args.Stitch()}. Replacing with a stub");
 			res = new EventfulTrigger() { On_ShouldRunUpdates = () => true };
 		}
 		return res;
