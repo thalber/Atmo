@@ -31,7 +31,7 @@ internal class HappenParser
 	#endregion fields
 	internal HappenParser(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
 	{
-		plog.LogDebug($"HappenParse: booting for file: {file.FullName}");
+		plog.DbgVerbose($"HappenParse: booting for file: {file.FullName}");
 		allLines = IO.File.ReadAllLines(file.FullName, Encoding.UTF8);
 		this.file = file;
 		this.set = set;
@@ -53,13 +53,13 @@ internal class HappenParser
 					if (group_que.Success)
 					{
 						cGroupName = cline.Substring(group_que.Length);
-						plog.LogDebug($"HappenParse: Beginning group block: {cGroupName}");
+						plog.DbgVerbose($"HappenParse: Beginning group block: {cGroupName}");
 						phase = ParsePhase.Group;
 					}
 					else if (happn_que.Success)
 					{
 						cHapp = new(cline.Substring(happn_que.Length));
-						plog.LogDebug($"HappenParse: Beginning happen block: {cHapp.name}");
+						plog.DbgVerbose($"HappenParse: Beginning happen block: {cHapp.name}");
 						phase = ParsePhase.Happen;
 
 					}
@@ -95,7 +95,7 @@ internal class HappenParser
 		TXT.Match ge;
 		if ((ge = LineMatchers[LineKind.GroupEnd].Match(cline)).Success && ge.Index == 0)
 		{
-			plog.LogDebug($"HappenParse: ending group: {cGroupName}. " +
+			plog.DbgVerbose($"HappenParse: ending group: {cGroupName}. " +
 				$"Regex patterns: {cGroupContents.matchers.Count}, " +
 				$"Literal rooms: {cGroupContents.rooms.Count}");
 			allGroupContents.Add(cGroupName, cGroupContents);
@@ -108,7 +108,7 @@ internal class HappenParser
 			try
 			{
 				cGroupContents.matchers.Add(new TXT.Regex(cline.Substring(2, cline.Length - 4)));
-				plog.LogDebug($"HappenParse: Created a regex matcher for: {cline}");
+				plog.DbgVerbose($"HappenParse: Created a regex matcher for: {cline}");
 			}
 			catch (Exception ex)
 			{
@@ -137,7 +137,7 @@ internal class HappenParser
 				{
 				case LineKind.HappenWhere:
 					{
-						plog.LogDebug("HappenParse: Recognized WHERE clause");
+						plog.DbgVerbose("HappenParse: Recognized WHERE clause");
 						WhereOps c = WhereOps.Group;
 						string[]? items = TXT.Regex.Split(payload, "\\s+");
 						foreach (var i in items)
@@ -171,7 +171,7 @@ internal class HappenParser
 					break;
 				case LineKind.HappenWhat:
 					{
-						plog.LogDebug("HappenParse: Recognized WHAT clause");
+						plog.DbgVerbose("HappenParse: Recognized WHAT clause");
 						PredicateInlay.Token[]? tokens = PredicateInlay.Tokenize(payload).ToArray();
 						for (var i = 0; i < tokens.Length; i++)
 						{
@@ -189,10 +189,10 @@ internal class HappenParser
 				{
 					if (cHapp.conditions is not null)
 					{
-						plog.LogWarning("HappenParse: Duplicate WHERE clause! Skipping! (Did you forget to close a previous Happen with END HAPPEN?)");
+						plog.LogWarning("HappenParse: Duplicate WHEN clause! Skipping! (Did you forget to close a previous Happen with END HAPPEN?)");
 						break;
 					}
-					plog.LogDebug("HappenParse: Recognized WHEN clause");
+					plog.DbgVerbose("HappenParse: Recognized WHEN clause");
 					cHapp.conditions = new PredicateInlay(payload, null);
 				}
 				catch (Exception ex)
@@ -202,7 +202,7 @@ internal class HappenParser
 				}
 				break;
 				case LineKind.HappenEnd:
-				plog.LogDebug("HappenParse: finishing a happen block");
+				plog.DbgVerbose("HappenParse: finishing a happen block");
 				retrievedHappens.Add(cHapp);
 				cHapp = default;
 				phase = ParsePhase.None;

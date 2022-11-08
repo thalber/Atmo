@@ -139,7 +139,7 @@ public static partial class HappenBuilding
 				}
 			}
 			if (!rm.BeingViewed) return;
-			plog.LogDebug($"{ha.name}: Need to create a new soundloop in {rm.abstractRoom.name}! {soundloops.GetHashCode()}");
+			plog.DbgVerbose($"{ha.name}: Need to create a new soundloop in {rm.abstractRoom.name}! {soundloops.GetHashCode()}");
 			DisembodiedLoopEmitter? newdle = rm.PlayDisembodiedLoop(soundid, vol.F32, pitch.F32, pan.F32);
 			newdle.requireActiveUpkeep = true;
 			newdle.alive = true;
@@ -234,8 +234,6 @@ public static partial class HappenBuilding
 	}
 	private static void Make_LogCall(Happen ha, ArgSet args)
 	{
-		//todo: revisit when variable support is here
-		//List<string> output = new();
 		Arg sev = args["sev", "severity"] ?? new Arg(LOG.LogLevel.Message.ToString());
 		sev.GetEnum(out LOG.LogLevel sevVal);
 		string lastSev = sev.Str;
@@ -342,9 +340,11 @@ public static partial class HappenBuilding
 				if (cam.room != rm || !rm.BeingViewed || cam.AboutToSwitchRoom) continue;
 				if (cam.room.abstractRoom.name != lastRoomPerCam[i])
 				{
-					if (palA is not null) cam.ChangeMainPalette(palA.I32);
-					//if (palB is not null) cam.ChangeFadePalette(palB.I32);
-					plog.LogDebug("changing palette");
+					if (palA is not null)
+					{
+						cam.ChangeMainPalette(palA.I32);
+						plog.DbgVerbose($"changing palette to {palA.I32}");
+					}
 				}
 			}
 		};
@@ -365,9 +365,7 @@ public static partial class HappenBuilding
 		ha.On_Init += (_) =>
 		{
 			Arg target = VarRegistry.GetVar(argn.Str, CurrentSaveslot ?? 0, CurrentCharacter ?? 0);
-			plog.LogDebug($"pre-set: {target}");
 			target.Str = argv.Str;
-			plog.LogDebug($"Set variable {target}");
 		};
 	}
 	#endregion

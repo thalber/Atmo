@@ -48,7 +48,6 @@ public sealed class Arg : IEquatable<Arg>
 	internal int _i32;
 	internal float _f32;
 	internal bool _bool;
-	//todo: add readonly support
 	/// <summary>
 	/// Parses contents of <see cref="_str"/> to fill other fields. Sets <see cref="DataType"/> to <see cref="ArgType.STR"/>.
 	/// </summary>
@@ -86,7 +85,7 @@ public sealed class Arg : IEquatable<Arg>
 			{
 				var ss = CurrentSaveslot;
 				var ch = CurrentCharacter;
-				plog.LogDebug($"Linking variable {value}: {ss}, {ch}");
+				plog.DbgVerbose($"Linking variable {value}: {ss}, {ch}");
 				if (ss is null)
 				{
 					plog.LogError($"Impossible to link variable! {value}: could not find RainWorldGame.");

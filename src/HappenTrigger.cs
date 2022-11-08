@@ -221,8 +221,6 @@ public abstract partial class HappenTrigger
 			foreach (AbstractCreature? player in game.Players) if (rooms.Contains(player.Room.name))
 				{
 					visit = true;
-					//plog.LogDebug("Trip!");
-					//plog.LogDebug(inst.CurrentSet.GetRoomsForHappen(inst.CurrentSet.AllHappens.First(x => x.name == "hitest")).Aggregate(JoinWithComma));
 				}
 		}
 		public override bool ShouldRunUpdates()
@@ -371,7 +369,7 @@ public abstract partial class HappenTrigger
 			foreach (Arg arg in args)
 			{
 				arg.GetEnum(out SlugcatStats.Name name);
-				if (name == game.GetStorySession.characterStats.name) enabled = true;		
+				if (name == game.GetStorySession.characterStats.name) enabled = true;
 			}
 		}
 		public override bool ShouldRunUpdates()

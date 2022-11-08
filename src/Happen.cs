@@ -114,7 +114,10 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// Make sure it is properly instantiated, and none of the fields are unexpectedly null.</param>
 	/// <param name="owner">HappenSet this happen will belong to. Must not be null.</param>
 	/// <param name="game">Current game instance. Must not be null.</param>
-	public Happen(HappenConfig cfg, HappenSet owner!!, RainWorldGame game!!)
+	public Happen(
+		HappenConfig cfg,
+		HappenSet owner!!,
+		RainWorldGame game!!)
 	{
 		set = owner;
 		name = cfg.name;
@@ -135,7 +138,9 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		if (conditions is null) plog.LogWarning($"Happen {this}: did not receive conditions! Possible missing 'WHEN:' clause");
 	}
 	#region lifecycle cbs
-	internal void AbstUpdate(AbstractRoom absroom, int time)
+	internal void AbstUpdate(
+		AbstractRoom absroom,
+		int time)
 	{
 		if (On_AbstUpdate is null) return;
 		foreach (API.lc_AbstractUpdate cb in On_AbstUpdate.GetInvocationList())
@@ -146,7 +151,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			}
 			catch (Exception ex)
 			{
-				plog.LogError(ErrorMessage(site.abstup, cb, ex));
+				plog.LogError(ErrorMessage(Site.abstup, cb, ex));
 				On_AbstUpdate -= cb;
 			}
 		}
@@ -167,7 +172,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			}
 			catch (Exception ex)
 			{
-				plog.LogError(ErrorMessage(site.realup, cb, ex));
+				plog.LogError(ErrorMessage(Site.realup, cb, ex));
 				On_RealUpdate -= cb;
 			}
 		}
@@ -190,7 +195,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			}
 			catch (Exception ex)
 			{
-				plog.LogError(ErrorMessage(site.init, cb, ex, Response.none));
+				plog.LogError(ErrorMessage(Site.init, cb, ex, Response.none));
 			}
 		}
 	}
@@ -211,7 +216,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			{
 				//todo: add a way to void a trigger
 				plog.LogError(ErrorMessage(
-					site.triggerupdate,
+					Site.triggerupdate,
 					triggers[tin].Update,
 					ex,
 					Response.none));
@@ -225,7 +230,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		catch (Exception ex)
 		{
 			plog.LogError(ErrorMessage(
-				site.eval,
+				Site.eval,
 				conditions is null ? null : conditions.Eval,
 				ex,
 				Response.none));
@@ -239,7 +244,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			}
 			catch (Exception ex)
 			{
-				plog.LogError(ErrorMessage(site.coreup, cb, ex));
+				plog.LogError(ErrorMessage(Site.coreup, cb, ex));
 				On_CoreUpdate -= cb;
 			}
 		}
@@ -257,20 +262,19 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// <returns></returns>
 	public Perf PerfRecord()
 	{
-		var perf = new Perf
+		Perf perf = new ()
 		{
 			name = name,
 			samples_eval = haeval_readings.Count,
 			samples_realup = realup_readings.Count
 		};
-
 		double
 			realuptotal = 0d,
 			evaltotal = 0d;
 		if (perf.samples_realup is not 0)
 		{
 			foreach (var rec in realup_readings) realuptotal += rec;
-			perf.avg_realup = realuptotal / (double)realup_readings.Count;
+			perf.avg_realup = realuptotal / realup_readings.Count;
 		}
 		else
 		{
@@ -279,7 +283,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		if (perf.samples_eval is not 0)
 		{
 			foreach (var rec in haeval_readings) evaltotal += rec;
-			perf.avg_eval = evaltotal / (double)haeval_readings.Count;
+			perf.avg_eval = evaltotal / haeval_readings.Count;
 		}
 		else
 		{
@@ -323,7 +327,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// <summary>
 	/// Carries performance report from the happen.
 	/// </summary>
-	public struct Perf
+	public record struct Perf
 	{
 		/// <summary>
 		/// Happen name
@@ -346,7 +350,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		/// </summary>
 		public int samples_eval;
 	}
-	private enum site
+	private enum Site
 	{
 		abstup,
 		realup,
@@ -362,7 +366,11 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		void_trigger
 	}
 	#endregion
-	private string ErrorMessage(site where, Delegate? cb, Exception ex, Response resp = Response.remove_cb)
+	private string ErrorMessage(
+		Site where,
+		Delegate? cb,
+		Exception ex,
+		Response resp = Response.remove_cb)
 	{
 		return $"Happen {this}: {where}: " +
 			$"Error on invoke {cb}//{cb?.Method}:" +

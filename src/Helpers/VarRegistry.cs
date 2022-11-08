@@ -35,7 +35,7 @@ public static partial class VarRegistry
 	/// <summary>
 	/// Global vars per saveslot. key is saveslot number
 	/// </summary>
-	internal static readonly Dictionary<int, NamedVars> VarsGlobal = new();\
+	internal static readonly Dictionary<int, NamedVars> VarsGlobal = new();
 	#endregion
 	#region lifecycle
 	internal static void Clear()
@@ -100,7 +100,7 @@ public static partial class VarRegistry
 	{
 		orig(self, world, minutes);
 		BuiltinVars[BIVar.cycletime].F32 = minutes * 60f;
-		plog.LogDebug($"Setting $cycletime to {BuiltinVars[BIVar.cycletime]}");
+		plog.DbgVerbose($"Setting $cycletime to {BuiltinVars[BIVar.cycletime]}");
 	}
 
 	private static void WipeSavestate(
@@ -175,9 +175,6 @@ public static partial class VarRegistry
 			VarsPerSave
 				.AddIfNone_Get(save, () => new(save))
 				.FillFrom(data ?? new(), DataSection.Persistent);
-			Arg aaa = VarsPerSave.AddIfNone_Get(save, () => new(save)).GetVar("AAA");//.F32 = 10f;
-			if (aaa.Str is "") aaa.I32 = 10;
-			plog.LogDebug(aaa);
 		}
 		catch (Exception ex)
 		{
@@ -236,9 +233,6 @@ public static partial class VarRegistry
 			VarsPerSave
 				.AddIfNone_Get(save, () => new(save))
 				.FillFrom(data ?? new(), DataSection.Normal);
-			Arg aaa = VarsPerSave.AddIfNone_Get(save, () => new(save)).GetVar("AAA");//.F32 = 10f;
-			if (aaa.Str is "") aaa.I32 = 10;
-			plog.LogDebug(aaa);
 		}
 		catch (Exception ex)
 		{
@@ -311,8 +305,13 @@ public static partial class VarRegistry
 		if (name.StartsWith(PREFIX_GLOBAL))
 		{
 			name = name.Substring(PREFIX_GLOBAL.Length);
+			plog.LogDebug($"Reading global var {name} for slot {saveslot}");
 			return VarsGlobal
-				.AddIfNone_Get(saveslot, () => ReadGlobal(saveslot))
+				.AddIfNone_Get(saveslot, () =>
+				{
+					plog.LogDebug("No global record found, creating");
+					return ReadGlobal(saveslot);
+				})
 				.AddIfNone_Get(name, () => Defarg);
 		}
 		Save save = MakeSD(saveslot, character);
@@ -352,6 +351,7 @@ public static partial class VarRegistry
 			NamedVars dict = VarsGlobal.AddIfNone_Get(slot, () => new());
 
 			using IO.StreamWriter writer = fi.CreateText();
+			plog.LogDebug($"Writing global vars for slot {slot}, {fi.FullName}");
 			writer.Write(Json.Serialize(dict));
 		}
 		catch (IO.IOException ex)

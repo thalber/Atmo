@@ -27,7 +27,14 @@ public sealed class ArgSet : IList<Arg>
 	{
 		for (int i = 0; i < rawargs.Length; i++)
 		{
-			Arg newarg = new(rawargs[i] ?? string.Empty, linkage);
+			Arg newarg = new(
+				rawargs[i]?
+				//todo: mention escapes in docs
+					.Replace("\\q", "'")
+					.Replace("\\t", "\t")
+					.Replace("\\n", "\n")
+				?? string.Empty,
+				linkage);
 			_args.Add(newarg);
 			if (newarg.Name is not null) { _named.Add(newarg.Name, newarg); }
 		}
@@ -64,9 +71,9 @@ public sealed class ArgSet : IList<Arg>
 	/// <param name="index"></param>
 	/// <returns></returns>
 	public Arg this[int index] { get => _args[index]; set => _args[index] = value; }
-	public int Count 
+	public int Count
 		=> _args.Count;
-	public bool IsReadOnly 
+	public bool IsReadOnly
 		=> false;
 	public void Add(Arg item)
 		=> _args.Add(item);
@@ -84,9 +91,9 @@ public sealed class ArgSet : IList<Arg>
 		=> _args.Insert(index, item);
 	public bool Remove(Arg item)
 		=> _args.Remove(item);
-	public void RemoveAt(int index) 
+	public void RemoveAt(int index)
 		=> _args.RemoveAt(index);
-	IEnumerator IEnumerable.GetEnumerator() 
+	IEnumerator IEnumerable.GetEnumerator()
 		=> _args.GetEnumerator();
 	#endregion interface;
 #pragma warning restore

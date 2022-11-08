@@ -27,7 +27,7 @@ public static class Utils
 	/// <param name="index">Target index</param>
 	/// <param name="def">Default value</param>
 	/// <returns></returns>
-	public static T AtOr<T>(this IList<T> arr, int index, T def)
+	public static T AtOr<T>(this IList<T> arr!!, int index, T def)
 	{
 		if (index >= arr.Count || index < 0) return def;
 		return arr[index];
@@ -396,7 +396,6 @@ public static class Utils
 		foreach (MainLoopProcess sideprocess in manager.sideProcesses) if (sideprocess is T tside) return tside;
 		return null;
 	}
-
 	/// <summary>
 	/// Gets bytes from ER of an assembly.
 	/// </summary>
@@ -512,7 +511,15 @@ public static class Utils
 		k = kvp.Key;
 		v = kvp.Value;
 	}
+
 #if ATMO //atmo-specific things
+	internal static void DbgVerbose(
+		this LOG.ManualLogSource logger!!,
+		object data,
+		LOG.LogLevel sev = BepInEx.Logging.LogLevel.Debug)
+	{
+		if (log_verbose?.Value ?? false) logger.Log(sev, data);
+	}
 	internal static void LogFrameTime(
 		List<TimeSpan> realup_times,
 		TimeSpan frame,

@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 
+using CFG = BepInEx.Configuration;
 using VREG = Atmo.Helpers.VarRegistry;
 
 namespace Atmo;
@@ -33,6 +34,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// publicized logger
 	/// </summary>
 	internal static LOG.ManualLogSource plog => inst.Logger;
+	internal static CFG.ConfigEntry<bool>? log_verbose;
 	private static int? _tempSSN;
 	internal static int? CurrentSaveslot => inst.RW?.options?.saveSlot;
 	internal static int? CurrentCharacter
@@ -43,6 +45,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		.characterStats.name
 		?? _tempSSN;
 	private bool setupRan = false;
+	private bool dying = false;
 	/// <summary>
 	/// Currently active <see cref="HappenSet"/>. Null if not in session, if in arena session, or if failed to read from session.
 	/// </summary>
@@ -58,7 +61,12 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// </summary>
 	public void OnEnable()
 	{
+		const string CFG_LOGGING = "logging";
 		inst = this;
+
+		log_verbose = Config.Bind(CFG_LOGGING, "verbose", true, "Enable more verbose logging. Can create clutter.");
+
+
 		try
 		{
 			On.AbstractRoom.Update += RunHappensAbstUpd;
@@ -74,19 +82,12 @@ public sealed partial class Atmod : BaseUnityPlugin
 			Logger.LogFatal($"Error on enable!\n{ex}");
 		}
 	}
-
-	private void SetTempSSN(On.OverWorld.orig_LoadFirstWorld orig, OverWorld self)
-	{
-		_tempSSN = self.PlayerCharacterNumber;
-		orig(self);
-		_tempSSN = null;
-	}
-
 	/// <summary>
 	/// Undoes hooks and spins up a static cleanup member cleanup procedure.
 	/// </summary>
 	public void OnDisable()
 	{
+		dying = true;
 		try
 		{
 			//On.World.ctor -= FetchHappenSet;
@@ -97,9 +98,10 @@ public sealed partial class Atmod : BaseUnityPlugin
 			On.OverWorld.LoadFirstWorld -= SetTempSSN;
 			VREG.Clear();
 
-			BepInEx.Logging.ManualLogSource? cleanup_logger =
-				BepInEx.Logging.Logger.CreateLogSource("Atmo_Purge");
-			System.Diagnostics.Stopwatch sw = new();
+			LOG.ManualLogSource? cleanup_logger =
+				LOG.Logger.CreateLogSource("Atmo_Purge");
+			DBG.Stopwatch sw = new();
+			bool verbose = log_verbose?.Value ?? false;
 			sw.Start();
 			cleanup_logger.LogMessage("Spooling cleanup thread.");
 			System.Threading.ThreadPool.QueueUserWorkItem((_) =>
@@ -124,9 +126,14 @@ public sealed partial class Atmod : BaseUnityPlugin
 				sw.Stop();
 
 				static string aggregator(string x, string y) => $"{x}\n\t{y}";
-				cleanup_logger.LogDebug($"Finished statics cleanup: {sw.Elapsed}." +
-					$"\nSuccessfully cleared: {success.Stitch(aggregator)}" +
-					$"\nErrored on: {failure.Stitch(aggregator)}");
+				cleanup_logger.LogDebug($"Finished statics cleanup: {sw.Elapsed}.");
+				if (verbose)
+				{
+					cleanup_logger.LogDebug(
+						$"Successfully cleared: {success.Stitch(aggregator)}");
+					cleanup_logger.LogDebug(
+						$"\nErrored on: {failure.Stitch(aggregator)}");
+				}
 			});
 		}
 		catch (Exception ex)
@@ -143,7 +150,8 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// </summary>
 	public void Update()
 	{
-		RW ??= FindObjectOfType<RainWorld>();
+		if (dying) return;
+		RW ??= CRW;
 		if (!setupRan && RW is not null)
 		{
 			//maybe put something here
@@ -159,6 +167,17 @@ public sealed partial class Atmod : BaseUnityPlugin
 		CurrentSet = null;
 	}
 	#region lifecycle hooks
+	/// <summary>
+	/// Temporarily forces currentindex during LoadFirstWorld. Needed for <see cref="Helpers.VarRegistry"/> function.
+	/// </summary>
+	/// <param name="orig"></param>
+	/// <param name="self"></param>
+	private void SetTempSSN(On.OverWorld.orig_LoadFirstWorld orig, OverWorld self)
+	{
+		_tempSSN = self.PlayerCharacterNumber;
+		orig(self);
+		_tempSSN = null;
+	}
 	private void FetchHappenSet(On.World.orig_LoadWorld orig, World self, int slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates)
 	{
 		orig(self, slugcatNumber, abstractRoomsList, swarmRooms, shelters, gates);

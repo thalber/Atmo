@@ -238,6 +238,7 @@ public sealed class HappenSet
 				{
 					plog.LogDebug("Found a .atmo file, reading a happenset...");
 					HappenSet gathered = new(world, tarfile);
+					plog.LogDebug($"Read happenset {gathered}");
 					if (res is null) res = gathered;
 					else res += gathered;
 				}
@@ -246,10 +247,6 @@ public sealed class HappenSet
 					plog.LogDebug("No XX.atmo file found.");
 				}
 			}
-			plog.LogDebug(res?
-				.GetHappensForRoom("SU_C04")
-				.Select(x => x.name)
-				.Stitch());
 			return res;
 		}
 		catch (Exception ex)
