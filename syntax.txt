@@ -12,16 +12,39 @@ GROUP:Inside
 room4
 room5
 room6
+//don't forget to close group blocks!
 END GROUP
 
+//Subregions are also automatically treated as groups and can be referenced by name in WHERE blocks below
+
 // Define an event
-HAPPEN: AlarmShake
+HAPPEN: ExampleHappen
+
 //groups + include rooms - exclude rooms
 WHERE: Inside + room3 - room4
+
 // Actions. Each action is a word, followed by optional literals that act as parameters for the action / word.
 // String literals are enclosed in ' single quotes. If you need a single quote inside your string, use \q. If you need to avoid this, double-escape (\\q).
-WHAT: PlaySound 'Alarm1' Shake 0.5
+// this one will play a mechanical sound 
+WHAT: soundloop 'Leviathan_Hydraulics_LOOP'
+
 // Activation conditions. You can connect them with () parens,
 // !&^| boolean math operators or NOT AND XOR OR word equivalents
-WHEN: AfterRain -80 AND ( Karma 0 '3-9' OR Maybe 0.7)
+// This one will be active when: It is 2 seconds before the rain starts, AND ( player is at karma 1, 3, 4 or 5  OR  70% success roll in the beginning of the cycle succeeded)
+WHEN: AfterRain -2 AND ( Karma 1 '3-5' OR Maybe 0.7)
+
+//don't forget to close the happen block like this!
+END HAPPEN
+
+// you can have multiple happens in one file
+// .atmo files can be merged if several regpacks affect the same region. In that case, ALL happens and groups are active and valid.
+
+HAPPEN: SecondExample
+WHERE: Inside Outside
+
+// Multiple actions can be selected. This one shakes the screen, and also posts a message to the log once activated.
+WHAT: rumble 0.5 log 'init=rumble start!'
+
+// Some behaviours allow you to make happens each other. This happen will activate 5 seconds after the first one
+WHEN: AfterOther 'ExampleHappen' 5
 END HAPPEN
