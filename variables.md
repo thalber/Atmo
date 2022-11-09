@@ -27,7 +27,7 @@ This is the list of all special variables provided by atmo.
 | utcnow, utctime | current UTC time. Not precise, since it is only updated once a frame |
 | version, atmover | Atmo current version |
 | cycletime | current cycle's max length, in seconds. |
-| os | current OS. valid values: Win32S, Win32Windows, Win32NT, WinCE, Unix, Xbox, MacOSX |
+| os | current OS. Theoretically possible values: Win32S, Win32Windows, Win32NT, WinCE, Unix, Xbox, MacOSX. |
 | realm | Whether the game is running Realm |
 
 ## Code reference
