@@ -209,6 +209,10 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 		_str = value.ToString();
 		I32 = (int)Convert.ChangeType(value, typeof(int));
 	}
+	/// <summary>
+	/// converts current float value into frames assuming it was seconds: (int)(F32*40f).
+	/// </summary>
+	public int SecAsFrames => (int)(F32 * 40f);
 	#region iconv
 	TypeCode IConvertible.GetTypeCode()
 		=> TypeCode.Object;

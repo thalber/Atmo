@@ -25,6 +25,7 @@ public static partial class VarRegistry
 	/// <see cref="DeathPersistentSaveData"/> hash to slugcat number.
 	/// </summary>
 	private static readonly Dictionary<int, int> DPSD_Slug = new();
+	internal const string PREFIX_VOLATILE = "v_";
 	internal const string PREFIX_GLOBAL = "g_";
 	internal const string PREFIX_PERSISTENT = "p_";
 	internal static Arg Defarg => string.Empty;
@@ -36,6 +37,10 @@ public static partial class VarRegistry
 	/// Global vars per saveslot. key is saveslot number
 	/// </summary>
 	internal static readonly Dictionary<int, NamedVars> VarsGlobal = new();
+	/// <summary>
+	/// Volatile variables are not serialized.
+	/// </summary>
+	internal static readonly NamedVars VarsVolatile = new();
 	#endregion
 	#region lifecycle
 	internal static void Clear()
@@ -312,6 +317,12 @@ public static partial class VarRegistry
 					plog.LogDebug("No global record found, creating");
 					return ReadGlobal(saveslot);
 				})
+				.AddIfNone_Get(name, () => Defarg);
+		}
+		else if (name.StartsWith(PREFIX_VOLATILE))
+		{
+			name = name.Substring(PREFIX_VOLATILE.Length);
+			return VarsVolatile
 				.AddIfNone_Get(name, () => Defarg);
 		}
 		Save save = MakeSD(saveslot, character);

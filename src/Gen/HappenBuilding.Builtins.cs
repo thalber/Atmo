@@ -41,10 +41,12 @@ public static partial class HappenBuilding
 		AddNamedTrigger(new[] { "after", "afterother" }, TMake_AfterOther);
 		AddNamedTrigger(new[] { "delay", "ondelay" }, TMake_Delay);
 		AddNamedTrigger(new[] { "playercount" }, TMake_PlayerCount);
-		AddNamedTrigger(new[] { "difficulty", "ondifficulty" }, TMake_Difficulty);
-		AddNamedTrigger(new[] { "vareq", "variableequal", "variableeq" }, TMake_VarEq);
+		AddNamedTrigger(new[] { "difficulty", "ondifficulty", "campaign" }, TMake_Difficulty);
+		AddNamedTrigger(new[] { "vareq", "varequal", "variableeq" }, TMake_VarEq);
 		AddNamedTrigger(new[] { "varne", "varnot", "varnotequal" }, TMake_VarNe);
-		AddNamedTrigger(new[] { "varmatch", "variablematch", "variableregex", "varregex" }, TMake_VarMatch);
+		AddNamedTrigger(new[] { "varmatch", "variableregex", "varregex" }, TMake_VarMatch);
+
+		//TXT.Regex r = new(".");
 		//todo: update docs. like a lot
 	}
 	/// <summary>
@@ -85,7 +87,11 @@ public static partial class HappenBuilding
 			1 => (int)(args[0].F32 * 40f),
 			> 1 => RND.Range((int?)(args.AtOr(0, 0f)?.F32 * 40f) ?? 0, (int?)(args.AtOr(1, 2400f)?.F32 * 40f) ?? 2400)
 		};
-		if (delay is null) return null;
+		if (delay is null)
+		{
+			NotifyArgsMissing(TMake_Delay, "delay/delaymin+delaymax");
+			return null;
+		} 
 		return new EventfulTrigger()
 		{
 			On_ShouldRunUpdates = () => rwg.world.rainCycle.timer > delay
@@ -97,9 +103,9 @@ public static partial class HappenBuilding
 	/// <returns>Null if no arguments.</returns>
 	private static HappenTrigger? TMake_AfterOther(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
-		if (args.Count < 2)
+		if (args.Count < 1)
 		{
-			plog.LogWarning($"HappenBuilding: builtins: after trigger on {ha.name} needs name of the target trigger and delay!");
+			NotifyArgsMissing(TMake_AfterOther, "name");
 			return null;
 		}
 		Happen? tar = null;
@@ -294,11 +300,16 @@ public static partial class HappenBuilding
 		};
 	}
 	/// <summary>
-	/// Creates a trigger that activates once every X frames.
+	/// Creates a trigger that activates once every X seconds.
 	/// </summary>
 	private static HappenTrigger? TMake_EveryX(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
-		int period = args.AtOr(0, 10).I32,
+		if (args.Count < 1)
+		{
+			NotifyArgsMissing(TMake_EveryX, "period");
+			return null;
+		}
+		int period = (int)(args[0].F32 * 40f),
 			counter = 0;// ?? 10;
 
 		return new EventfulTrigger()
@@ -312,7 +323,10 @@ public static partial class HappenBuilding
 	/// </summary>
 	private static HappenTrigger? TMake_VarEq(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
-		if (args.Count < 2) return null;
+		if (args.Count < 2) {
+			NotifyArgsMissing(TMake_VarEq, "varname/value");
+			return null; 
+		}
 		Arg tar = VarRegistry.GetVar(args[0].Str, CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
 		Arg val = args[1];
 		return new EventfulTrigger()
@@ -325,7 +339,10 @@ public static partial class HappenBuilding
 	/// </summary>
 	public static HappenTrigger? TMake_VarNe(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
-		if (args.Count < 2) return null;
+		if (args.Count < 2) {
+			NotifyArgsMissing(TMake_VarNe, "varname/value");
+			return null;
+		}
 		Arg tar = VarRegistry.GetVar(args[0].Str, CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
 		Arg val = args[1];
 		return new EventfulTrigger()
@@ -338,7 +355,11 @@ public static partial class HappenBuilding
 	/// </summary>
 	private static HappenTrigger? TMake_VarMatch(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
-		if (args.Count < 2) return null;
+		if (args.Count < 2)
+		{
+			NotifyArgsMissing(TMake_VarMatch, "varname/pattern");
+			return null;
+		}
 		Arg tar = VarRegistry.GetVar(args[0].Str, CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
 		Arg val = args[1];
 		TXT.Regex? matcher = null;
@@ -380,9 +401,9 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "karma", "setkarma" }, Make_SetKarma);
 		AddNamedAction(new[] { "karmacap", "maxkarma", "setmaxkarma" }, Make_SetMaxKarma);
 		AddNamedAction(new[] { "log", "message" }, Make_LogCall);
-		AddNamedAction(new[] { "mark", "themark" }, Make_Mark);
-		AddNamedAction(new[] { "glow", "theglow" }, Make_Glow);
-		AddNamedAction(new[] { "raintimer", "setraintimer" }, Make_SetRainTimer);
+		AddNamedAction(new[] { "mark", "themark", "setmark" }, Make_Mark);
+		AddNamedAction(new[] { "glow", "theglow", "setglow" }, Make_Glow);
+		AddNamedAction(new[] { "raintimer", "cycleclock" }, Make_SetRainTimer);
 		AddNamedAction(new[] { "palette", "changepalette" }, Make_ChangePalette);
 		AddNamedAction(new[] { "setvar", "setvariable" }, Make_SetVar);
 		//AddNamedAction(new[] { "music", "playmusic" }, Make_PlayMusic);
@@ -409,16 +430,16 @@ public static partial class HappenBuilding
 		}
 		Arg
 			sid = args[0],
-			vol = args["vol", "volume"]?.F32 ?? 1f,
-			pitch = args["pitch"]?.F32 ?? 1f,
-			pan = args["pan"]?.F32 ?? 0f,
+			vol = args["vol", "volume"] ?? 1f,
+			pitch = args["pitch"] ?? 1f,
+			pan = args["pan"] ?? 0f,
 			limit = args["lim", "limit"]?.F32 ?? float.PositiveInfinity;
 		string lastSid = sid.Str;
 		int timeAlive = 0;
 		Dictionary<string, DisembodiedLoopEmitter> soundloops = new();//hashes = new();
 		ha.On_RealUpdate += (rm) =>
 		{
-			if (timeAlive > limit.F32 * 40f) return;
+			if (timeAlive > limit.SecAsFrames) return;
 			for (int i = 0; i < rm.updateList.Count; i++)
 			{
 				if (rm.BeingViewed && rm.updateList[i] is DisembodiedLoopEmitter dle && soundloops.ContainsValue(dle))
@@ -457,8 +478,7 @@ public static partial class HappenBuilding
 	{
 		if (args.Count == 0)
 		{
-			plog.LogError($"Happen {ha.name}: sound action: " +
-				$"No arguments provided.");
+			NotifyArgsMissing(Make_Sound, "soundid");
 			return;
 		}
 
@@ -470,12 +490,13 @@ public static partial class HappenBuilding
 		}
 		Arg sid = args[0];
 		string lastSid = sid.Str;
-		int cooldown = args["cd", "cooldown"]?.I32 ?? 40,
+		int cooldown = args["cd", "cooldown"]?.SecAsFrames ?? 2,
 			limit = args["lim", "limit"]?.I32 ?? int.MaxValue;
-		float
-			vol = args["vol", "volume"]?.F32 ?? 0.5f,
-			pitch = args["pitch"]?.F32 ?? 1f,
-			pan = args["pan"]?.F32 ?? 1f;
+		Arg
+			vol = args["vol", "volume"] ?? 0.5f,
+			pitch = args["pitch"] ?? 1f
+			//pan = args["pan"]?.F32 ?? 1f
+			;
 		int counter = 1;
 		ha.On_RealUpdate += (room) =>
 		{
@@ -485,7 +506,7 @@ public static partial class HappenBuilding
 			{
 				if (room.updateList[i] is Player p)
 				{
-					ChunkSoundEmitter? em = room.PlaySound(soundid, p.firstChunk, false, vol, pitch);
+					ChunkSoundEmitter? em = room.PlaySound(soundid, p.firstChunk, false, vol.F32, pitch.F32);
 					counter = cooldown;
 					limit--;
 					return;
@@ -549,24 +570,35 @@ public static partial class HappenBuilding
 	}
 	private static void Make_SetRainTimer(Happen ha, ArgSet args)
 	{
-		Arg target = args.AtOr(0, 0);
+		if (args.Count < 1)
+		{
+			NotifyArgsMissing(Make_SetRainTimer, "value");
+			return;
+		}
+		Arg target = args[0];
 		//int.TryParse(args.AtOr(0, "0").Str, out var target);
 		ha.On_Init += (w) =>
 		{
-			w.rainCycle.timer = target.I32;
+			w.rainCycle.timer = target.SecAsFrames;
 		};
 	}
 	private static void Make_SetKarma(Happen ha, ArgSet args)
 	{
+		if (args.Count < 1)
+		{
+			NotifyArgsMissing(Make_SetKarma, "level");
+			return;
+		}
+
 		ha.On_Init += (w) =>
 		{
 			DeathPersistentSaveData? dpsd = w.game?.GetStorySession?.saveState?.deathPersistentSaveData;
 			if (dpsd is null || w.game is null) return;
-			Arg ts = args.AtOr(0, 0);
+			Arg ts = args[0];
 			int karma = dpsd.karma;
 			if (ts.Name is "add" or "+") karma += ts.I32;
 			else if (ts.Name is "sub" or "substract" or "-") karma -= ts.I32;
-			else karma = ts.I32;
+			else karma = ts.I32 - 1;
 			karma = Clamp(karma, 0, 9);
 			dpsd.karma = karma;
 			foreach (RoomCamera cam in w.game.cameras) { cam?.hud.karmaMeter?.UpdateGraphic(); }
@@ -582,15 +614,15 @@ public static partial class HappenBuilding
 			var cap = dpsd.karmaCap;
 			if (ts.Name is "add" or "+") cap += ts.I32;
 			else if (ts.Name is "sub" or "-") cap -= ts.I32;
-			else cap = ts.I32;
-			cap = Clamp(cap, 0, 9);
+			else cap = ts.I32 - 1;
+			cap = Clamp(cap, 4, 9);
 			dpsd.karma = cap;
 			foreach (RoomCamera? cam in w.game.cameras) { cam?.hud.karmaMeter?.UpdateGraphic(); }
 		};
 	}
 	private static void Make_Playergrav(Happen ha, ArgSet args)
 	{
-		Arg frac = args.AtOr(0, 0);
+		Arg frac = args.AtOr(0, 0.5f);
 		//float.TryParse(args.AtOr(0, "0.5"), out var frac);
 		ha.On_RealUpdate += (room) =>
 		{
@@ -618,8 +650,13 @@ public static partial class HappenBuilding
 	}
 	private static void Make_ChangePalette(Happen ha, ArgSet args)
 	{
+		if (args.Count < 1)
+		{
+			NotifyArgsMissing(Make_ChangePalette, "pal");
+			return;
+		}
 		//todo: support for fade palettes? make sure they dont fuck with rain
-		Arg? palA = args.AtOr(0, 15);//["palA", "A", "1"];
+		Arg palA = args[0];//["palA", "A", "1"];
 		string[] lastRoomPerCam = null;
 		ha.On_RealUpdate += (rm) =>
 		{
@@ -658,4 +695,7 @@ public static partial class HappenBuilding
 		};
 	}
 	#endregion
+
+	private static void NotifyArgsMissing(Delegate source, string arg) 
+		=> plog.LogWarning($"{nameof(HappenBuilding)}.{source.Method.Name}: Missing argument: {arg}");
 }

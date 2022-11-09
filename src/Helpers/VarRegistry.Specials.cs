@@ -9,6 +9,7 @@ public static partial class VarRegistry
 {
 	#region fields
 	internal static readonly NamedVars BuiltinVars = new();
+	#endregion;
 	internal static Arg? GetBuiltin (string name)
 	{
 		BIVar tp = BuiltinForName(name);
@@ -29,6 +30,7 @@ public static partial class VarRegistry
 				BIVar.cycletime => 0,
 				BIVar.root => RootFolderDirectory(),
 				BIVar.realm => FindAssembliesByName("Realm").Count() > 0, //check if right
+				BIVar.os => Environment.OSVersion.Platform.ToString(),
 				_ => 0,
 			});
 		}
@@ -42,6 +44,7 @@ public static partial class VarRegistry
 			"version" or "atmover" or "atmoversion" => BIVar.version,
 			"cycletime" or "cycle" => BIVar.cycletime,
 			"realm" => BIVar.realm,
+			"os" => BIVar.os,
 			_ => BIVar.NONE,
 		};
 	internal enum BIVar
@@ -52,7 +55,7 @@ public static partial class VarRegistry
 		utctime,
 		cycletime,
 		root,
-		realm
+		realm,
+		os,
 	}
-	#endregion;
 }

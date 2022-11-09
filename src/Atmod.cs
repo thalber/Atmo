@@ -162,7 +162,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		}
 		VarRegistry.BuiltinVars[VarRegistry.BIVar.time].Str = DateTime.Now.ToString();
 		VarRegistry.BuiltinVars[VarRegistry.BIVar.utctime].Str = DateTime.UtcNow.ToString();
-
+		
 		if (RW is null || CurrentSet is null) return;
 		if (RW.processManager.currentMainLoop is RainWorldGame) return;
 		foreach (MainLoopProcess? proc in RW.processManager.sideProcesses) if (proc is RainWorldGame) return;
