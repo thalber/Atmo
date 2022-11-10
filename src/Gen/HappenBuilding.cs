@@ -54,7 +54,7 @@ public static partial class HappenBuilding
 			if (res is not null) break;
 			try
 			{
-				res ??= cb?.Invoke(id, args, rwg, owner);
+				res ??= cb?.Invoke(id, args.Select(x => x.ApplyEscapes()).ToArray(), rwg, owner);
 			}
 			catch (Exception ex)
 			{

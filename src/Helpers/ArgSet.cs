@@ -30,8 +30,7 @@ public sealed class ArgSet : IList<Arg>
 		{
 			Arg newarg = new(
 				//todo: fix escapes, then mention escapes in docs
-				rawargs[i]?.ApplyEscapes()
-				?? string.Empty,
+				rawargs[i] ?? string.Empty,
 				linkage);
 			_args.Add(newarg);
 			if (newarg.Name is not null) { _named.Add(newarg.Name, newarg); }

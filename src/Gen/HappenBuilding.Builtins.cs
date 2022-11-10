@@ -45,9 +45,6 @@ public static partial class HappenBuilding
 		AddNamedTrigger(new[] { "vareq", "varequal", "variableeq" }, TMake_VarEq);
 		AddNamedTrigger(new[] { "varne", "varnot", "varnotequal" }, TMake_VarNe);
 		AddNamedTrigger(new[] { "varmatch", "variableregex", "varregex" }, TMake_VarMatch);
-
-		//TXT.Regex r = new(".");
-		//todo: update docs. like a lot
 	}
 	/// <summary>
 	/// Creates a trigger that is active based on difficulty. 
