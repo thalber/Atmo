@@ -19,13 +19,13 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DebugType>embedded</DebugType>
 		<TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-		<WarningsAsErrors>$(WarningsAsErrors);NU1605;</WarningsAsErrors>
+		<WarningsAsErrors>$(WarningsAsErrors);NU1605;Nullable;</WarningsAsErrors>
 		<DefineConstants>$(DefineConstants)TRACE;ATMO</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<DebugType>embedded</DebugType>
 		<TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-		<WarningsAsErrors>$(WarningsAsErrors);NU1605;</WarningsAsErrors>
+		<WarningsAsErrors>$(WarningsAsErrors);NU1605;Nullable;</WarningsAsErrors>
 		<DefineConstants>$(DefineConstants)TRACE;ATMO</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>

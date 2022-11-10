@@ -654,7 +654,7 @@ public static partial class HappenBuilding
 		}
 		//todo: support for fade palettes? make sure they dont fuck with rain
 		Arg palA = args[0];//["palA", "A", "1"];
-		string[] lastRoomPerCam = null;
+		string[]? lastRoomPerCam = null;
 		ha.On_RealUpdate += (rm) =>
 		{
 			if (lastRoomPerCam is null) return;

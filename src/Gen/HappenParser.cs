@@ -37,6 +37,7 @@ internal class HappenParser
 		this.file = file;
 		this.set = set;
 		this.rwg = rwg;
+		cline = string.Empty;
 	}
 	internal void Advance()
 	{
@@ -94,6 +95,13 @@ internal class HappenParser
 	private void ParseGroup()
 	{
 		TXT.Match ge;
+		if (cGroupName is null)
+		{
+			plog.LogWarning($"Error parsing group: current name is null! aborting!");
+			phase = ParsePhase.None;
+			return;
+		}
+
 		if ((ge = LineMatchers[LineKind.GroupEnd].Match(cline)).Success && ge.Index == 0)
 		{
 			plog.DbgVerbose($"HappenParse: ending group: {cGroupName}. " +
@@ -104,7 +112,7 @@ internal class HappenParser
 			phase = ParsePhase.None;
 			return;
 		}
-		if (cline.Length > 4 && cline.StartsWith("./") && cline.EndsWith("/."))
+		if (cline?.Length > 4 && cline.StartsWith("./") && cline.EndsWith("/."))
 		{
 			try
 			{

@@ -33,12 +33,24 @@ public static class Utils
 		if (index >= arr.Count || index < 0) return def;
 		return arr[index];
 	}
+	/// <summary>
+	/// Attempts to get a char at a specified position.
+	/// </summary>
+	/// <param name="str"></param>
+	/// <param name="index"></param>
+	/// <returns></returns>
 	public static char? Get(this string str, int index)
 	{
 		BangBang(str, nameof(str));
 		if (index >= str.Length || index < 0) return null;
 		return str[index];
 	}
+	/// <summary>
+	/// Attempts to get a char at a specified position.
+	/// </summary>
+	/// <param name="sb"></param>
+	/// <param name="index"></param>
+	/// <returns></returns>
 	public static char? Get(this StringBuilder sb, int index)
 	{
 		BangBang(sb, nameof(sb));

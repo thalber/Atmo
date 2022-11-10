@@ -1,6 +1,6 @@
 ﻿namespace Atmo.Body;
 /// <summary>
-/// Base class for triggers. Triggers determine when happens are allowed to run; They are composed into a <see cref="PredicateInlay"/> instance, that acts as a logical expression tree. Derive from this class to define your custom trigger to be used in <see cref="API.AddNamedTrigger"/> overloads, or use the event-driven child <see cref="EventfulTrigger"/> if you prefer composition with callbacks here as well.
+/// Base class for triggers. Triggers determine when happens are allowed to run; They are composed into a <see cref="PredicateInlay"/> instance, that acts as a logical expression tree. Derive from this class to define your custom trigger to be used in <see cref="API.AddNamedTrigger(string, Atmo.API.Create_NamedTriggerFactory, bool)"/> overloads, or use the event-driven child <see cref="EventfulTrigger"/> if you prefer composition with callbacks here as well.
 /// <para>
 /// This expression: <code> WHEN: (maybe 0.7 OR karma 1 2 3) AND fry 25 5 </code> will be turned into a set of happentrigger children that do the following:
 /// <list type="number">
