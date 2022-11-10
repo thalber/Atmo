@@ -24,9 +24,8 @@ public static partial class HappenBuilding
 	}
 	#region triggers
 #warning contributor notice: triggers
-	//Place your trigger classes here.
-	//Don't forget to register them in HappenBuilding.RegisterDefaultTriggers as well.
-	//Do not remove the warning directive.
+	//Place your trigger registration code here.
+	//Do not remove this warning directive.
 	private static void RegisterBuiltinTriggers()
 	{
 		AddNamedTrigger(new[] { "always" }, TMake_Always);
@@ -388,7 +387,6 @@ public static partial class HappenBuilding
 	}
 	#endregion
 	#region actions
-#warning contributor notice: actions
 	private static void RegisterBuiltinActions()
 	{
 		AddNamedAction(new[] { "playergrav", "playergravity" }, Make_Playergrav);
@@ -406,9 +404,9 @@ public static partial class HappenBuilding
 		//AddNamedAction(new[] { "music", "playmusic" }, Make_PlayMusic);
 		//AddNamedAction()
 	}
-	//add your custom actions in methods here
-	//Use methods with the same structure. Don't forget to also add them to the inst method above.
-	//Do not remove the warning directive.
+#warning contributor notice: actions
+	//Add your action registration code here.
+	//Do not remove this warning directive.
 	private static void Make_SoundLoop(Happen ha, ArgSet args)
 	{
 		//does not work in HI (???). does not automatically get discontinued when leaving an affected room.
