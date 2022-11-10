@@ -587,7 +587,7 @@ public static class Utils
 	/// <summary>
 	/// Cache to speed up <see cref="SlugName(int)"/>.
 	/// </summary>
-	internal readonly static Dictionary<int, string> SlugNameCache = new();
+	internal static readonly Dictionary<int, string> SlugNameCache = new();
 
 	/// <summary>
 	/// Returns slugcat name for a given index.
