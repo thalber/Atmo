@@ -56,14 +56,14 @@ public sealed class HappenSet
 		if (world is null || file is null) return;
 		HappenParser.Parse(file, this, game);
 		//subregions as groups
-		Dictionary<string, List<string>> subContents = new();
+		Dictionary<string, IEnumerable<string>> subContents = new();
 
 		foreach (string sub in world.region.subRegions)
 		{
 			int index = world.region.subRegions.IndexOf(sub);
 			subContents.Add(sub, world.abstractRooms
 				.Where(x => x.subRegion == index)
-				.Select(x => x.name).ToList());
+				.Select(x => x.name));
 		}
 		InsertGroups(subContents);
 	}
@@ -134,8 +134,8 @@ public sealed class HappenSet
 		BangBang(happen, nameof(happen));
 		BangBang(groups, nameof(groups));
 		if (groups?.Count() is null or 0) return;
-		Dictionary<string, List<string>> ins = new();
-		foreach (var g in groups) { ins.Add(g, new(0)); }
+		Dictionary<string, IEnumerable<string>> ins = new();
+		foreach (var g in groups) { ins.Add(g, new List<string>(0)); }
 		InsertGroups(ins);
 		GroupsToHappens.AddLinksBulk(groups.Select(gr => new KeyValuePair<string, Happen>(gr, happen)));
 	}
@@ -182,14 +182,14 @@ public sealed class HappenSet
 	/// Adds a group with its contents.
 	/// </summary>
 	/// <param name="groups"></param>
-	public void InsertGroups(IDictionary<string, List<string>> groups)
+	public void InsertGroups(IDictionary<string, IEnumerable<string>> groups)
 	{
 		RoomsToGroups.InsertRangeRight(groups.Keys);
 		GroupsToHappens.InsertRangeLeft(groups.Keys);
-		foreach (KeyValuePair<string, List<string>> kvp in groups)
+		foreach ((string name, IEnumerable<string> group) in groups)
 		{
-			RoomsToGroups.InsertRangeLeft(kvp.Value);
-			foreach (var room in kvp.Value) { RoomsToGroups.AddLink(room, kvp.Key); }
+			RoomsToGroups.InsertRangeLeft(group);
+			foreach (var room in group) { RoomsToGroups.AddLink(room, name); }
 		}
 	}
 	/// <summary>

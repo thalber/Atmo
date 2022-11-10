@@ -10,18 +10,30 @@ namespace Atmo.Helpers;
 /// <summary>
 /// Represents variable storage for a single character save on a single slot.
 /// </summary>
-internal class VarSet
+public class VarSet
 {
 	#region fields
-	private readonly NamedVars persistent = new();
-	private readonly NamedVars normal = new();
+	/// <summary>
+	/// Death-persistent data
+	/// </summary>
+	public readonly NamedVars persistent = new();
+	/// <summary>
+	/// Normal data
+	/// </summary>
+	public readonly NamedVars normal = new();
 	#endregion fields
-	internal VarSet(Save save)
+	/// <summary>
+	/// Normal ctor
+	/// </summary>
+	/// <param name="save"></param>
+	public VarSet(Save save)
 	{
 
 	}
-
-	internal Arg GetVar(string name)
+	/// <summary>
+	/// Fetches a variable by name (may contain persistent prefix)
+	/// </summary>
+	public Arg GetVar(string name)
 	{
 		DataSection sec = DataSection.Normal;
 		if (name.StartsWith(PREFIX_PERSISTENT))
@@ -31,7 +43,11 @@ internal class VarSet
 		}
 		return GetVar(name, sec);
 	}
-	internal Arg GetVar(string name, DataSection section)
+	/// <summary>
+	/// Gets variable by name in a specified section
+	/// </summary>
+	/// <returns></returns>
+	public Arg GetVar(string name, DataSection section)
 	{
 		NamedVars vars = DictForSection(section);
 		Arg _def = Defarg;

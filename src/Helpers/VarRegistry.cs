@@ -32,15 +32,15 @@ public static partial class VarRegistry
 	/// <summary>
 	/// Var sets per save. Key is saveslot number + character index.
 	/// </summary>
-	internal static readonly Dictionary<Save, VarSet> VarsPerSave = new();
+	public static readonly Dictionary<Save, VarSet> VarsPerSave = new();
 	/// <summary>
 	/// Global vars per saveslot. key is saveslot number
 	/// </summary>
-	internal static readonly Dictionary<int, NamedVars> VarsGlobal = new();
+	public static readonly Dictionary<int, NamedVars> VarsGlobal = new();
 	/// <summary>
 	/// Volatile variables are not serialized.
 	/// </summary>
-	internal static readonly NamedVars VarsVolatile = new();
+	public static readonly NamedVars VarsVolatile = new();
 	#endregion
 	#region lifecycle
 	internal static void Clear()
@@ -420,24 +420,51 @@ public static partial class VarRegistry
 	}
 	#endregion filemanip
 	#region pathbuild
-	internal static VarSet VarsForSave(Save save)
+	/// <summary>
+	/// Returns a VarSet for a given save.
+	/// </summary>
+	public static VarSet VarsForSave(Save save)
 		=> VarsPerSave.AddIfNone_Get(save, () => new(save));
-	internal static string SaveFolder(in Save save)
+	/// <summary>
+	/// Returns the folder a given save should reside in.
+	/// </summary>
+	public static string SaveFolder(in Save save)
 		=> CombinePath(RootFolderDirectory(), "UserData", "Atmo", $"{save.a}");
-	internal static string SaveFile(in Save save, DataSection section)
+	/// <summary>
+	/// Returns final file path the save should reside in.
+	/// </summary>
+	public static string SaveFile(in Save save, DataSection section)
 		=> CombinePath(SaveFolder(save), $"{SlugName(save.b)}_{section}.json");
-	internal static string GlobalFile(int slot) 
+	/// <summary>
+	/// Returns filepath for global variables of a given slot.
+	/// </summary>
+	public static string GlobalFile(int slot) 
 		=> CombinePath(SaveFolder(new(slot, -1)), "global.json");
 	#endregion pathbuild
-	internal static Save MakeSD(int slot, int @char) 
+	/// <summary>
+	/// Creates a valid <see cref="Utils.VT{T1, T2}"/> instance for use in 
+	/// </summary>
+	/// <param name="slot"></param>
+	/// <param name="char"></param>
+	/// <returns></returns>
+	public static Save MakeSD(int slot, int @char) 
 		=> new(slot, @char, "SaveData", "slot", "char");
 	private static string ErrorMessage(Site site, string message, Exception? ex)
 		=> $"{nameof(VarRegistry)}: {site}: {message}\nException: {ex?.ToString() ?? "NULL"}";
 	#endregion methods
 	#region nested
-	internal enum DataSection
+	/// <summary>
+	/// Variable kinds
+	/// </summary>
+	public enum DataSection
 	{
+		/// <summary>
+		/// Normal data
+		/// </summary>
 		Normal,
+		/// <summary>
+		/// Death-persistent data
+		/// </summary>
 		Persistent,
 		//global
 	}

@@ -290,7 +290,7 @@ internal class HappenParser
 		{
 			p.Advance();
 		}
-		Dictionary<string, List<string>> groupsFinal = new();
+		Dictionary<string, IEnumerable<string>> groupsFinal = new();
 		foreach (KeyValuePair<string, GroupContents> groupPre in p.allGroupContents)
 		{
 			GroupContents fin = groupPre.Value.Finalize(set.world);
