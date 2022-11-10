@@ -233,11 +233,13 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		}
 		catch (Exception ex)
 		{
+#pragma warning disable IDE0031 // Use null propagation
 			plog.LogError(ErrorMessage(
 				Site.eval,
 				conditions is null ? null : conditions.Eval,
 				ex,
 				Response.none));
+#pragma warning restore IDE0031 // Use null propagation
 		}
 		if (On_CoreUpdate is null) return;
 		foreach (API.lc_CoreUpdate cb in On_CoreUpdate.GetInvocationList())
