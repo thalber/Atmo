@@ -68,7 +68,6 @@ public sealed partial class Atmod : BaseUnityPlugin
 	{
 		const string CFG_LOGGING = "logging";
 		inst = this;
-
 		log_verbose = Config.Bind(CFG_LOGGING, "verbose", true, "Enable more verbose logging. Can create clutter.");
 		try
 		{

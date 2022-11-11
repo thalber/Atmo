@@ -17,6 +17,11 @@ public static class Utils
 	/// Strings that evaluate to bool.false
 	/// </summary>
 	public static readonly string[] falseStrings = new[] { "false", "0", "no", };
+	/// <summary>
+	/// Unsafe string allocator
+	/// </summary>
+	public static readonly Func<int, string> stralloc = 
+		GetFn_t<Func<int, string>>(null, methodof_t<string>("InternalAllocateStr", AllContextsStatic));
 	#endregion
 	#region collections
 	/// <summary>
@@ -177,13 +182,29 @@ public static class Utils
 		BindingFlags context = AllContextsInstance)
 		=> typeof(T).GetMethod(mname, context);
 	/// <summary>
+	/// Looks up methodinfo from T. Throws if not found
+	/// </summary>
+	/// <typeparam name="T">Target type</typeparam>
+	/// <param name="name">Method name</param>
+	/// <param name="context">Defaults to <see cref="AllContextsInstance"/></param>
+	/// <returns>Resulting method info</returns>
+	/// <exception cref="ArgumentException"></exception>
+	public static MethodInfo methodof_t<T>(
+		string name,
+		BindingFlags context = AllContextsInstance)
+	{
+		MethodInfo? res = methodof<T>(name, context);
+		if (res is null) throw new ArgumentException("Method not found");
+		return res;
+	}
+	/// <summary>
 	/// Looks up methodinfo from t, defaults to <see cref="AllContextsStatic"/>
 	/// </summary>
 	/// <param name="t">target type</param>
 	/// <param name="mname">method name</param>
 	/// <param name="context">binding flags, default private+public+static</param>
 	/// <returns></returns>
-	public static MethodInfo methodof(
+	public static MethodInfo? methodof(
 		Type t,
 		string mname,
 		BindingFlags context = AllContextsStatic)
@@ -197,7 +218,9 @@ public static class Utils
 	/// <param name="context"></param>
 	/// <param name="pms"></param>
 	/// <returns></returns>
-	public static ConstructorInfo ctorof<T>(BindingFlags context = AllContextsCtor, params Type[] pms)
+	public static ConstructorInfo? ctorof<T>(
+		BindingFlags context = AllContextsCtor,
+		params Type[] pms)
 		=> typeof(T).GetConstructor(context, null, pms, null);
 	/// <summary>
 	/// Gets constructorinfo from T.
@@ -205,7 +228,7 @@ public static class Utils
 	/// <typeparam name="T"></typeparam>
 	/// <param name="pms"></param>
 	/// <returns></returns>
-	public static ConstructorInfo ctorof<T>(params Type[] pms)
+	public static ConstructorInfo? ctorof<T>(params Type[] pms)
 		=> typeof(T).GetConstructor(pms);
 	/// <summary>
 	/// takes fieldinfo from T, defaults to <see cref="AllContextsInstance"/>
@@ -214,7 +237,7 @@ public static class Utils
 	/// <param name="name">field name</param>
 	/// <param name="context">context, default private+public+instance</param>
 	/// <returns></returns>
-	public static FieldInfo fieldof<T>(string name, BindingFlags context = AllContextsInstance)
+	public static FieldInfo? fieldof<T>(string name, BindingFlags context = AllContextsInstance)
 	{
 		return typeof(T).GetField(name, context);
 	}
@@ -236,7 +259,10 @@ public static class Utils
 	/// <param name="from">source object</param>
 	/// <param name="to">target object</param>
 	/// <param name="context">specifies context of fields to be cloned</param>
-	public static void CloneInstance<T>(T from, T to, BindingFlags context = AllContextsInstance)
+	public static void CloneInstance<T>(
+		T from,
+		T to,
+		BindingFlags context = AllContextsInstance)
 	{
 		Type tt = typeof(T);
 		foreach (FieldInfo field in tt.GetFields(context))
@@ -275,6 +301,45 @@ public static class Utils
 			failure.AddRange(res.b);
 		}
 		return new(success, failure, "CleanupResults", "Done", "Faliled");
+	}
+
+	/// <summary>
+	/// Generic wrapper for <see cref="Delegate.CreateDelegate(Type, object, MethodInfo)"/>.
+	/// </summary>
+	/// <typeparam name="T">Delegate type</typeparam>
+	/// <param name="inst">Instance. Set to null to treat method as static.</param>
+	/// <param name="method">Target method.</param>
+	/// <returns>Resulting delegate; null if failure.</returns>
+	public static T? GetFn<T>(object? inst, MethodInfo method)
+		where T : MulticastDelegate
+	{
+		BangBang(method, nameof(method));
+		return (T)Delegate.CreateDelegate(typeof(T), inst, method);
+	}
+	/// <summary>
+	/// Generic wrapper for <see cref="Delegate.CreateDelegate(Type, object, MethodInfo)"/>. Throws on failure.
+	/// </summary>
+	/// <typeparam name="T">Delegate type.</typeparam>
+	/// <param name="inst">Object instance.</param>
+	/// <param name="method">Method info.</param>
+	/// <returns>Resulting delegate.</returns>
+	/// <exception cref="ArgumentException"></exception>
+	public static T GetFn_t<T>(object? inst, MethodInfo method)
+		where T : MulticastDelegate
+	{
+		T? res = GetFn<T>(inst, method);
+		if (res is null) throw new ArgumentException("Could not create delegate");
+		return res;
+	}
+	/// <summary>
+	/// Gets an internal char setter for given string.
+	/// </summary>
+	/// <param name="s"></param>
+	/// <returns></returns>
+	public static Action<int, char> Fn_SetChar(this string s)
+	{
+		MethodInfo method = methodof_t<string>("InternalSetChar", AllContextsInstance);
+		return GetFn_t<Action<int, char>>(s, method);
 	}
 	#endregion
 	#region randomization extensions
@@ -551,7 +616,6 @@ public static class Utils
 	{
 		if (item is null) throw new ArgumentNullException(name);
 	}
-
 #if ATMO //atmo-specific things
 	internal static void DbgVerbose(
 		this LOG.ManualLogSource logger,
