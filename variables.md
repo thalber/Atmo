@@ -29,6 +29,7 @@ This is the list of all special variables provided by atmo.
 | cycletime | current cycle's max length, in seconds. |
 | os | current OS. Theoretically possible values: Win32S, Win32Windows, Win32NT, WinCE, Unix, Xbox, MacOSX. |
 | realm | Whether the game is running Realm |
+| memoryused, memused | Current size of used memory in bytes. Can only be fetched as string |
 
 ### Format macro
 
