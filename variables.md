@@ -30,6 +30,26 @@ This is the list of all special variables provided by atmo.
 | os | current OS. Theoretically possible values: Win32S, Win32Windows, Win32NT, WinCE, Unix, Xbox, MacOSX. |
 | realm | Whether the game is running Realm |
 
+### Format macro
+
+This is a special variable that allows you to combine outputs of several other variables into a string. For example, this
+
+```
+log 'init=$$FMT(\qThis is a format string! Current time is: {1}, running OS: {2}\q now os)' 'sev=Warning'
+```
+
+will cause `log` action to output the following into console:
+
+```
+[Warning: Atmo] test:"This is a format string! Current time is: 11/19/2022 7:34:51 AM, running OS: Win32NT"
+```
+
+**Breaking it down**:
+
+* Format macro always starts with `$$FMT(` and ends with `)`. Only what's inside the parens is considered part of the format.
+* The text inside is structured the same as action/trigger names and arguments. First item is considered the format, while the rest are then applied to that format. Since you can't use single-quotes (`'`) directly inside the literal that contains the entire macro, you can instead use `\q` escape sequence, which gets replaced with a singlequote. You can double-escape (`\\q`) if you actually want backslash+Q in your resulting string, `\\\q` if you want the resulting string to have `\'` and so on.
+* Inside the format, items are referenced by index. To use item 1 (`time` in the example), you insert `{1}` into the format. Make sure you supply enough items! If you don't, an error will be thrown.
+
 ## Code reference
 
 For accessing variables from other c# code, see [VarRegistry file and its docstrings](src/Helpers/VarRegistry.cs), or [this section for special variables](src/Helpers/VarRegistry.Specials.cs).
