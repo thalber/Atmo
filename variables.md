@@ -32,13 +32,15 @@ This is the list of all special variables provided by atmo.
 
 ### Format macro
 
-This is a special variable that allows you to combine outputs of several other variables into a string. For example, this
+This is a special variable that allows you to combine outputs of several other variables into a string.
+
+It appears in the following form: `$$FMT(\q Format String \q variableName1 variableName2)`. Putting this example
 
 ```
-log 'init=$$FMT(\qThis is a format string! Current time is: {1}, running OS: {2}\q now os)' 'sev=Warning'
+WHAT: log 'init=$$FMT(\qThis is a format string! Current time is: {1}, running OS: {2}\q time os)' 'sev=Warning'
 ```
 
-will cause `log` action to output the following into console:
+in a happen body will cause `log` action to output the following into console:
 
 ```
 [Warning: Atmo] test:"This is a format string! Current time is: 11/19/2022 7:34:51 AM, running OS: Win32NT"
