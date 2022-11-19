@@ -78,9 +78,9 @@ public sealed class HappenSet
 		List<string> returned = new();
 		IEnumerable<string>? excludes = ExcludeToHappens.IndexFromRight(ha);
 		IEnumerable<string>? includes = IncludeToHappens.IndexFromRight(ha);
-		foreach (var group in GroupsToHappens.IndexFromRight(ha))
+		foreach (string? group in GroupsToHappens.IndexFromRight(ha))
 		{
-			foreach (var room in RoomsToGroups.IndexFromRight(group))
+			foreach (string? room in RoomsToGroups.IndexFromRight(group))
 			{
 				if (excludes.Contains(room)) break;
 				//if (SpecificExcludeToHappens.IndexFromRight(ha).Contains(room)) continue;
@@ -88,7 +88,7 @@ public sealed class HappenSet
 				yield return room;
 			}
 		}
-		foreach (var room in includes)
+		foreach (string? room in includes)
 		{
 			if (!returned.Contains(room)) yield return room;
 		}
@@ -104,7 +104,7 @@ public sealed class HappenSet
 		List<Happen> returned = new();
 		//goto _specific;
 		if (!RoomsToGroups.LeftContains(roomname)) goto _specific;
-		foreach (var group in RoomsToGroups.IndexFromLeft(roomname))
+		foreach (string? group in RoomsToGroups.IndexFromLeft(roomname))
 		{
 			if (!GroupsToHappens.LeftContains(group)) continue;
 			foreach (Happen? ha in GroupsToHappens.IndexFromLeft(group))
@@ -135,7 +135,7 @@ public sealed class HappenSet
 		BangBang(groups, nameof(groups));
 		if (groups?.Count() is null or 0) return;
 		Dictionary<string, IEnumerable<string>> ins = new();
-		foreach (var g in groups) { ins.Add(g, new List<string>(0)); }
+		foreach (string? g in groups) { ins.Add(g, new List<string>(0)); }
 		InsertGroups(ins);
 		GroupsToHappens.AddLinksBulk(groups.Select(gr => new KeyValuePair<string, Happen>(gr, happen)));
 	}
@@ -150,7 +150,7 @@ public sealed class HappenSet
 		BangBang(excl, nameof(excl));
 		if (excl?.Count() is null or 0) return;
 		ExcludeToHappens.InsertRangeLeft(excl);
-		foreach (var ex in excl) ExcludeToHappens.AddLink(ex, happen);
+		foreach (string? ex in excl) ExcludeToHappens.AddLink(ex, happen);
 	}
 	/// <summary>
 	/// Adds room includes for a given happen. In these rooms, the happen will be active regardless of grouping. Assumes happen has already been added via <see cref="InsertHappens(IEnumerable{Happen})"/>
@@ -163,7 +163,7 @@ public sealed class HappenSet
 		BangBang(incl, nameof(incl));
 		if (incl?.Count() is null or 0) return;
 		IncludeToHappens.InsertRangeLeft(incl);
-		foreach (var @in in incl) IncludeToHappens.AddLink(@in, happen);
+		foreach (string? @in in incl) IncludeToHappens.AddLink(@in, happen);
 	}
 	/// <summary>
 	/// Inserts a single group.
@@ -189,7 +189,7 @@ public sealed class HappenSet
 		foreach ((string name, IEnumerable<string> group) in groups)
 		{
 			RoomsToGroups.InsertRangeLeft(group);
-			foreach (var room in group) { RoomsToGroups.AddLink(room, name); }
+			foreach (string? room in group) { RoomsToGroups.AddLink(room, name); }
 		}
 	}
 	/// <summary>
@@ -238,7 +238,7 @@ public sealed class HappenSet
 				CRS.CustomWorldStructs.RegionPack data = kvp.Value;
 				//skip inactive
 				if (!active.ContainsKey(name)) continue;
-				var tarpath = CRS.API.BuildPath(
+				string? tarpath = CRS.API.BuildPath(
 					regionPackFolder: data.folderName,
 					folderName: "World",
 					regionID: world.name,

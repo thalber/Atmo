@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using Atmo.Body;
 
-namespace Atmo.Helpers;
+namespace Atmo.Data;
 
 /// <summary>
 /// A set of <see cref="Arg"/>s. Implements IList, so can be indexed by position (<see cref="this[int]"/>), as well as <see cref="Arg"/>'s name <see cref="this[string[]]"/>.
@@ -56,7 +56,7 @@ public sealed class ArgSet : IList<Arg>
 	{
 		get
 		{
-			foreach (var name in names) if (_named.TryGetValue(name, out Arg val)) return val;
+			foreach (string? name in names) if (_named.TryGetValue(name, out Arg val)) return val;
 			return null;
 		}
 	}
@@ -73,30 +73,62 @@ public sealed class ArgSet : IList<Arg>
 	public bool IsReadOnly
 		=> false;
 	public void Add(Arg item)
-		=> _args.Add(item);
+	{
+		_args.Add(item);
+	}
+
 	public void Clear()
-		=> _args.Clear();
+	{
+		_args.Clear();
+	}
+
 	public bool Contains(Arg item)
-		=> _args.Contains(item);
+	{
+		return _args.Contains(item);
+	}
+
 	public void CopyTo(Arg[] array, int arrayIndex)
-		=> _args.CopyTo(array, arrayIndex);
+	{
+		_args.CopyTo(array, arrayIndex);
+	}
+
 	public IEnumerator<Arg> GetEnumerator()
-		=> _args.GetEnumerator();
+	{
+		return _args.GetEnumerator();
+	}
+
 	public int IndexOf(Arg item)
-		=> _args.IndexOf(item);
+	{
+		return _args.IndexOf(item);
+	}
+
 	public void Insert(int index, Arg item)
-		=> _args.Insert(index, item);
+	{
+		_args.Insert(index, item);
+	}
+
 	public bool Remove(Arg item)
-		=> _args.Remove(item);
+	{
+		return _args.Remove(item);
+	}
+
 	public void RemoveAt(int index)
-		=> _args.RemoveAt(index);
+	{
+		_args.RemoveAt(index);
+	}
+
 	IEnumerator IEnumerable.GetEnumerator()
-		=> _args.GetEnumerator();
+	{
+		return _args.GetEnumerator();
+	}
 	#endregion interface;
 #pragma warning restore
 	/// <summary>
 	/// Creates a new ArgSet from a specified string array.
 	/// </summary>
 	/// <param name="raw"></param>
-	public static implicit operator ArgSet(string[] raw) => new(raw);
+	public static implicit operator ArgSet(string[] raw)
+	{
+		return new(raw);
+	}
 }

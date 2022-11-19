@@ -1,6 +1,7 @@
-﻿using SerDict = System.Collections.Generic.Dictionary<string, object>;
-using NamedVars = System.Collections.Generic.Dictionary<string, Atmo.Helpers.Arg>;
-using Save = Atmo.Helpers.Utils.VT<int, int>;
+﻿using Atmo.Data;
+using NamedVars = System.Collections.Generic.Dictionary<string, Atmo.Data.Arg>;
+using Save = Atmo.Helpers.VT<int, int>;
+using SerDict = System.Collections.Generic.Dictionary<string, object>;
 
 namespace Atmo.Helpers;
 /// <summary>
@@ -113,10 +114,9 @@ public static partial class VarRegistry
 		PlayerProgression self,
 		int saveStateNumber)
 	{
-		Save save = default;
+		Save save = MakeSD(CurrentSaveslot ?? -1, saveStateNumber);
 		try
 		{
-			save = MakeSD(CurrentSaveslot ?? -1, saveStateNumber);
 			plog.LogDebug($"Wiping data for save {save}");
 			EraseData(save);
 		}
@@ -429,33 +429,49 @@ public static partial class VarRegistry
 	/// Returns a VarSet for a given save.
 	/// </summary>
 	public static VarSet VarsForSave(Save save)
-		=> VarsPerSave.AddIfNone_Get(save, () => new(save));
+	{
+		return VarsPerSave.AddIfNone_Get(save, () => new(save));
+	}
+
 	/// <summary>
 	/// Returns the folder a given save should reside in.
 	/// </summary>
 	public static string SaveFolder(in Save save)
-		=> CombinePath(RootFolderDirectory(), "UserData", "Atmo", $"{save.a}");
+	{
+		return CombinePath(RootFolderDirectory(), "UserData", "Atmo", $"{save.a}");
+	}
+
 	/// <summary>
 	/// Returns final file path the save should reside in.
 	/// </summary>
 	public static string SaveFile(in Save save, DataSection section)
-		=> CombinePath(SaveFolder(save), $"{SlugName(save.b)}_{section}.json");
+	{
+		return CombinePath(SaveFolder(save), $"{SlugName(save.b)}_{section}.json");
+	}
+
 	/// <summary>
 	/// Returns filepath for global variables of a given slot.
 	/// </summary>
-	public static string GlobalFile(int slot) 
-		=> CombinePath(SaveFolder(new(slot, -1)), "global.json");
+	public static string GlobalFile(int slot)
+	{
+		return CombinePath(SaveFolder(new(slot, -1)), "global.json");
+	}
 	#endregion pathbuild
 	/// <summary>
-	/// Creates a valid <see cref="Utils.VT{T1, T2}"/> instance for use in 
+	/// Creates a valid <see cref="VT{T1, T2}"/> instance for use in 
 	/// </summary>
 	/// <param name="slot"></param>
 	/// <param name="char"></param>
 	/// <returns></returns>
-	public static Save MakeSD(int slot, int @char) 
-		=> new(slot, @char, "SaveData", "slot", "char");
+	public static Save MakeSD(int slot, int @char)
+	{
+		return new(slot, @char, "SaveData", "slot", "char");
+	}
+
 	private static string ErrorMessage(Site site, string message, Exception? ex)
-		=> $"{nameof(VarRegistry)}: {site}: {message}\nException: {ex?.ToString() ?? "NULL"}";
+	{
+		return $"{nameof(VarRegistry)}: {site}: {message}\nException: {ex?.ToString() ?? "NULL"}";
+	}
 	#endregion methods
 	#region nested
 	/// <summary>

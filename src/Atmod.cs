@@ -127,7 +127,11 @@ public sealed partial class Atmod : BaseUnityPlugin
 				}
 				sw.Stop();
 
-				static string aggregator(string x, string y) => $"{x}\n\t{y}";
+				static string aggregator(string x, string y)
+				{
+					return $"{x}\n\t{y}";
+				}
+
 				cleanup_logger.LogDebug($"Finished statics cleanup: {sw.Elapsed}.");
 				if (verbose)
 				{
@@ -163,7 +167,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		}
 		VarRegistry.SpecialVars[VarRegistry.SpVar.time].Str = DateTime.Now.ToString();
 		VarRegistry.SpecialVars[VarRegistry.SpVar.utctime].Str = DateTime.UtcNow.ToString();
-		
+
 		if (RW is null || CurrentSet is null) return;
 		if (RW.processManager.currentMainLoop is RainWorldGame) return;
 		foreach (MainLoopProcess? proc in RW.processManager.sideProcesses) if (proc is RainWorldGame) return;

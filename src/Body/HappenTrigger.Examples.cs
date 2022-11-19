@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Atmo.Data;
 
 namespace Atmo.Body;
 
@@ -78,7 +79,10 @@ public partial class HappenTrigger
 			yes = RND.value < chance.F32;
 		}
 		private readonly bool yes;
-		public override bool ShouldRunUpdates() => yes;
+		public override bool ShouldRunUpdates()
+		{
+			return yes;
+		}
 	}
 	/// <summary>
 	/// Turns on and off periodically.
@@ -129,13 +133,13 @@ public partial class HappenTrigger
 		{
 			foreach (Arg op in options)
 			{
-				if (int.TryParse(op.Str, out var r)) levels.Add(r);
-				var spl = TXT.Regex.Split(op.Str, "\\s*-\\s*");
+				if (int.TryParse(op.Str, out int r)) levels.Add(r);
+				string[]? spl = TXT.Regex.Split(op.Str, "\\s*-\\s*");
 				if (spl.Length == 2)
 				{
-					int.TryParse(spl[0], out var min);
-					int.TryParse(spl[1], out var max);
-					for (var i = min; i <= max; i++) if (!levels.Contains(i)) levels.Add(i);
+					int.TryParse(spl[0], out int min);
+					int.TryParse(spl[1], out int max);
+					for (int i = min; i <= max; i++) if (!levels.Contains(i)) levels.Add(i);
 				}
 			}
 		}
@@ -186,7 +190,11 @@ public partial class HappenTrigger
 			counter = 0;
 			active = true;
 		}
-		public override bool ShouldRunUpdates() => active;
+		public override bool ShouldRunUpdates()
+		{
+			return active;
+		}
+
 		public override void EvalResults(bool res)
 		{
 			if (active)
@@ -235,7 +243,7 @@ public partial class HappenTrigger
 					switchOff.Add(delay);
 				}
 			}
-			for (var i = 0; i < switchOn.Count; i++)
+			for (int i = 0; i < switchOn.Count; i++)
 			{
 				switchOn[i]--;
 			}
@@ -244,7 +252,7 @@ public partial class HappenTrigger
 				switchOn.RemoveAt(0);
 				amActive = true;
 			}
-			for (var i = 0; i < switchOff.Count; i++)
+			for (int i = 0; i < switchOff.Count; i++)
 			{
 				switchOff[i]--;
 			}
@@ -255,7 +263,10 @@ public partial class HappenTrigger
 			}
 			tarWasOn = tar.Active;
 		}
-		public override bool ShouldRunUpdates() => amActive;
+		public override bool ShouldRunUpdates()
+		{
+			return amActive;
+		}
 	}
 	/// <summary>
 	/// Activates after a set delay.
@@ -302,7 +313,9 @@ public partial class HappenTrigger
 			accepted = args.Select(x => (int)x).ToArray();
 		}
 		public override bool ShouldRunUpdates()
-			=> accepted.Contains(game.Players.Count);
+		{
+			return accepted.Contains(game.Players.Count);
+		}
 	}
 	/// <summary>
 	/// Only activates on a given difficulty.
@@ -322,7 +335,9 @@ public partial class HappenTrigger
 			}
 		}
 		public override bool ShouldRunUpdates()
-			=> enabled;//difficulties.Contains(game.GetStorySession.characterStats.name);
+		{
+			return enabled;//difficulties.Contains(game.GetStorySession.characterStats.name);
+		}
 	}
 #pragma warning restore CS1591
 	#endregion

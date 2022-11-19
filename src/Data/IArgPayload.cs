@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Atmo.Helpers;
+namespace Atmo.Data;
 /// <summary>
 /// Objects that can be used as payloads for <see cref="Arg"/>. Don't forget to add <see cref="object.ToString"/> override! Implement this, or use <see cref="GetOnlyCallbackPayload"/> and <see cref="CallbackPayload"/> if you want callback-driven shorthands.
 /// </summary>

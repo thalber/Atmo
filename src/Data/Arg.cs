@@ -1,4 +1,4 @@
-﻿namespace Atmo.Helpers;
+﻿namespace Atmo.Data;
 /// <summary>
 /// Wraps a string argument for easy conversion into several other language primitives. Can be named (named arguments come in form of "name=value").
 /// <para>
@@ -69,10 +69,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// </summary>
 	public string Raw
 	{
-		get
-		{
-			return _payload?.Raw ?? _raw;
-		}
+		get => _payload?.Raw ?? _raw;
 		set
 		{
 			if (_readonly) return;
@@ -80,7 +77,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			if (_payload is not null) { _payload.Raw = value; return; }
 			_raw = value;
 			Name = null;
-			var splPoint = _raw.IndexOf('=');
+			int splPoint = _raw.IndexOf('=');
 			if (splPoint is not -1 && splPoint < _raw.Length - 1)
 			{
 				Name = _raw.Substring(0, splPoint);
@@ -88,8 +85,8 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			}
 			if (value.StartsWith("$"))
 			{
-				var ss = CurrentSaveslot;
-				var ch = CurrentCharacter;
+				int? ss = CurrentSaveslot;
+				int? ch = CurrentCharacter;
 				plog.DbgVerbose($"Linking variable {value}: {ss}, {ch}");
 				if (ss is null)
 				{
@@ -119,10 +116,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// </summary>
 	public string Str
 	{
-		get
-		{
-			return _payload?.Str ?? _str;
-		}
+		get => _payload?.Str ?? _str;
 		set
 		{
 			if (_readonly) return;
@@ -140,10 +134,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// </summary>
 	public int I32
 	{
-		get
-		{
-			return _payload?.I32 ?? _i32;
-		}
+		get => _payload?.I32 ?? _i32;
 		set
 		{
 
@@ -162,16 +153,13 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// </summary>
 	public float F32
 	{
-		get
-		{
-			return _payload?.F32 ?? _f32;
-		}
+		get => _payload?.F32 ?? _f32;
 		set
 		{
 			if (_readonly) return;
 			if (_payload is not null) { _payload.F32 = value; return; }
 			_f32 = value;
-			_i32 = (value is float.PositiveInfinity or float.NegativeInfinity or float.NaN) ? 0 : (int)value;
+			_i32 = value is float.PositiveInfinity or float.NegativeInfinity or float.NaN ? 0 : (int)value;
 			_bool = value is not 0f;
 			_skipparse = true;
 			Str = value.ToString();
@@ -179,14 +167,11 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		}
 	}
 	/// <summary>
-	/// Boolean value of the argument; false by default. False if original string is found in <see cref="Utils.falseStrings"/>, or if <see cref="Arg"/> is created from a zero int or float; True if original string is found in <see cref="Utils.trueStrings"/>, or of <see cref="Arg"/> is created from a non-zero int or float. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.BOOL"/>.
+	/// Boolean value of the argument; false by default. False if original string is found in <see cref="falseStrings"/>, or if <see cref="Arg"/> is created from a zero int or float; True if original string is found in <see cref="trueStrings"/>, or of <see cref="Arg"/> is created from a non-zero int or float. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.BOOL"/>.
 	/// </summary>
 	public bool Bool
 	{
-		get
-		{
-			return _payload?.Bool ?? _bool;
-		}
+		get => _payload?.Bool ?? _bool;
 		set
 		{
 			if (_readonly) return;
@@ -233,39 +218,89 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	public int SecAsFrames => (int)(F32 * 40f);
 	#region iconv
 	TypeCode IConvertible.GetTypeCode()
-		=> TypeCode.Object;
+	{
+		return TypeCode.Object;
+	}
+
 	bool IConvertible.ToBoolean(IFormatProvider provider)
-		=> Bool;
+	{
+		return Bool;
+	}
+
 	char IConvertible.ToChar(IFormatProvider provider)
-		=> (char)I32;
+	{
+		return (char)I32;
+	}
+
 	sbyte IConvertible.ToSByte(IFormatProvider provider)
-		=> (sbyte)I32;
+	{
+		return (sbyte)I32;
+	}
+
 	byte IConvertible.ToByte(IFormatProvider provider)
-		=> (byte)I32;
+	{
+		return (byte)I32;
+	}
+
 	short IConvertible.ToInt16(IFormatProvider provider)
-		=> (short)I32;
+	{
+		return (short)I32;
+	}
+
 	ushort IConvertible.ToUInt16(IFormatProvider provider)
-		=> (ushort)I32;
+	{
+		return (ushort)I32;
+	}
+
 	int IConvertible.ToInt32(IFormatProvider provider)
-		=> I32;
+	{
+		return I32;
+	}
+
 	uint IConvertible.ToUInt32(IFormatProvider provider)
-		=> (uint)I32;
+	{
+		return (uint)I32;
+	}
+
 	long IConvertible.ToInt64(IFormatProvider provider)
-		=> (long)I32;
+	{
+		return I32;
+	}
+
 	ulong IConvertible.ToUInt64(IFormatProvider provider)
-		=> (ulong)I32;
+	{
+		return (ulong)I32;
+	}
+
 	float IConvertible.ToSingle(IFormatProvider provider)
-		=> (float)F32;
+	{
+		return (float)F32;
+	}
+
 	double IConvertible.ToDouble(IFormatProvider provider)
-		=> (double)F32;
+	{
+		return (double)F32;
+	}
+
 	decimal IConvertible.ToDecimal(IFormatProvider provider)
-		=> (decimal)F32;
+	{
+		return (decimal)F32;
+	}
+
 	DateTime IConvertible.ToDateTime(IFormatProvider provider)
-		=> throw new InvalidCastException();
+	{
+		throw new InvalidCastException();
+	}
+
 	string IConvertible.ToString(IFormatProvider provider)
-		=> ToString();
+	{
+		return ToString();
+	}
+
 	object IConvertible.ToType(Type conversionType, IFormatProvider provider)
-		=> throw new NotImplementedException();
+	{
+		throw new NotImplementedException();
+	}
 	#endregion iconv
 	#endregion convert
 	/// <summary>
@@ -282,10 +317,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// </summary>
 	public ArgType DataType
 	{
-		get
-		{
-			return _payload?.DataType ?? _dt;
-		}
+		get => _payload?.DataType ?? _dt;
 		private set
 		{
 			if (IsVar) return;
@@ -320,7 +352,10 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	}
 	/// <inheritdoc/>
 	public override int GetHashCode()
-		=> _str.GetHashCode();
+	{
+		return _str.GetHashCode();
+	}
+
 	/// <inheritdoc/>
 	public override string ToString()
 	{
@@ -427,41 +462,72 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// Converts an instance into a string.
 	/// </summary>
 	/// <param name="arg"></param>
-	public static explicit operator string(Arg arg) => arg.Str;
+	public static explicit operator string(Arg arg)
+	{
+		return arg.Str;
+	}
+
 	/// <summary>
 	/// Creates an instance from a string.
 	/// </summary>
 	/// <param name="src"></param>
-	public static implicit operator Arg(string src) => new(src, false);
+	public static implicit operator Arg(string src)
+	{
+		return new(src, false);
+	}
+
 	/// <summary>
 	/// Converts an instance into an int.
 	/// </summary>
 	/// <param name="arg"></param>
-	public static explicit operator int(Arg arg) => arg.I32;
+	public static explicit operator int(Arg arg)
+	{
+		return arg.I32;
+	}
+
 	/// <summary>
 	/// Creates an unnamed instance from an int.
 	/// </summary>
 	/// <param name="src"></param>
-	public static implicit operator Arg(int src) => new(src);
+	public static implicit operator Arg(int src)
+	{
+		return new(src);
+	}
+
 	/// <summary>
 	/// Converts an instance into a float.
 	/// </summary>
 	/// <param name="arg"></param>
-	public static explicit operator float(Arg arg) => arg.F32;
+	public static explicit operator float(Arg arg)
+	{
+		return arg.F32;
+	}
+
 	/// <summary>
 	/// Creates an unnamed instance from a float.
 	/// </summary>
 	/// <param name="src"></param>
-	public static implicit operator Arg(float src) => new(src);
+	public static implicit operator Arg(float src)
+	{
+		return new(src);
+	}
+
 	/// <summary>
 	/// Converts an instance into a bool.
 	/// </summary>
 	/// <param name="arg"></param>
-	public static explicit operator bool(Arg arg) => arg.Bool;
+	public static explicit operator bool(Arg arg)
+	{
+		return arg.Bool;
+	}
+
 	/// <summary>
 	/// Creates an unnamed instance from a bool.
 	/// </summary>
 	/// <param name="src"></param>
-	public static implicit operator Arg(bool src) => new(src);
+	public static implicit operator Arg(bool src)
+	{
+		return new(src);
+	}
 	#endregion;
 }

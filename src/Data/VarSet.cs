@@ -1,12 +1,10 @@
 ﻿using System.Runtime.Serialization;
-
 using static Atmo.Helpers.VarRegistry;
-
-using NamedVars = System.Collections.Generic.Dictionary<string, Atmo.Helpers.Arg>;
+using NamedVars = System.Collections.Generic.Dictionary<string, Atmo.Data.Arg>;
+using Save = Atmo.Helpers.VT<int, int>;
 using SerDict = System.Collections.Generic.Dictionary<string, object>;
-using Save = Atmo.Helpers.Utils.VT<int, int>;
 
-namespace Atmo.Helpers;
+namespace Atmo.Data;
 /// <summary>
 /// Represents variable storage for a single character save on a single slot.
 /// </summary>
@@ -58,7 +56,7 @@ public class VarSet
 		SerDict res = new();
 		Arg _def = Defarg;
 		NamedVars tdict = DictForSection(section);
-		foreach ((string name, Arg var)in tdict)
+		foreach ((string name, Arg var) in tdict)
 		{
 			if (var.Equals(_def)) continue;
 			res.Add(name, var.Str);
@@ -70,14 +68,18 @@ public class VarSet
 		NamedVars tdict = DictForSection(section);
 		tdict.Clear();
 		if (dict is null) return;
-		foreach ((string name, object val) in dict) {
+		foreach ((string name, object val) in dict)
+		{
 			tdict.Add(name, val.ToString());
 		}
 	}
-	private NamedVars DictForSection(DataSection sec) => sec switch
+	private NamedVars DictForSection(DataSection sec)
 	{
-		DataSection.Normal => normal,
-		DataSection.Persistent => persistent,
-		_ => throw new ArgumentException("Invalid data section"),
-	};
+		return sec switch
+		{
+			DataSection.Normal => normal,
+			DataSection.Persistent => persistent,
+			_ => throw new ArgumentException("Invalid data section"),
+		};
+	}
 }

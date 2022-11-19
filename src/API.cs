@@ -1,4 +1,5 @@
 ﻿using Atmo.Body;
+using Atmo.Data;
 
 namespace Atmo;
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
@@ -116,7 +117,7 @@ public static class API
 		if (namedActions.ContainsKey(name)) { return false; }
 		void newCb(Happen ha)
 		{
-			foreach (var ac in ha.actions.Keys)
+			foreach (string? ac in ha.actions.Keys)
 			{
 				if (comp.Compare(ac, name) == 0)
 				{

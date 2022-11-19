@@ -52,9 +52,10 @@ public abstract partial class HappenTrigger
 		/// </summary>
 		/// <param name="game">Current game instance for state access.</param>
 		/// <param name="ow"></param>
-		public NeedsRWG(RainWorldGame game, Happen? ow = null) : base(ow) {
+		public NeedsRWG(RainWorldGame game, Happen? ow = null) : base(ow)
+		{
 			BangBang(game, nameof(game));
-			this.game = game; 
+			this.game = game;
 		}
 		/// <summary>
 		/// The required rain world instance.
@@ -94,14 +95,22 @@ public abstract partial class HappenTrigger
 		/// </summary>
 		public Func<bool>? On_ShouldRunUpdates;
 		/// <inheritdoc/>
-		public override void EvalResults(bool res) 
-			=> On_EvalResults?.Invoke(res);
+		public override void EvalResults(bool res)
+		{
+			On_EvalResults?.Invoke(res);
+		}
+
 		/// <inheritdoc/>
-		public override void Update() 
-			=> On_Update?.Invoke();
+		public override void Update()
+		{
+			On_Update?.Invoke();
+		}
+
 		/// <inheritdoc/>
-		public override bool ShouldRunUpdates() 
-			=> On_ShouldRunUpdates?.Invoke() ?? false;
+		public override bool ShouldRunUpdates()
+		{
+			return On_ShouldRunUpdates?.Invoke() ?? false;
+		}
 	}
 
 }

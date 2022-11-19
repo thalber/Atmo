@@ -1,6 +1,7 @@
-﻿using SerDict = System.Collections.Generic.Dictionary<string, object>;
-using Save = Atmo.Helpers.Utils.VT<int, int>;
-using NamedVars = System.Collections.Generic.Dictionary<Atmo.Helpers.VarRegistry.SpVar, Atmo.Helpers.Arg>;
+﻿using Atmo.Data;
+using NamedVars = System.Collections.Generic.Dictionary<Atmo.Helpers.VarRegistry.SpVar, Atmo.Data.Arg>;
+using Save = Atmo.Helpers.VT<int, int>;
+using SerDict = System.Collections.Generic.Dictionary<string, object>;
 
 namespace Atmo.Helpers;
 
@@ -60,12 +61,15 @@ public static partial class VarRegistry
 				{
 					getStr = () => DBG.Process.GetCurrentProcess().PrivateMemorySize64.ToString()
 				}),
+				SpVar.username => Environment.UserName,
+				SpVar.machinename => Environment.MachineName,
 				_ => 0,
 			});
 		}
 	}
 	private static SpVar SpecialForName(string name)
-		=> name.ToLower() switch
+	{
+		return name.ToLower() switch
 		{
 			"root" or "rootfolder" => SpVar.root,
 			"now" or "time" => SpVar.time,
@@ -76,8 +80,12 @@ public static partial class VarRegistry
 			"os" => SpVar.os,
 			"memoryused" or "memused" => SpVar.memused,
 			"memorytotal" or "memtotal" => SpVar.memtotal,
+			"user" or "username" => SpVar.username,
+			"machine" or "machinename" => SpVar.machinename,
 			_ => SpVar.NONE,
 		};
+	}
+
 	internal enum SpVar
 	{
 		NONE,
@@ -89,6 +97,8 @@ public static partial class VarRegistry
 		realm,
 		os,
 		memused,
-		memtotal
+		memtotal,
+		username,
+		machinename
 	}
 }

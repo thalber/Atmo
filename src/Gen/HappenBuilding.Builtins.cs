@@ -87,7 +87,7 @@ public static partial class HappenBuilding
 		{
 			NotifyArgsMissing(TMake_Delay, "delay/delaymin+delaymax");
 			return null;
-		} 
+		}
 		return new EventfulTrigger()
 		{
 			On_ShouldRunUpdates = () => rwg.world.rainCycle.timer > delay
@@ -129,7 +129,7 @@ public static partial class HappenBuilding
 						switchOff.Add(delay);
 					}
 				}
-				for (var i = 0; i < switchOn.Count; i++)
+				for (int i = 0; i < switchOn.Count; i++)
 				{
 					switchOn[i]--;
 				}
@@ -138,7 +138,7 @@ public static partial class HappenBuilding
 					switchOn.RemoveAt(0);
 					amActive = true;
 				}
-				for (var i = 0; i < switchOff.Count; i++)
+				for (int i = 0; i < switchOff.Count; i++)
 				{
 					switchOff[i]--;
 				}
@@ -233,10 +233,13 @@ public static partial class HappenBuilding
 	/// Creates a trigger that is always active.
 	/// </summary>
 	private static HappenTrigger? TMake_Always(ArgSet args, RainWorldGame rwg, Happen ha)
-		=> new EventfulTrigger()
+	{
+		return new EventfulTrigger()
 		{
 			On_ShouldRunUpdates = () => true
 		};
+	}
+
 	/// <summary>
 	/// Creates a trigger that is active each cycle with a given chance (default 50%)
 	/// </summary>
@@ -256,13 +259,13 @@ public static partial class HappenBuilding
 		List<int> levels = new();
 		foreach (Arg op in args)
 		{
-			if (int.TryParse(op.Str, out var r)) levels.Add(r);
-			var spl = TXT.Regex.Split(op.Str, "\\s*-\\s*");
+			if (int.TryParse(op.Str, out int r)) levels.Add(r);
+			string[]? spl = TXT.Regex.Split(op.Str, "\\s*-\\s*");
 			if (spl.Length == 2)
 			{
-				int.TryParse(spl[0], out var min);
-				int.TryParse(spl[1], out var max);
-				for (var i = min; i <= max; i++) if (!levels.Contains(i)) levels.Add(i);
+				int.TryParse(spl[0], out int min);
+				int.TryParse(spl[1], out int max);
+				for (int i = min; i <= max; i++) if (!levels.Contains(i)) levels.Add(i);
 			}
 		}
 		return new EventfulTrigger()
@@ -319,9 +322,10 @@ public static partial class HappenBuilding
 	/// </summary>
 	private static HappenTrigger? TMake_VarEq(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
-		if (args.Count < 2) {
+		if (args.Count < 2)
+		{
 			NotifyArgsMissing(TMake_VarEq, "varname/value");
-			return null; 
+			return null;
 		}
 		Arg tar = VarRegistry.GetVar(args[0].Str, CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
 		Arg val = args[1];
@@ -335,7 +339,8 @@ public static partial class HappenBuilding
 	/// </summary>
 	public static HappenTrigger? TMake_VarNe(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
-		if (args.Count < 2) {
+		if (args.Count < 2)
+		{
 			NotifyArgsMissing(TMake_VarNe, "varname/value");
 			return null;
 		}
@@ -495,7 +500,7 @@ public static partial class HappenBuilding
 		{
 			if (counter != 0) return;
 			if (limit < 1) return;
-			for (var i = 0; i < room.updateList.Count; i++)
+			for (int i = 0; i < room.updateList.Count; i++)
 			{
 				if (room.updateList[i] is Player p)
 				{
@@ -604,7 +609,7 @@ public static partial class HappenBuilding
 			DeathPersistentSaveData? dpsd = w.game?.GetStorySession?.saveState?.deathPersistentSaveData;
 			if (dpsd is null || w.game is null) return;
 			Arg ts = args.AtOr(0, 0);
-			var cap = dpsd.karmaCap;
+			int cap = dpsd.karmaCap;
 			if (ts.Name is "add" or "+") cap += ts.I32;
 			else if (ts.Name is "sub" or "-") cap -= ts.I32;
 			else cap = ts.I32 - 1;
@@ -619,7 +624,7 @@ public static partial class HappenBuilding
 		//float.TryParse(args.AtOr(0, "0.5"), out var frac);
 		ha.On_RealUpdate += (room) =>
 		{
-			for (var i = 0; i < room.updateList.Count; i++)
+			for (int i = 0; i < room.updateList.Count; i++)
 			{
 				UAD? uad = room.updateList[i];
 				if (uad is Player p)
@@ -654,7 +659,7 @@ public static partial class HappenBuilding
 		ha.On_RealUpdate += (rm) =>
 		{
 			if (lastRoomPerCam is null) return;
-			for (var i = 0; i < lastRoomPerCam.Length; i++)
+			for (int i = 0; i < lastRoomPerCam.Length; i++)
 			{
 				RoomCamera? cam = rm.game.cameras[i];
 				if (cam.room != rm || !rm.BeingViewed || cam.AboutToSwitchRoom) continue;
@@ -671,7 +676,7 @@ public static partial class HappenBuilding
 		ha.On_CoreUpdate += (rwg) =>
 		{
 			if (lastRoomPerCam is null) lastRoomPerCam = new string[rwg.cameras.Length];
-			else for (var i = 0; i < rwg.cameras.Length; i++)
+			else for (int i = 0; i < rwg.cameras.Length; i++)
 				{
 					lastRoomPerCam[i] = rwg.cameras[i].room.abstractRoom.name;
 				}
@@ -688,6 +693,8 @@ public static partial class HappenBuilding
 		};
 	}
 	#endregion
-	private static void NotifyArgsMissing(Delegate source, string arg) 
-		=> plog.LogWarning($"{nameof(HappenBuilding)}.{source.Method.Name}: Missing argument: {arg}");
+	private static void NotifyArgsMissing(Delegate source, string arg)
+	{
+		plog.LogWarning($"{nameof(HappenBuilding)}.{source.Method.Name}: Missing argument: {arg}");
+	}
 }

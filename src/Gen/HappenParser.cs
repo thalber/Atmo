@@ -118,7 +118,7 @@ internal class HappenParser
 			}
 			return;
 		}
-		foreach (var ss in roomsep.Split(cline))
+		foreach (string? ss in roomsep.Split(cline))
 		{
 			if (ss.Length is 0) continue;
 			cGroupContents.rooms.Add(ss);
@@ -132,7 +132,7 @@ internal class HappenParser
 			TXT.Regex matcher = LineMatchers[prop];
 			if ((match = matcher.Match(cline)).Success && match.Index == 0)
 			{
-				var payload = cline.Substring(match.Length);
+				string? payload = cline.Substring(match.Length);
 				switch (prop)
 				{
 				case LineKind.HappenWhere:
@@ -140,7 +140,7 @@ internal class HappenParser
 					plog.DbgVerbose("HappenParse: Recognized WHERE clause");
 					WhereOps c = WhereOps.Group;
 					string[]? items = TXT.Regex.Split(payload, "\\s+");
-					foreach (var i in items)
+					foreach (string? i in items)
 					{
 						if (i.Length == 0) continue;
 						switch (i)
@@ -173,7 +173,7 @@ internal class HappenParser
 				{
 					plog.DbgVerbose("HappenParse: Recognized WHAT clause");
 					PredicateInlay.Token[]? tokens = PredicateInlay.Tokenize(payload).ToArray();
-					for (var i = 0; i < tokens.Length; i++)
+					for (int i = 0; i < tokens.Length; i++)
 					{
 						PredicateInlay.Token tok = tokens[i];
 						if (tok.type == PredicateInlay.TokenType.Word)
@@ -231,7 +231,7 @@ internal class HappenParser
 		{
 			foreach (TXT.Regex? matcher in matchers)
 			{
-				for (var i = 0; i < w.abstractRooms.Length; i++)
+				for (int i = 0; i < w.abstractRooms.Length; i++)
 				{
 					if (matcher.IsMatch(w.abstractRooms[i].name)) rooms.Add(w.abstractRooms[i].name);
 				}
@@ -288,7 +288,7 @@ internal class HappenParser
 		BangBang(set, "set");
 		BangBang(rwg, "rwg");
 		HappenParser p = new(file);
-		for (var i = 0; i < p.allLines.Length; i++)
+		for (int i = 0; i < p.allLines.Length; i++)
 		{
 			p.Advance();
 		}

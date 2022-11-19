@@ -7,7 +7,7 @@ namespace Atmo.Helpers;
 /// <summary>
 /// contains general purpose utility methods
 /// </summary>
-public static class Utils
+public static partial class Utils
 {
 	#region fields
 	/// <summary>
@@ -94,7 +94,7 @@ public static class Utils
 	/// <param name="arr">Array in question</param>
 	public static void RightShift(this System.Collections.BitArray arr)
 	{
-		for (var i = arr.Count - 2; i >= 0; i--)
+		for (int i = arr.Count - 2; i >= 0; i--)
 		{
 			arr[i + 1] = arr[i];//arr.Set(i + 1, arr.Get(i));//[i + 1] = arr[i];
 		}
@@ -155,7 +155,10 @@ public static class Utils
 	public static MethodInfo? GetMethodAllContexts(
 		this Type self,
 		string name)
-		=> self.GetMethod(name, AllContexts);
+	{
+		return self.GetMethod(name, AllContexts);
+	}
+
 	/// <summary>
 	/// Gets
 	/// </summary>
@@ -165,12 +168,18 @@ public static class Utils
 	public static PropertyInfo? GetPropertyAllContexts(
 		this Type self,
 		string name)
-		=> self.GetProperty(name, AllContexts);
+	{
+		return self.GetProperty(name, AllContexts);
+	}
+
 	/// <summary>
 	/// Returns prop backing field name
 	/// </summary>
 	public static string Pbfiname(string propname)
-		=> $"<{propname}>k__BackingField";
+	{
+		return $"<{propname}>k__BackingField";
+	}
+
 	/// <summary>
 	/// Looks up methodinfo from T, defaults to <see cref="AllContextsInstance"/>
 	/// </summary>
@@ -181,7 +190,10 @@ public static class Utils
 	public static MethodInfo? methodof<T>(
 		string mname,
 		BindingFlags context = AllContextsInstance)
-		=> typeof(T).GetMethod(mname, context);
+	{
+		return typeof(T).GetMethod(mname, context);
+	}
+
 	/// <summary>
 	/// Looks up methodinfo from T. Throws if not found
 	/// </summary>
@@ -222,7 +234,10 @@ public static class Utils
 	public static ConstructorInfo? ctorof<T>(
 		BindingFlags context = AllContextsCtor,
 		params Type[] pms)
-		=> typeof(T).GetConstructor(context, null, pms, null);
+	{
+		return typeof(T).GetConstructor(context, null, pms, null);
+	}
+
 	/// <summary>
 	/// Gets constructorinfo from T.
 	/// </summary>
@@ -230,7 +245,10 @@ public static class Utils
 	/// <param name="pms"></param>
 	/// <returns></returns>
 	public static ConstructorInfo? ctorof<T>(params Type[] pms)
-		=> typeof(T).GetConstructor(pms);
+	{
+		return typeof(T).GetConstructor(pms);
+	}
+
 	/// <summary>
 	/// takes fieldinfo from T, defaults to <see cref="AllContextsInstance"/>
 	/// </summary>
@@ -250,7 +268,7 @@ public static class Utils
 	public static IEnumerable<Assembly> FindAssembliesByName(string n)
 	{
 		Assembly[] lasms = AppDomain.CurrentDomain.GetAssemblies();
-		for (var i = lasms.Length - 1; i > -1; i--)
+		for (int i = lasms.Length - 1; i > -1; i--)
 			if (lasms[i].FullName.Contains(n)) yield return lasms[i];
 	}
 	/// <summary>
@@ -357,7 +375,10 @@ public static class Utils
 		int mDev,
 		int minRes = int.MinValue,
 		int maxRes = int.MaxValue)
-		=> IntClamp(RND.Range(start - mDev, start + mDev), minRes, maxRes);
+	{
+		return IntClamp(RND.Range(start - mDev, start + mDev), minRes, maxRes);
+	}
+
 	/// <summary>
 	/// Returns a random deviation from start position, up to mDev in both directions. Clamps to given bounds if provided.
 	/// </summary>
@@ -371,13 +392,19 @@ public static class Utils
 		float mDev,
 		float minRes = float.NegativeInfinity,
 		float maxRes = float.PositiveInfinity)
-		=> Clamp(Lerp(start - mDev, start + mDev, RND.value), minRes, maxRes);
+	{
+		return Clamp(Lerp(start - mDev, start + mDev, RND.value), minRes, maxRes);
+	}
+
 	/// <summary>
 	/// Gives you a random sign.
 	/// </summary>
 	/// <returns>1f or -1f on a coinflip.</returns>
 	public static float RandSign()
-		=> RND.value > 0.5f ? -1f : 1f;
+	{
+		return RND.value > 0.5f ? -1f : 1f;
+	}
+
 	/// <summary>
 	/// Performs a random lerp between two 2d points.
 	/// </summary>
@@ -385,7 +412,10 @@ public static class Utils
 	/// <param name="b">Second vector.</param>
 	/// <returns>Resulting vector.</returns>
 	public static Vector2 V2RandLerp(Vector2 a, Vector2 b)
-		=> Vector2.Lerp(a, b, RND.value);
+	{
+		return Vector2.Lerp(a, b, RND.value);
+	}
+
 	/// <summary>
 	/// Clamps a color to acceptable values.
 	/// </summary>
@@ -405,7 +435,7 @@ public static class Utils
 	public static Color RandDev(this Color bcol, Color dbound, bool clamped = true)
 	{
 		Color res = default;
-		for (var i = 0; i < 3; i++) res[i] = bcol[i] + dbound[i] * RND.Range(-1f, 1f);
+		for (int i = 0; i < 3; i++) res[i] = bcol[i] + (dbound[i] * RND.Range(-1f, 1f));
 		return clamped ? res.Clamped() : res;
 	}
 	#endregion
@@ -439,7 +469,10 @@ public static class Utils
 	/// <param name="y"></param>
 	/// <returns></returns>
 	public static string JoinWithComma(string x, string y)
-		=> $"{x}, {y}";
+	{
+		return $"{x}, {y}";
+	}
+
 	/// <summary>
 	/// Stitches a given collection with, returns an empty string if empty.
 	/// </summary>
@@ -461,14 +494,20 @@ public static class Utils
 	/// <param name="p2"></param>
 	/// <returns></returns>
 	public static IntRect ConstructIR(IntVector2 p1, IntVector2 p2)
-		=> new(Min(p1.x, p2.x), Min(p1.y, p2.y), Max(p1.x, p2.x), Max(p1.y, p2.y));
+	{
+		return new(Min(p1.x, p2.x), Min(p1.y, p2.y), Max(p1.x, p2.x), Max(p1.y, p2.y));
+	}
+
 	/// <summary>
 	/// <see cref="IO.Path.Combine"/> but params.
 	/// </summary>
 	/// <param name="parts"></param>
 	/// <returns></returns>
 	public static string CombinePath(params string[] parts)
-		=> parts.Aggregate(IO.Path.Combine);
+	{
+		return parts.Aggregate(IO.Path.Combine);
+	}
+
 	/// <summary>
 	/// Current RainWorld instance. Uses Unity lookup, may be slow.
 	/// </summary>
@@ -480,7 +519,10 @@ public static class Utils
 	/// <param name="t"></param>
 	/// <returns></returns>
 	public static CreatureTemplate GetCreatureTemplate(CreatureTemplate.Type t)
-		=> StaticWorld.creatureTemplates[(int)t];
+	{
+		return StaticWorld.creatureTemplates[(int)t];
+	}
+
 	/// <summary>
 	/// Finds specified subprocess in ProcessManager (looks at both mainloop and side processes).
 	/// </summary>
@@ -523,79 +565,10 @@ public static class Utils
 		casm ??= Assembly.GetExecutingAssembly();
 		try
 		{
-			var bf = ResourceBytes(resname, casm);
+			byte[]? bf = ResourceBytes(resname, casm);
 			return bf is null ? null : enc.GetString(bf);
 		}
 		catch (Exception ee) { plog.LogError($"Error getting ER: {ee}"); return null; }
-	}
-	/// <summary>
-	/// Replaces ValueTuple with some semblance of named field functionality. Names are used when comparing!
-	/// </summary>
-	/// <typeparam name="T1">Type of left item</typeparam>
-	/// <typeparam name="T2">Type of right item</typeparam>
-	/// <param name="a">Left item</param>
-	/// <param name="b">Right item</param>
-	/// <param name="name">Name of the instance</param>
-	/// <param name="nameA">Name of the left item</param>
-	/// <param name="nameB">Name of the right item</param>
-	public record VT<T1, T2>(
-		T1 a,
-		T2 b,
-		string name,
-		string nameA,
-		string nameB)
-	{
-		/// <summary>
-		/// Creates a new instance, using default names.
-		/// </summary>
-		/// <param name="_a">Left item</param>
-		/// <param name="_b">Right item</param>
-		public VT(T1 _a, T2 _b) : this(_a, _b, defName ?? "VT", defAName ?? "a", defBName ?? "b")
-		{
-
-		}
-		/// <inheritdoc/>
-		public override string ToString()
-			=> $"{name} {{ {nameA} = {a}, {nameB} = {b} }}";
-		/// <summary>
-		/// Default name for instances. "VT" if null
-		/// </summary>
-		public static string? defName { get; private set; }
-		/// <summary>
-		/// Default name for left items. "a" if null
-		/// </summary>
-		public static string? defAName { get; private set; }
-		/// <summary>
-		/// Default name for right items. "b" if null
-		/// </summary>
-		public static string? defBName { get; private set; }
-		/// <summary>
-		/// Use this as a shorthand for creating several instances with similar names. Not thread safe (but that's okay because basically nothing in RW is)
-		/// </summary>
-		public struct Names : IDisposable
-		{
-			/// <summary>
-			/// Sets name defaults to specified values.
-			/// </summary>
-			/// <param name="defname">default instance name</param>
-			/// <param name="defaname">default left item name</param>
-			/// <param name="defbname">default right item name</param>
-			public Names(string defname, string defaname, string defbname)
-			{
-				defName = defname;
-				defAName = defaname;
-				defBName = defbname;
-			}
-			/// <summary>
-			/// Resets the static default names.
-			/// </summary>
-			public void Dispose()
-			{
-				defName = null;
-				defAName = null;
-				defBName = null;
-			}
-		}
 	}
 	/// <summary>
 	/// Deconstructs a KeyValuePair.
@@ -624,169 +597,6 @@ public static class Utils
 	{
 		if (item is not null) throw new InvalidOperationException($"{name} is not null");
 	}
-	/// <summary>
-	/// A byref list.
-	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	public class RefList<T> : IEnumerable
-	{
-		/// <summary>
-		/// Constructs a new instance with default capacity.
-		/// </summary>
-		public RefList()
-		{
-			_arr = new T[DEFAULT_CAPACITY];
-			len = 0;
-		}
-		/// <summary>
-		/// Default capacity of a list.
-		/// </summary>
-		public const int DEFAULT_CAPACITY = 16;
-		private T?[] _arr;
-		private int len;
-		/// <summary>
-		/// Number of items the instance can contain without needing to resize.
-		/// </summary>
-		public int Capacity => _arr.Length;
-		private void _EnsureCapacity(int l)
-		{
-			if (l > Capacity)
-			{
-				Array.Resize(ref _arr, Capacity * 2);
-			}
-		}
-		/// <summary>
-		/// Returns a reference for item under specified index.
-		/// </summary>
-		/// <param name="index"></param>
-		/// <returns></returns>
-		public ref T? this[int index] { get => ref _arr[index]; }
-		/// <summary>
-		/// Returns current number of elements.
-		/// </summary>
-		public int Count => len;
-		/// <summary>
-		/// Appends an item, resizing if necessary.
-		/// </summary>
-		/// <param name="item"></param>
-		public void Add(T item)
-		{
-			_EnsureCapacity(len + 1);
-			_arr[len] = item;
-			len++;
-		}
-		/// <summary>
-		/// Resets to default capacity and erases all elements.
-		/// </summary>
-		public void Clear()
-		{
-			Array.Resize(ref _arr, DEFAULT_CAPACITY);
-			len = 0;
-			for (int i = 0; i < Capacity; i++)
-			{
-				_arr[i] = default;
-			}
-		}
-		/// <summary>
-		/// Checks if a given item is in the list.
-		/// </summary>
-		public bool Contains(T item)
-			=> _arr.Contains(item);
-		/// <summary>
-		/// Copies all elements starting with <paramref name="arrayIndex"/> to specified <paramref name="array"/>.
-		/// </summary>
-		public void CopyTo(T?[] array, int arrayIndex)
-		{
-			_arr.CopyTo(array, arrayIndex);
-		}
-		/// <summary>
-		/// Returns an object to enumerate this list.
-		/// </summary>
-		/// <returns></returns>
-		public RefEn GetEnumerator()
-			=> new(this);
-		/// <returns>Position of given item in list; negative if not found.</returns>
-		public int IndexOf(T? item)
-		{
-			for (int i = 0; i < len; i++)
-			{
-				if (Equals(_arr[i], item)) return i;
-			}
-			return -1;
-		}
-		/// <summary>
-		/// Inserts an item at position.
-		/// </summary>
-		/// <param name="index"></param>
-		/// <param name="item"></param>
-		public void Insert(int index, T? item)
-		{
-			_EnsureCapacity(len + 1);
-			Array.Copy(_arr, index, _arr, index + 1, len - index);
-			_arr[index] = item;
-		}
-		/// <summary>
-		/// Removes a specified item.
-		/// </summary>
-		/// <param name="item"></param>
-		/// <returns></returns>
-		public bool Remove(T? item)
-		{
-			int index = IndexOf(item);
-			if (index < 0 || index >= len) return false;
-			RemoveAt(index);
-			return true;
-		}
-		/// <summary>
-		/// Removes an item at given index.
-		/// </summary>
-		/// <param name="index"></param>
-		public bool RemoveAt(int index)
-		{
-			if (index < 0 || index >= len) return false;
-			Array.Copy(_arr, index + 1, _arr, index, len - index);
-			len--;
-			return true;
-		}
-		IEnumerator IEnumerable.GetEnumerator() 
-			=> GetEnumerator();
-		/// <summary>
-		/// Enumerator to cycle list by ref
-		/// </summary>
-		public struct RefEn : IEnumerator
-		{
-			private readonly RefList<T> _owner;
-			private int index = -1;
-			/// <summary>
-			/// Creates an instance wrapping a given reflist.
-			/// </summary>
-			/// <param name="owner"></param>
-			public RefEn(RefList<T> owner)
-			{
-				_owner = owner;
-			}
-			/// <summary>
-			/// Current item.
-			/// </summary>
-			public ref T? Current => ref _owner[index];
-			object? IEnumerator.Current => Current;
-			/// <summary>
-			/// Advances enumeration; returns whether you can continue.
-			/// </summary>
-			public bool MoveNext()
-			{
-				index++;
-				return index < _owner.Count;
-			}
-			/// <summary>
-			/// Resets to start enumeration again.
-			/// </summary>
-			public void Reset()
-			{
-				index = -1;
-			}
-		}
-	}
 #if ATMO //atmo-specific things
 	internal static void DbgVerbose(
 		this LOG.ManualLogSource logger,
@@ -806,7 +616,7 @@ public static class Utils
 		if (realup_times.Count == realup_times.Capacity)
 		{
 			TimeSpan total = new(0);
-			for (var i = 0; i < realup_times.Count; i++)
+			for (int i = 0; i < realup_times.Count; i++)
 			{
 				total += realup_times[i];
 			}
@@ -854,7 +664,10 @@ public static class Utils
 		});
 	}
 	private static string SlugName_WrapSB(int slugNumber)
-		=> SlugBase.PlayerManager.GetCustomPlayer(slugNumber)?.Name ?? SlugNotFound;
+	{
+		return SlugBase.PlayerManager.GetCustomPlayer(slugNumber)?.Name ?? SlugNotFound;
+	}
+
 	internal static readonly Dictionary<char, char> escapes = new()
 	{
 		{ 'q', '\'' },
@@ -900,7 +713,6 @@ public static class Utils
 		}
 		return res.ToString();
 	}
-
 #endif
 	#endregion
 }

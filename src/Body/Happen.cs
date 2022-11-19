@@ -210,7 +210,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	internal void CoreUpdate()
 	{
 		sw.Start();
-		for (var tin = 0; tin < triggers.Length; tin++)
+		for (int tin = 0; tin < triggers.Length; tin++)
 		{
 			try
 			{
@@ -279,7 +279,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			evaltotal = 0d;
 		if (perf.samples_realup is not 0)
 		{
-			foreach (var rec in realup_readings) realuptotal += rec;
+			foreach (double rec in realup_readings) realuptotal += rec;
 			perf.avg_realup = realuptotal / realup_readings.Count;
 		}
 		else
@@ -288,7 +288,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		}
 		if (perf.samples_eval is not 0)
 		{
-			foreach (var rec in haeval_readings) evaltotal += rec;
+			foreach (double rec in haeval_readings) evaltotal += rec;
 			perf.avg_eval = evaltotal / haeval_readings.Count;
 		}
 		else
