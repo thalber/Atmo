@@ -17,7 +17,7 @@ public static partial class VarRegistry
 		plog.DbgVerbose($"Creating format string from \"{text}\"...");
 		List<PredicateInlay.Token> tokens = PredicateInlay.Tokenize(text);
 		string format = tokens.AtOr(0, new(PredicateInlay.TokenType.Literal, string.Empty)).val;
-		IEnumerable<Arg>? values = tokens.Skip(1).Select(x => GetVar(x.val, saveslot, character));
+		IEnumerable<Arg>? values = tokens.Select(x => GetVar(x.val, saveslot, character));
 		return new Arg(new ReadOnlyEventful()
 		{
 			getStr = () => string.Format(format, values
