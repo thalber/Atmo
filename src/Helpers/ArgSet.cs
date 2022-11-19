@@ -43,7 +43,7 @@ public sealed class ArgSet : IList<Arg>
 	/// <para>
 	/// This indexer can be used to easily fetch an argument that may have variant names, for example:
 	/// <code>
-	///		<see cref="ArgSet"/> set = myStringArray;
+	///		ArgSet set = myStringArray;
 	///		Arg
 	///		  cooldown = set["cd", "cooldown"] ?? 80,
 	///		  power = set["pow", "power"] ?? 0.3f;

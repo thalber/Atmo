@@ -45,6 +45,6 @@ WHERE: Inside Outside
 // Multiple actions can be selected. This one shakes the screen, and also posts a message to the log once activated.
 WHAT: rumble 0.5 log 'init=rumble start!'
 
-// Some behaviours allow you to make happens each other. This happen will activate 5 seconds after the first one
+// Some behaviours allow you to make happens affect each other. This happen will activate 5 seconds after the first one
 WHEN: AfterOther 'ExampleHappen' 5
 END HAPPEN

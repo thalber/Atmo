@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Atmo.Helpers;
 /// <summary>
-/// Objects that can be used as payloads for <see cref="Arg"/>. Don't forget to add <see cref="object.ToString"/> override! Implement this, or use <see cref="ReadOnlyEventful"/> if you want a basic read-only shorthand.
+/// Objects that can be used as payloads for <see cref="Arg"/>. Don't forget to add <see cref="object.ToString"/> override! Implement this, or use <see cref="GetOnlyCallbackPayload"/> and <see cref="CallbackPayload"/> if you want callback-driven shorthands.
 /// </summary>
 public interface IArgPayload
 {
@@ -34,7 +34,7 @@ public interface IArgPayload
 	/// </summary>
 	public void GetEnum<T>(out T? value) where T : Enum;
 	/// <summary>
-	/// Try setting instance to contain given enum.
+	/// Tries setting instance to contain given enum.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
 	/// <param name="value"></param>

@@ -18,7 +18,7 @@ public static partial class VarRegistry
 		List<PredicateInlay.Token> tokens = PredicateInlay.Tokenize(text);
 		string format = tokens.AtOr(0, new(PredicateInlay.TokenType.Literal, string.Empty)).val;
 		IEnumerable<Arg>? values = tokens.Select(x => GetVar(x.val, saveslot, character));
-		return new Arg(new ReadOnlyEventful()
+		return new Arg(new GetOnlyCallbackPayload()
 		{
 			getStr = () => string.Format(format, values
 			.Select(x => x.Str)
@@ -40,11 +40,11 @@ public static partial class VarRegistry
 			{
 				SpVar.NONE => 0,
 				SpVar.version => Ver,
-				SpVar.time => new Arg(new ReadOnlyEventful()
+				SpVar.time => new Arg(new GetOnlyCallbackPayload()
 				{
 					getStr = () => DateTime.Now.ToString()
 				}),
-				SpVar.utctime => new Arg(new ReadOnlyEventful()
+				SpVar.utctime => new Arg(new GetOnlyCallbackPayload()
 				{
 					getStr = () => DateTime.UtcNow.ToString()
 				}),
@@ -52,11 +52,11 @@ public static partial class VarRegistry
 				SpVar.root => RootFolderDirectory(),
 				SpVar.realm => FindAssembliesByName("Realm").Count() > 0, //check if right
 				SpVar.os => Environment.OSVersion.Platform.ToString(),
-				SpVar.memused => new Arg(new ReadOnlyEventful()
+				SpVar.memused => new Arg(new GetOnlyCallbackPayload()
 				{
 					getStr = () => GC.GetTotalMemory(false).ToString()
 				}),
-				SpVar.memtotal => new Arg(new ReadOnlyEventful()
+				SpVar.memtotal => new Arg(new GetOnlyCallbackPayload()
 				{
 					getStr = () => DBG.Process.GetCurrentProcess().PrivateMemorySize64.ToString()
 				}),

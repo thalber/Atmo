@@ -2,6 +2,7 @@
 using System.Text;
 using UnityEngine;
 using static UnityEngine.Mathf;
+
 namespace Atmo.Helpers;
 /// <summary>
 /// contains general purpose utility methods
@@ -537,7 +538,7 @@ public static class Utils
 	/// <param name="name">Name of the instance</param>
 	/// <param name="nameA">Name of the left item</param>
 	/// <param name="nameB">Name of the right item</param>
-	public record struct VT<T1, T2>(
+	public record VT<T1, T2>(
 		T1 a,
 		T2 b,
 		string name,
@@ -754,7 +755,7 @@ public static class Utils
 		/// </summary>
 		public struct RefEn : IEnumerator
 		{
-			private RefList<T> _owner;
+			private readonly RefList<T> _owner;
 			private int index = -1;
 			/// <summary>
 			/// Creates an instance wrapping a given reflist.
@@ -898,7 +899,6 @@ public static class Utils
 			}
 		}
 		return res.ToString();
-
 	}
 
 #endif
