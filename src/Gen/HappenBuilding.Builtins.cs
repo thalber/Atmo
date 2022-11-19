@@ -455,11 +455,6 @@ public static partial class HappenBuilding
 			newdle.soundStillPlaying = true;
 			soundloops.Set(rm.abstractRoom.name, newdle);
 		};
-		//ha.On_AbstUpdate += (ar, t) =>
-		//{
-		//	//clean up hashes from abstractized rooms
-		//	if (soundloops.TryGetValue(ar.name, out var here) && ar.realizedRoom is null) soundloops.Remove(ar.name);//here.Clear();
-		//};
 		ha.On_CoreUpdate += (rwg) =>
 		{
 			if (ha.Active) timeAlive++;
