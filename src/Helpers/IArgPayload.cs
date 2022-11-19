@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Atmo.Helpers;
 /// <summary>
-/// Objects that can be used as payloads for <see cref="Arg"/>. Don't forget to add <see cref="object.ToString"/> override!
+/// Objects that can be used as payloads for <see cref="Arg"/>. Don't forget to add <see cref="object.ToString"/> override! Implement this, or use <see cref="ReadOnlyEventful"/> if you want a basic read-only shorthand.
 /// </summary>
 public interface IArgPayload
 {
