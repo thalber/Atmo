@@ -21,7 +21,7 @@ public static partial class VarRegistry
 		return new Arg(new ReadOnlyEventful()
 		{
 			getStr = () => string.Format(format, values
-			.Select(x => x.ToString())
+			.Select(x => x.Str)
 			.ToArray()),
 		});
 	}
