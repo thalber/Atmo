@@ -161,8 +161,8 @@ public sealed partial class Atmod : BaseUnityPlugin
 			//maybe put something here
 			setupRan = true;
 		}
-		VarRegistry.BuiltinVars[VarRegistry.BIVar.time].Str = DateTime.Now.ToString();
-		VarRegistry.BuiltinVars[VarRegistry.BIVar.utctime].Str = DateTime.UtcNow.ToString();
+		VarRegistry.SpecialVars[VarRegistry.SpVar.time].Str = DateTime.Now.ToString();
+		VarRegistry.SpecialVars[VarRegistry.SpVar.utctime].Str = DateTime.UtcNow.ToString();
 		
 		if (RW is null || CurrentSet is null) return;
 		if (RW.processManager.currentMainLoop is RainWorldGame) return;

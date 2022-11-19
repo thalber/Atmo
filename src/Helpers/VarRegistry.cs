@@ -28,6 +28,7 @@ public static partial class VarRegistry
 	internal const string PREFIX_VOLATILE = "v_";
 	internal const string PREFIX_GLOBAL = "g_";
 	internal const string PREFIX_PERSISTENT = "p_";
+	//internal const string PREFIX_FMT = "$FMT_";
 	internal static Arg Defarg => string.Empty;
 	/// <summary>
 	/// Var sets per save. Key is saveslot number + character index.
@@ -75,7 +76,7 @@ public static partial class VarRegistry
 		plog.LogDebug("Init VarRegistry hooks");
 		try
 		{
-			FillBuiltins();
+			FillSpecials();
 
 			On.RainCycle.ctor += TrackCycleLength;
 
@@ -103,8 +104,8 @@ public static partial class VarRegistry
 		float minutes)
 	{
 		orig(self, world, minutes);
-		BuiltinVars[BIVar.cycletime].F32 = minutes * 60f;
-		plog.DbgVerbose($"Setting $cycletime to {BuiltinVars[BIVar.cycletime]}");
+		SpecialVars[SpVar.cycletime].F32 = minutes * 60f;
+		plog.DbgVerbose($"Setting $cycletime to {SpecialVars[SpVar.cycletime]}");
 	}
 
 	private static void WipeSavestate(
@@ -303,7 +304,11 @@ public static partial class VarRegistry
 	{
 		BangBang(name, nameof(name));
 		Arg? res;
-		if ((res = GetBuiltin(name)) is not null)
+		if ((res = GetFmt(name, saveslot, character)) is not null)
+		{
+			return res;
+		}
+		if ((res = GetSpecial(name)) is not null)
 		{
 			return res;
 		}

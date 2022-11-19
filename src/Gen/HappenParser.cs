@@ -15,28 +15,20 @@ internal class HappenParser
 	#endregion statfields
 	private readonly Dictionary<string, GroupContents> allGroupContents = new();
 	private readonly List<HappenConfig> retrievedHappens = new();
-
 	private readonly string[] allLines;
 	private int index = 0;
 	public bool done => aborted || index >= allLines.Length;
 	private bool aborted;
-	private readonly IO.FileInfo file;
-	private readonly HappenSet set;
-	private readonly RainWorldGame rwg;
-	//private IO.StreamReader lines;
 	private string cline;
 	private ParsePhase phase = ParsePhase.None;
 	private HappenConfig cHapp;
 	private string? cGroupName = null;
 	private GroupContents cGroupContents = new();
 	#endregion fields
-	internal HappenParser(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
+	internal HappenParser(IO.FileInfo file)
 	{
 		plog.DbgVerbose($"HappenParse: booting for file: {file.FullName}");
 		allLines = IO.File.ReadAllLines(file.FullName, Encoding.UTF8);
-		this.file = file;
-		this.set = set;
-		this.rwg = rwg;
 		cline = string.Empty;
 	}
 	internal void Advance()
@@ -75,7 +67,6 @@ internal class HappenParser
 			case ParsePhase.Happen:
 			{
 				ParseHappen();
-				//ParseHappen(cl, ref currentHappen, retrievedHappens, ref phase);
 			}
 			break;
 			default:
@@ -293,7 +284,10 @@ internal class HappenParser
 	#endregion
 	internal static void Parse(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
 	{
-		HappenParser p = new(file, set, rwg);
+		BangBang(file, "file");
+		BangBang(set, "set");
+		BangBang(rwg, "rwg");
+		HappenParser p = new(file);
 		for (var i = 0; i < p.allLines.Length; i++)
 		{
 			p.Advance();

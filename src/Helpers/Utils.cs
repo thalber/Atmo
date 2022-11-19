@@ -616,7 +616,13 @@ public static class Utils
 	{
 		if (item is null) throw new ArgumentNullException(name);
 	}
-
+	/// <summary>
+	/// Throws if item is not null.
+	/// </summary>
+	public static void AntiBang(object? item, string name)
+	{
+		if (item is not null) throw new InvalidOperationException($"{name} is not null");
+	}
 	/// <summary>
 	/// A byref list.
 	/// </summary>
@@ -780,8 +786,6 @@ public static class Utils
 			}
 		}
 	}
-
-
 #if ATMO //atmo-specific things
 	internal static void DbgVerbose(
 		this LOG.ManualLogSource logger,

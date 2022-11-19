@@ -387,6 +387,9 @@ public static partial class HappenBuilding
 	}
 	#endregion
 	#region actions
+#warning contributor notice: actions
+	//Add your action registration code here.
+	//Do not remove this warning directive.
 	private static void RegisterBuiltinActions()
 	{
 		AddNamedAction(new[] { "playergrav", "playergravity" }, Make_Playergrav);
@@ -401,12 +404,7 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "raintimer", "cycleclock" }, Make_SetRainTimer);
 		AddNamedAction(new[] { "palette", "changepalette" }, Make_ChangePalette);
 		AddNamedAction(new[] { "setvar", "setvariable" }, Make_SetVar);
-		//AddNamedAction(new[] { "music", "playmusic" }, Make_PlayMusic);
-		//AddNamedAction()
 	}
-#warning contributor notice: actions
-	//Add your action registration code here.
-	//Do not remove this warning directive.
 	private static void Make_SoundLoop(Happen ha, ArgSet args)
 	{
 		//does not work in HI (???). does not automatically get discontinued when leaving an affected room.
@@ -690,7 +688,6 @@ public static partial class HappenBuilding
 		};
 	}
 	#endregion
-
 	private static void NotifyArgsMissing(Delegate source, string arg) 
 		=> plog.LogWarning($"{nameof(HappenBuilding)}.{source.Method.Name}: Missing argument: {arg}");
 }

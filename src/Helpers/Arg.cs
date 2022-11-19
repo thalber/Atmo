@@ -37,17 +37,19 @@
 /// </list>
 /// </para>
 /// </summary>
-public sealed class Arg : IEquatable<Arg>, IConvertible
+public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 {
 	private bool _skipparse = false;
 	private bool _readonly = false;
 	private ArgType _dt = ArgType.STR;
-	private Arg? _var;
+	#region backing
+	private IArgPayload? _payload;
 	private string _raw;
 	private string _str;
 	private int _i32;
 	private float _f32;
 	private bool _bool;
+	#endregion backing
 	/// <summary>
 	/// Parses contents of <see cref="_str"/> to fill other fields. Sets <see cref="DataType"/> to <see cref="ArgType.STR"/>.
 	/// </summary>
@@ -67,12 +69,15 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 	/// </summary>
 	public string Raw
 	{
-		get => _var?.Raw ?? _raw;
+		get
+		{
+			return _payload?.Raw ?? _raw;
+		}
 		set
 		{
 			if (_readonly) return;
 			if (value is null) throw new ArgumentNullException(nameof(value));
-			if (_var is not null) { _var.Raw = value; return; }
+			if (_payload is not null) { _payload.Raw = value; return; }
 			_raw = value;
 			Name = null;
 			var splPoint = _raw.IndexOf('=');
@@ -92,7 +97,7 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 					parseVal(value);
 					return;
 				}
-				_var = VarRegistry.GetVar(value.Substring(1), ss.Value, ch ?? -1);
+				_payload = VarRegistry.GetVar(value.Substring(1), ss.Value, ch ?? -1);
 				//DataType = ArgType.VAR;
 			}
 			else
@@ -114,11 +119,14 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 	/// </summary>
 	public string Str
 	{
-		get => _var?.Str ?? _str;
+		get
+		{
+			return _payload?.Str ?? _str;
+		}
 		set
 		{
 			if (_readonly) return;
-			if (_var is not null) { _var.Str = value; }
+			if (_payload is not null) { _payload.Str = value; }
 			else
 			{
 				_str = value;
@@ -132,11 +140,15 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 	/// </summary>
 	public int I32
 	{
-		get => _var?.I32 ?? _i32;
+		get
+		{
+			return _payload?.I32 ?? _i32;
+		}
 		set
 		{
+
 			if (_readonly) return;
-			if (_var is not null) { _var.I32 = value; return; }
+			if (_payload is not null) { _payload.I32 = value; return; }
 			_skipparse = true;
 			_i32 = value;
 			_f32 = value;
@@ -150,11 +162,14 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 	/// </summary>
 	public float F32
 	{
-		get => _var?._f32 ?? _f32;
+		get
+		{
+			return _payload?.F32 ?? _f32;
+		}
 		set
 		{
 			if (_readonly) return;
-			if (_var is not null) { _var.F32 = value; return; }
+			if (_payload is not null) { _payload.F32 = value; return; }
 			_f32 = value;
 			_i32 = (value is float.PositiveInfinity or float.NegativeInfinity or float.NaN) ? 0 : (int)value;
 			_bool = value is not 0f;
@@ -168,11 +183,14 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 	/// </summary>
 	public bool Bool
 	{
-		get => _var?.Bool ?? _bool;
+		get
+		{
+			return _payload?.Bool ?? _bool;
+		}
 		set
 		{
 			if (_readonly) return;
-			if (_var is not null) { _var.Bool = value; return; }
+			if (_payload is not null) { _payload.Bool = value; return; }
 			_bool = value;
 			_i32 = value ? 1 : 0;
 			_f32 = value ? 1 : 0;
@@ -188,9 +206,9 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 	public void GetEnum<T>(out T? value)
 		where T : Enum
 	{
-		if (_var is not null)
+		if (_payload is not null)
 		{
-			_var.GetEnum(out value);
+			_payload.GetEnum(out value);
 			return;
 		}
 		if (TryParseEnum(Str, out value)) { return; }
@@ -205,7 +223,7 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 		where T : Enum
 	{
 		if (_readonly) return;
-		if (_var is not null) { _var.SetEnum(value); return; }
+		if (_payload is not null) { _payload.SetEnum(value); return; }
 		_str = value.ToString();
 		I32 = (int)Convert.ChangeType(value, typeof(int));
 	}
@@ -258,13 +276,16 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 	/// Indicates whether this instance is linked to a variable. If yes, all property accessors will lead to associated variable, and the instance's internal state will be ignored.
 	/// </summary>
 	// internally (inside properties) replaced with individual checks to eliminate compiler warnings.
-	public bool IsVar => _var is not null;
+	public bool IsVar => _payload is not null;
 	/// <summary>
 	/// Indicates what data type was this instance's contents filled from.
 	/// </summary>
 	public ArgType DataType
 	{
-		get => _var?.DataType ?? _dt;
+		get
+		{
+			return _payload?.DataType ?? _dt;
+		}
 		private set
 		{
 			if (IsVar) return;
@@ -291,6 +312,7 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 				ArgType.STR => other.Str == Str,
 				ArgType.ENUM => other.I32 == I32 || other.Str == Str,
 				ArgType.BOOL => other.Bool == Bool,
+				ArgType.OTHER => false,
 				_ => throw new InvalidOperationException("Impossible data type value!"),
 			};
 		}
@@ -307,7 +329,7 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 		if (IsVar)
 		{
 
-			sb.Append($"(var){{{_var}}}");
+			sb.Append($"(var){{{_payload}}}");
 			return sb.ToString();
 		}
 		sb.Append(string.Format("{{ {0} : {1} }}", DataType, DataType switch
@@ -392,10 +414,10 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 	/// </summary>
 	/// <param name="val">Another arg instance that serves as a variable. Must not be null.</param>
 	/// <param name="name">Name of the new instance.</param>
-	public Arg(Arg val, string? name = null)
+	public Arg(IArgPayload val, string? name = null)
 	{
 		BangBang(val, nameof(val));
-		_var = val;
+		_payload = val;
 		Name = name;
 		_raw = _str = string.Empty;
 	}
@@ -442,32 +464,4 @@ public sealed class Arg : IEquatable<Arg>, IConvertible
 	/// <param name="src"></param>
 	public static implicit operator Arg(bool src) => new(src);
 	#endregion;
-	#region nested
-	/// <summary>
-	/// Displays what kind of data was originally provided to the Arg object.
-	/// </summary>
-	public enum ArgType
-	{
-		/// <summary>
-		/// Value was originally assigned as float.
-		/// </summary>
-		F32,
-		/// <summary>
-		/// Value was originally assigned as int.
-		/// </summary>
-		I32,
-		/// <summary>
-		/// Value was originally assigned as string.
-		/// </summary>
-		STR,
-		/// <summary>
-		/// Value was originally assigned as an enum.
-		/// </summary>
-		ENUM,
-		/// <summary>
-		/// Value was originally assigned as boolean.
-		/// </summary>
-		BOOL,
-	}
-	#endregion
 }
