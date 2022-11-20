@@ -415,6 +415,7 @@ public static partial class HappenBuilding
 	}
 	private static void Make_Tempglow(Happen ha, ArgSet args)
 	{
+		//todo: make it turn off!
 		if (args.Count < 1)
 		{
 			NotifyArgsMissing(Make_Tempglow, "color");
@@ -465,19 +466,25 @@ public static partial class HappenBuilding
 			NotifyArgsMissing(Make_Fling, "force");
 		}
 		Arg force = args[0],
-			filter = args.AtOr(1, ".+");
-		plog.DbgVerbose(args.Select(x => x.ToString()).Stitch());
-		plog.DbgVerbose($"Fling force: {force}, {force.Vec}, {force.Str == ("10;10")}");
+			filter = args.AtOr(1, ".*");
 		ha.On_RealUpdate += (rm) =>
 		{
 			foreach (UpdatableAndDeletable? uad in rm.updateList)
 			{
 				if (uad is PhysicalObject obj)
 				{
-					string identifier = (obj is Creature c)
-					? c.abstractCreature.creatureTemplate.type.ToString()
-					: obj.abstractPhysicalObject.type.ToString();
-					if (!TXT.Regex.IsMatch(identifier, filter.Str)) continue;
+					string objtype = obj.abstractPhysicalObject.type.ToString();
+					string? crittype = (obj as Creature)?.Template.type.ToString();
+					if 
+					(
+					TXT.Regex.IsMatch(objtype, filter.Str) 
+					|| 
+					(crittype is not null && TXT.Regex.IsMatch(crittype, filter.Str))
+					)
+					{
+						continue;
+					}
+					
 					foreach (BodyChunk ch in obj.bodyChunks)
 					{
 						ch.vel += (Vector2)force.Vec;
@@ -710,8 +717,8 @@ public static partial class HappenBuilding
 	}
 	private static void Make_Rumble(Happen ha, ArgSet args)
 	{
-		Arg intensity = args["int", "intensity"]?.F32 ?? 1f,
-			shake = args["shake"]?.F32 ?? 0.5f;
+		Arg intensity = args["int", "intensity"] ?? 1f,
+			shake = args["shake"] ?? 0.5f;
 		ha.On_RealUpdate += (room) =>
 		{
 			room.ScreenMovement(null, RND.insideUnitCircle * intensity.F32, shake.F32);
