@@ -1,6 +1,6 @@
 # Builtin list
 
-This document describes all actions and triggers you can use out of the box. Most of them can receive arguments, and to indicate how they are expected to be used, i mark them in tables as following:
+This document describes all actions and triggers you can use out of the box. Most of them can receive arguments, and to indicate how they are expected to be used, I mark them in tables as following:
 
 | Syntax	| Description	|
 | ---		| ---			|
@@ -28,14 +28,14 @@ It is encouraged that whoever adds new behaviours, documents argument use in the
 | flicker | `1:minOn?=5`, `2:maxOn?=5`, `3:minOff?=5`, `4:maxOff?=5`, `5:startEnabled?=true` | Flickers on and off periodically. Each time, stays on for a random number of seconds betweem `minOn` and `maxOn`, then turns off for a random number of seconds between `minOff` and `maxOff`, and repeats this endlessly. `startEnabled` sets whether the trigger should start active. | `flicker 5 7 20 25 yes` - uptime 5-7 seconds, downtime 20-25 seconds, starts enabled |
 | karma, onkarma | `1..:levels...` | Active when player is on one of provided karma `levels`. Levels can be given as numbers (1, 2, 10), and optionally in form of `3-7` (accepts all values between 3 and 7, both ends included. this syntax is action-specific) | `karma 10` - activates on max karma, `karma 1-5 8` - activates on karma 1, 2, 3, 4, 5 and 8 |
 | visit, playervisit, playervisited | `1..:rooms...` | Activates once any player enters one of the provided rooms. | `visit 'SU_C04' 'GATE_SU_HU'` - activates after player visits `SU_C04` or the SU-HI gate |
-| fry, fryafter | `1:limit?=10`, `2:cooldown?=15` | On by default, but if the happen this trigger is attached to stays active for `limit` consecutive seconds, fries itself for `cooldown` seconds. | `fry 5 25` - can tolerate 5 seconds of uptime, fries for 25 seconds |
+| fry, fryafter | `1:limit?=10`, `2:cooldown?=15` | On by default, but if the happen this trigger is attached to stays active for `limit` consecutive seconds, disables itself for `cooldown` seconds. | `fry 5 25` - can tolerate 5 seconds of uptime, disables itself for 25 seconds |
 | after, afterother | `1:name`, `2:delay` | Looks up a given happen by `name`, and repeats its state, with a set `delay` in seconds. | `after happen2 10` |
 | delay, ondelay | `1:delay` | Activates after a specified `delay` in seconds. | `delay 60` - starts after a minute |
 | delay, ondelay | `1:minDelay`, `2:maxDelay` | Activates after a delay randomly picked between `minDelay` and `maxDelay`. | `delay 60 '$cycletime'` (this picks a delay somewhere between 1 minute after starting and the end of the cycle.) |
 | playercount | `1..:counts...` | Active if player `counts` contains current player count. | `playercount 1 2 4` - active if session has 1, 2 or 4 players. |
 | difficulty, ondifficulty, campaign | `1..:difficulties...` | Active on given `difficulties`. | `difficulty 'Survivor'` - active for survivor, `difficulty 0 1` - active for survivor and monk |
-| vareq, varequal, variableeq | `1:varname`, `2:value` | Active is variable `varname`'s string value is equal to `value`. NOTE: make sure you write your target variable's name without a dollar sign! | `vareq 'OS' 'Unix'` - active if user is on a Unix machine |
-| varne, varnot, varnotequal | `1:varname`, `2:value` | Active if variable `varname`'s string value is not equal to `value`. NOTE: make sure you write your target variable's name without a dollar sign! | `varne 'OS' 'Unix'` - active is user is not on Unix |
+| vareq, varequal, variableeq | `1:varname`, `2:value` | Active if variable `varname`'s string value is equal to `value`. NOTE: make sure you write your target variable's name without a dollar sign! | `vareq 'OS' 'Unix'` - active if user is on a Unix machine |
+| varne, varnot, varnotequal | `1:varname`, `2:value` | Active if variable `varname`'s string value is not equal to `value`. NOTE: make sure you write your target variable's name without a dollar sign! | `varne 'OS' 'Unix'` - active if user is not on Unix |
 | varmatch, variablematch, varregex | `1:varname`, `2:pattern` | Active if regular expression `pattern` matches `varname`. NOTE: using this directly from atmo files may occasionally be problematic, since string literals in .atmo files can't directly contain singlequotes. You can use `\q` to escape a singlequote, but escapes are currently unfinished. | `varmatch 'OS' 'Win.+'` - active if user is on any Windows platform |
 
 ## List of default actions
