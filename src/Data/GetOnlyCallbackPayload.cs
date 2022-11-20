@@ -24,7 +24,7 @@ public struct GetOnlyCallbackPayload : IArgPayload
 	/// <summary>
 	/// Callback to get vector value.
 	/// </summary>
-	public Func<Vector3>? getVec;
+	public Func<Vector4>? getVec;
 	/// <summary>
 	/// Operation is not supported.
 	/// </summary>
@@ -68,7 +68,7 @@ public struct GetOnlyCallbackPayload : IArgPayload
 	/// <summary>
 	/// Vector value of the instance. Read-only.
 	/// </summary>
-	public Vector3 Vec
+	public Vector4 Vec
 	{
 		get => getVec?.Invoke() ?? default;
 		set { }

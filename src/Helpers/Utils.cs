@@ -472,7 +472,6 @@ public static partial class Utils
 	{
 		return $"{x}, {y}";
 	}
-
 	/// <summary>
 	/// Stitches a given collection with, returns an empty string if empty.
 	/// </summary>
@@ -486,7 +485,6 @@ public static partial class Utils
 		BangBang(coll, nameof(coll));
 		return coll is null || coll.Count() is 0 ? string.Empty : coll.Aggregate(aggregator ?? JoinWithComma);
 	}
-
 	/// <summary>
 	/// Creates an <see cref="IntRect"/> from two corner points.
 	/// </summary>
@@ -495,9 +493,9 @@ public static partial class Utils
 	/// <returns></returns>
 	public static IntRect ConstructIR(IntVector2 p1, IntVector2 p2)
 	{
+		Vector4 vec = new Color();
 		return new(Min(p1.x, p2.x), Min(p1.y, p2.y), Max(p1.x, p2.x), Max(p1.y, p2.y));
 	}
-
 	/// <summary>
 	/// <see cref="IO.Path.Combine"/> but params.
 	/// </summary>
@@ -507,7 +505,6 @@ public static partial class Utils
 	{
 		return parts.Aggregate(IO.Path.Combine);
 	}
-
 	/// <summary>
 	/// Current RainWorld instance. Uses Unity lookup, may be slow.
 	/// </summary>
@@ -522,7 +519,6 @@ public static partial class Utils
 	{
 		return StaticWorld.creatureTemplates[(int)t];
 	}
-
 	/// <summary>
 	/// Finds specified subprocess in ProcessManager (looks at both mainloop and side processes).
 	/// </summary>
@@ -597,6 +593,11 @@ public static partial class Utils
 	{
 		if (item is not null) throw new InvalidOperationException($"{name} is not null");
 	}
+	/// <summary>
+	/// Creates a Color from a vector and makes sure its alpha is not zero.
+	/// </summary>
+	public static Color ToOpaqueCol(in this Vector4 vec)
+		=> vec.w is not 0f ? vec : new(vec.x, vec.y, vec.z, 1f);
 #if ATMO //atmo-specific things
 	//todo: default value breaks preloader. god.
 	internal static void DbgVerbose(

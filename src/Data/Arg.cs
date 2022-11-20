@@ -49,7 +49,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	private int _i32;
 	private float _f32;
 	private bool _bool;
-	private Vector3 _vec; //todo: add autoconverts
+	private Vector4 _vec; //todo: add autoconverts
 	#endregion backing
 	/// <summary>
 	/// Parses contents of <see cref="_str"/> to fill other fields. Sets <see cref="DataType"/> to <see cref="ArgType.STR"/>.
@@ -59,15 +59,14 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		//check vec parsn
 		string[] spl;
 		_vec = default;
-		Vector3 vecres = default;
+		Vector4 vecres = default;
 		bool vecparsed = false;
-		if ((spl = TXT.Regex.Split(_str, ";\\s*")).Length > 1)
+		if ((spl = TXT.Regex.Split(_str, ";\\s*")).Length is 2 or 3 or 4)
 		{
 			vecparsed = true;
 			for (int i = 0; i < spl.Length; i++)
 			{
 				if (!float.TryParse(spl[i], out float val)) vecparsed = false;
-				plog.DbgVerbose(val);
 				vecres[i] = val;
 			}
 		}
@@ -215,7 +214,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// <summary>
 	/// Vector value of the instance. Zeroed unless instance has been created from a vector or successfully parsed the vector from string.
 	/// </summary>
-	public Vector3 Vec
+	public Vector4 Vec
 	{
 		get
 			=> _payload?.Vec ?? _vec;
@@ -227,7 +226,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			_bool = _f32 != 0f;
 			_vec = value;
 			_skipparse = true;
-			Str = $"{value.x};{value.y};{value.z}";
+			Str = $"{value.x};{value.y};{value.z};{value.w}";
 			DataType = ArgType.VEC;
 		}
 	}

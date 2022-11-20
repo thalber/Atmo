@@ -24,23 +24,16 @@ public struct CallbackPayload : IArgPayload
 	/// <summary>
 	/// <see cref="Vec"/> property backing
 	/// </summary>
-	public FakeProp<Vector3> prop_Vec;
-	/// <summary>
-	/// <see cref="Vec2"/> property backing.
-	/// </summary>
+	public FakeProp<Vector4> prop_Vec;
 	/// <summary>
 	/// Creates a new instance with given prop backings.
 	/// </summary>
-	/// <param name="prop_I32"></param>
-	/// <param name="prop_F32"></param>
-	/// <param name="prop_Bool"></param>
-	/// <param name="prop_Str"></param>
 	public CallbackPayload(
 		FakeProp<int>? prop_I32 = null,
 		FakeProp<float>? prop_F32 = null,
 		FakeProp<bool>? prop_Bool = null,
 		FakeProp<string>? prop_Str = null,
-		FakeProp<Vector3>? prop_Vec = null)
+		FakeProp<Vector4>? prop_Vec = null)
 	{
 		this.prop_I32 = prop_I32 ?? new(null, null);
 		this.prop_F32 = prop_F32 ?? new(null, null);
@@ -81,7 +74,8 @@ public struct CallbackPayload : IArgPayload
 	}
 	/// <inheritdoc/>
 	public ArgType DataType => ArgType.OTHER;
-	public Vector3 Vec
+	/// <inheritdoc/>
+	public Vector4 Vec
 	{
 		get => prop_Vec.a?.Invoke() ?? default;
 		set => prop_Vec.b?.Invoke(value);

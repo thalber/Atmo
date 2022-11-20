@@ -207,10 +207,10 @@ public static partial class HappenBuilding
 	/// </summary>
 	private static HappenTrigger? TMake_Flicker(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
-		int minOn = args.AtOr(0, 5.0f).I32,
-			maxOn = args.AtOr(1, 5.0f).I32,
-			minOff = args.AtOr(2, 5.0f).I32,
-			maxOff = args.AtOr(3, 5.0f).I32;
+		int minOn = args.AtOr(0, 5.0f).SecAsFrames,
+			maxOn = args.AtOr(1, 5.0f).SecAsFrames,
+			minOff = args.AtOr(2, 5.0f).SecAsFrames,
+			maxOff = args.AtOr(3, 5.0f).SecAsFrames;
 		bool on = args.AtOr(4, true).Bool;
 		int counter = 0;
 
@@ -409,7 +409,54 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "raintimer", "cycleclock" }, Make_SetRainTimer);
 		AddNamedAction(new[] { "palette", "changepalette" }, Make_ChangePalette);
 		AddNamedAction(new[] { "setvar", "setvariable" }, Make_SetVar);
+		//todo: document all below
 		AddNamedAction(new[] { "fling", "force" }, Make_Fling);
+		AddNamedAction(new[] { "light", "tempglow" }, Make_Tempglow);
+	}
+	private static void Make_Tempglow(Happen ha, ArgSet args)
+	{
+		if (args.Count < 1)
+		{
+			NotifyArgsMissing(Make_Tempglow, "color");
+		}
+		Arg argcol = args[0];
+		Dictionary<Player, bool> playersActive = new();
+		ha.On_RealUpdate += (rm) =>
+		{
+			foreach (UAD? uad in rm.updateList)
+			{
+				if (uad is Player p)
+				{
+					p.glowing = true;
+					PlayerGraphics? pgraf = p.graphicsModule as PlayerGraphics;
+					playersActive.Set(p, true);
+					if (pgraf?.lightSource is null) continue;
+					pgraf.lightSource.color = argcol.Vec.ToOpaqueCol();
+				}
+			}
+		};
+		ha.On_CoreUpdate += (game) =>
+		{
+			foreach (AbstractCreature? absp in game.Players)
+			{
+				if (absp.realizedCreature is Player p)
+				{
+					if (!playersActive.AddIfNone_Get(p, static () => false))
+					{
+						p.glowing = false;
+						if (p.graphicsModule is PlayerGraphics pgraf)
+						{
+							pgraf.lightSource.requireUpKeep = true;
+							pgraf.lightSource = null;
+						}
+					}
+					else
+					{
+						playersActive[p] = false;
+					}
+				}
+			}
+		};
 	}
 	private static void Make_Fling(Happen ha, ArgSet args)
 	{
@@ -417,7 +464,8 @@ public static partial class HappenBuilding
 		{
 			NotifyArgsMissing(Make_Fling, "force");
 		}
-		Arg force = args[0];
+		Arg force = args[0],
+			filter = args.AtOr(1, ".+");
 		plog.DbgVerbose(args.Select(x => x.ToString()).Stitch());
 		plog.DbgVerbose($"Fling force: {force}, {force.Vec}, {force.Str == ("10;10")}");
 		ha.On_RealUpdate += (rm) =>
@@ -426,9 +474,13 @@ public static partial class HappenBuilding
 			{
 				if (uad is PhysicalObject obj)
 				{
-					foreach (BodyChunk c in obj.bodyChunks)
+					string identifier = (obj is Creature c)
+					? c.abstractCreature.creatureTemplate.type.ToString()
+					: obj.abstractPhysicalObject.type.ToString();
+					if (!TXT.Regex.IsMatch(identifier, filter.Str)) continue;
+					foreach (BodyChunk ch in obj.bodyChunks)
 					{
-						c.vel += (Vector2)force.Vec;
+						ch.vel += (Vector2)force.Vec;
 					}
 				}
 			}
@@ -712,8 +764,8 @@ public static partial class HappenBuilding
 		};
 	}
 	#endregion
-	private static void NotifyArgsMissing(Delegate source, string arg)
+	private static void NotifyArgsMissing(Delegate source, params string[] args)
 	{
-		plog.LogWarning($"{nameof(HappenBuilding)}.{source.Method.Name}: Missing argument: {arg}");
+		plog.LogWarning($"{nameof(HappenBuilding)}.{source.Method.Name}: Missing argument(s): {args.Stitch()}");
 	}
 }

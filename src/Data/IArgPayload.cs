@@ -26,9 +26,9 @@ public interface IArgPayload
 	public bool Bool { get; set; }
 	//todo: integrate fv2/fv3 into normal inst
 	/// <summary>
-	/// Vector3 value of the instance.
+	/// Vector value of the instance.
 	/// </summary>
-	public Vector3 Vec { get; set; }
+	public Vector4 Vec { get; set; }
 	/// <summary>
 	/// Tries getting an enum from the instance.
 	/// </summary>
