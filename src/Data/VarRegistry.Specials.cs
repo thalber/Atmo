@@ -59,7 +59,10 @@ public static partial class VarRegistry
 				}),
 				SpVar.memtotal => new Arg(new GetOnlyCallbackPayload()
 				{
-					getStr = () => DBG.Process.GetCurrentProcess().PrivateMemorySize64.ToString()
+					getStr = () =>
+					{
+						return System.Environment.WorkingSet.ToString();
+					}
 				}),
 				SpVar.username => Environment.UserName,
 				SpVar.machinename => Environment.MachineName,

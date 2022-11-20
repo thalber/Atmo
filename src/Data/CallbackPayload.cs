@@ -22,6 +22,13 @@ public struct CallbackPayload : IArgPayload
 	/// </summary>
 	public FakeProp<string> prop_Str;
 	/// <summary>
+	/// <see cref="Vec"/> property backing
+	/// </summary>
+	public FakeProp<Vector3> prop_Vec;
+	/// <summary>
+	/// <see cref="Vec2"/> property backing.
+	/// </summary>
+	/// <summary>
 	/// Creates a new instance with given prop backings.
 	/// </summary>
 	/// <param name="prop_I32"></param>
@@ -32,12 +39,14 @@ public struct CallbackPayload : IArgPayload
 		FakeProp<int>? prop_I32 = null,
 		FakeProp<float>? prop_F32 = null,
 		FakeProp<bool>? prop_Bool = null,
-		FakeProp<string>? prop_Str = null)
+		FakeProp<string>? prop_Str = null,
+		FakeProp<Vector3>? prop_Vec = null)
 	{
 		this.prop_I32 = prop_I32 ?? new(null, null);
 		this.prop_F32 = prop_F32 ?? new(null, null);
 		this.prop_Bool = prop_Bool ?? new(null, null);
 		this.prop_Str = prop_Str ?? new(null, null);
+		this.prop_Vec = prop_Vec ?? new(null, null);
 	}
 
 	/// <inheritdoc/>
@@ -72,13 +81,23 @@ public struct CallbackPayload : IArgPayload
 	}
 	/// <inheritdoc/>
 	public ArgType DataType => ArgType.OTHER;
-	void IArgPayload.GetEnum<T>(out T? value) where T : default
+	public Vector3 Vec
 	{
-		throw new NotImplementedException();
+		get => prop_Vec.a?.Invoke() ?? default;
+		set => prop_Vec.b?.Invoke(value);
 	}
-
-	void IArgPayload.SetEnum<T>(in T value)
+	/// <inheritdoc/>
+	public void GetEnum<T>(out T? value) where T : Enum
 	{
-		throw new NotImplementedException();
+		if (!TryParseEnum(Str, out value))
+		{
+			value = (T)Convert.ChangeType(I32, typeof(T));
+		};
+	}
+	/// <inheritdoc/>
+	public void SetEnum<T>(in T value) where T : Enum
+	{
+		Str = value.ToString();
+		I32 = (int)Convert.ChangeType(value, typeof(int));
 	}
 }

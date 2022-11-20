@@ -26,6 +26,10 @@ public enum ArgType
 	/// </summary>
 	BOOL,
 	/// <summary>
+	/// Value was orignally assigned as a vector.
+	/// </summary>
+	VEC,
+	/// <summary>
 	/// The data type is unspecified.
 	/// </summary>
 	OTHER

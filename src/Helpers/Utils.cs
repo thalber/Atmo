@@ -598,13 +598,13 @@ public static partial class Utils
 		if (item is not null) throw new InvalidOperationException($"{name} is not null");
 	}
 #if ATMO //atmo-specific things
+	//todo: default value breaks preloader. god.
 	internal static void DbgVerbose(
 		this LOG.ManualLogSource logger,
-		object data,
-		LOG.LogLevel sev = BepInEx.Logging.LogLevel.Debug)
+		object data)
 	{
 		BangBang(logger, nameof(logger));
-		if (log_verbose?.Value ?? false) logger.Log(sev, data);
+		if (log_verbose?.Value ?? false) logger.LogDebug(data);
 	}
 	internal static void LogFrameTime(
 		List<TimeSpan> realup_times,

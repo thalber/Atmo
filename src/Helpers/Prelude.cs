@@ -5,6 +5,7 @@ global using System.Linq;
 global using Atmo.Data;
 global using Atmo.Helpers;
 global using RWCustom;
+global using UnityEngine;
 global using static Atmo.Atmod;
 global using static Atmo.Helpers.Utils;
 global using static RWCustom.Custom;

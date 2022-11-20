@@ -29,7 +29,6 @@ public sealed class ArgSet : IList<Arg>
 		for (int i = 0; i < rawargs.Length; i++)
 		{
 			Arg newarg = new(
-				//todo: fix escapes, then mention escapes in docs
 				rawargs[i] ?? string.Empty,
 				linkage);
 			_args.Add(newarg);

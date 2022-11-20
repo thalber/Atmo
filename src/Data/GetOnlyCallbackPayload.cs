@@ -22,6 +22,10 @@ public struct GetOnlyCallbackPayload : IArgPayload
 	/// </summary>
 	public Func<string>? getStr;
 	/// <summary>
+	/// Callback to get vector value.
+	/// </summary>
+	public Func<Vector3>? getVec;
+	/// <summary>
 	/// Operation is not supported.
 	/// </summary>
 	public string Raw
@@ -62,10 +66,19 @@ public struct GetOnlyCallbackPayload : IArgPayload
 		set { }
 	}
 	/// <summary>
+	/// Vector value of the instance. Read-only.
+	/// </summary>
+	public Vector3 Vec
+	{
+		get => getVec?.Invoke() ?? default;
+		set { }
+	}
+	/// <summary>
 	/// Type of the instance. Read-only.
 	/// </summary>
 	public ArgType DataType
 		=> ArgType.OTHER;
+
 	void IArgPayload.GetEnum<T>(out T? value) where T : default
 	{
 		throw new NotSupportedException("Operation not supported");

@@ -10,7 +10,7 @@
 ///		w = false;
 /// </code>
 /// and do explicit conversions the other way around
-/// (alternatively, use getters of <see cref="I32"/>/<see cref="F32"/>/<see cref="Bool"/>/<see cref="Str"/>):
+/// (alternatively, use getters of <see cref="I32"/>/<see cref="F32"/>/<see cref="Bool"/>/<see cref="Str"/>/<see cref="Vec"/>):
 /// <code>
 ///		<see cref="Arg"/> arg = new(12);
 ///		<see cref="float"/> fl = (<see cref="float"/>)arg; // 12f
@@ -49,18 +49,41 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	private int _i32;
 	private float _f32;
 	private bool _bool;
+	private Vector3 _vec; //todo: add autoconverts
 	#endregion backing
 	/// <summary>
 	/// Parses contents of <see cref="_str"/> to fill other fields. Sets <see cref="DataType"/> to <see cref="ArgType.STR"/>.
 	/// </summary>
 	private void _parseStr()
 	{
-		float.TryParse(_str, out _f32);
-		//F32 = asfloat;
-		int.TryParse(_str, out _i32);
-		bool.TryParse(_str, out _bool);
-		if (trueStrings.Contains(_str.ToLower())) _bool = true;
-		if (falseStrings.Contains(_str.ToLower())) _bool = false;
+		string[] spl;
+		_vec = default;
+		Vector3 vecres = default;
+		bool vecparsed = false;
+		if ((spl = _str.Split(';')).Length is 2 or 3)
+		{
+			vecparsed = true;
+			for (int i = 0; i < spl.Length; i++)
+			{
+				if (!float.TryParse(spl[i], out float val)) vecparsed = false;
+				vecres[i] = val;
+			}
+		}
+		if (vecparsed)
+		{
+			_vec = vecres;
+			_f32 = vecres.magnitude;
+			_i32 = (int)_f32;
+			_bool = _f32 != 0f;
+		}
+		else
+		{
+			float.TryParse(_str, out _f32);
+			int.TryParse(_str, out _i32);
+			bool.TryParse(_str, out _bool);
+			if (trueStrings.Contains(_str.ToLower())) _bool = true;
+			if (falseStrings.Contains(_str.ToLower())) _bool = false;
+		}
 		DataType = ArgType.STR;
 	}
 	#region convert
@@ -144,6 +167,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			_i32 = value;
 			_f32 = value;
 			_bool = value is not 0;
+			_vec = default;
 			Str = value.ToString();
 			DataType = ArgType.I32;
 		}
@@ -161,6 +185,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			_f32 = value;
 			_i32 = value is float.PositiveInfinity or float.NegativeInfinity or float.NaN ? 0 : (int)value;
 			_bool = value is not 0f;
+			_vec = default;
 			_skipparse = true;
 			Str = value.ToString();
 			DataType = ArgType.F32;
@@ -180,9 +205,31 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			_i32 = value ? 1 : 0;
 			_f32 = value ? 1 : 0;
 			_skipparse = true;
+			_vec = default;
 			Str = value.ToString();
+			DataType = ArgType.BOOL;
 		}
 	}
+	/// <summary>
+	/// Vector value of the instance. Zeroed unless instance has been created from a vector or successfully parsed the vector from string.
+	/// </summary>
+	public Vector3 Vec
+	{
+		get
+			=> _payload?.Vec ?? _vec;
+		set
+		{
+			if (_payload is not null) { _payload.Vec = value; return; }
+			_f32 = value.magnitude;
+			_i32 = (int)_f32;
+			_bool = _f32 != 0f;
+			_vec = value;
+			_skipparse = true;
+			Str = value.ToString();
+			DataType = ArgType.VEC;
+		}
+	}
+
 	/// <summary>
 	/// Attempts to convert value of the current instance into a specified enum. Perf note: each call parses <see cref="Str"/> or invokes <see cref="Convert.ChangeType(object, Type)"/> to convert <see cref="I32"/>'s current value if parsing fails.
 	/// </summary>
@@ -324,7 +371,6 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			_dt = value;
 		}
 	}
-	//todo: allow changing names?
 	#region general
 	/// <summary>
 	/// Compares against another instance. Uses raw contents of <see cref="Str"/> for comparison.
@@ -421,8 +467,8 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	public Arg(int val)
 	{
 		I32 = val;
-		_raw = val.ToString();
-		_str ??= string.Empty;
+		_raw ??= val.ToString();
+		_str ??= val.ToString();
 	}
 	/// <summary>
 	/// Creates the structure from a given float. Always unnamed. Mostly used for implicit casts.
@@ -431,8 +477,8 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	public Arg(float val)
 	{
 		F32 = val;
-		_raw = val.ToString();
-		_str ??= string.Empty;
+		_raw ??= val.ToString();
+		_str ??= val.ToString();
 	}
 	/// <summary>
 	/// Creates the structure from a given bool. Always unnamed. Mostly used for implicit casts.
@@ -441,8 +487,19 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	public Arg(bool val)
 	{
 		Bool = val;
-		_raw = val.ToString();
-		_str ??= string.Empty;
+		_raw ??= val.ToString();
+		_str ??= val.ToString();
+	}
+	/// <summary>
+	/// Creates an instance from a vector.
+	/// </summary>
+	/// <param name="val"></param>
+	public Arg(Vector3 val)
+	{
+		Vec = val;
+		_raw ??= val.ToString();
+		_str ??= val.ToString();
+
 	}
 	/// <summary>
 	/// Creates a new instance that wraps another as a variable, with an optional name.
@@ -463,71 +520,63 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// </summary>
 	/// <param name="arg"></param>
 	public static explicit operator string(Arg arg)
-	{
-		return arg.Str;
-	}
+		=> arg.Str;
 
 	/// <summary>
 	/// Creates an instance from a string.
 	/// </summary>
 	/// <param name="src"></param>
 	public static implicit operator Arg(string src)
-	{
-		return new(src, false);
-	}
+		=> new(src, false);
 
 	/// <summary>
 	/// Converts an instance into an int.
 	/// </summary>
 	/// <param name="arg"></param>
 	public static explicit operator int(Arg arg)
-	{
-		return arg.I32;
-	}
-
+		=> arg.I32;
 	/// <summary>
 	/// Creates an unnamed instance from an int.
 	/// </summary>
 	/// <param name="src"></param>
 	public static implicit operator Arg(int src)
-	{
-		return new(src);
-	}
-
+		=> new(src);
 	/// <summary>
 	/// Converts an instance into a float.
 	/// </summary>
 	/// <param name="arg"></param>
 	public static explicit operator float(Arg arg)
-	{
-		return arg.F32;
-	}
-
+		=> arg.F32;
 	/// <summary>
 	/// Creates an unnamed instance from a float.
 	/// </summary>
 	/// <param name="src"></param>
 	public static implicit operator Arg(float src)
-	{
-		return new(src);
-	}
-
+		=> new(src);
 	/// <summary>
 	/// Converts an instance into a bool.
 	/// </summary>
 	/// <param name="arg"></param>
 	public static explicit operator bool(Arg arg)
-	{
-		return arg.Bool;
-	}
-
+		=> arg.Bool;
 	/// <summary>
 	/// Creates an unnamed instance from a bool.
 	/// </summary>
 	/// <param name="src"></param>
 	public static implicit operator Arg(bool src)
-	{
-		return new(src);
-	}
+		=> new(src);
+	/// <summary>
+	/// Converts an instance into a vector.
+	/// </summary>
+	/// <param name="arg"></param>
+	public static explicit operator Vector3(Arg arg)
+		=> arg.Vec;
+	/// <summary>
+	/// Creates an unnamed instance from a vector.
+	/// </summary>
+	/// <param name="src"></param>
+	public static implicit operator Arg(Vector3 src)
+		=> new(src);
+
 	#endregion;
 }

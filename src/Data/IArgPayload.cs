@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Atmo.Data;
+﻿namespace Atmo.Data;
 /// <summary>
 /// Objects that can be used as payloads for <see cref="Arg"/>. Don't forget to add <see cref="object.ToString"/> override! Implement this, or use <see cref="GetOnlyCallbackPayload"/> and <see cref="CallbackPayload"/> if you want callback-driven shorthands.
 /// </summary>
@@ -29,6 +24,11 @@ public interface IArgPayload
 	/// Boolean value of the instance.
 	/// </summary>
 	public bool Bool { get; set; }
+	//todo: integrate fv2/fv3 into normal inst
+	/// <summary>
+	/// Vector3 value of the instance.
+	/// </summary>
+	public Vector3 Vec { get; set; }
 	/// <summary>
 	/// Tries getting an enum from the instance.
 	/// </summary>
