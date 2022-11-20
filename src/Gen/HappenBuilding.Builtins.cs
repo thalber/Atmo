@@ -409,6 +409,30 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "raintimer", "cycleclock" }, Make_SetRainTimer);
 		AddNamedAction(new[] { "palette", "changepalette" }, Make_ChangePalette);
 		AddNamedAction(new[] { "setvar", "setvariable" }, Make_SetVar);
+		AddNamedAction(new[] { "fling", "force" }, Make_Fling);
+	}
+	private static void Make_Fling(Happen ha, ArgSet args)
+	{
+		if (args.Count < 1)
+		{
+			NotifyArgsMissing(Make_Fling, "force");
+		}
+		Arg force = args[0];
+		plog.DbgVerbose(args.Select(x => x.ToString()).Stitch());
+		plog.DbgVerbose($"Fling force: {force}, {force.Vec}, {force.Str == ("10;10")}");
+		ha.On_RealUpdate += (rm) =>
+		{
+			foreach (UpdatableAndDeletable? uad in rm.updateList)
+			{
+				if (uad is PhysicalObject obj)
+				{
+					foreach (BodyChunk c in obj.bodyChunks)
+					{
+						c.vel += (Vector2)force.Vec;
+					}
+				}
+			}
+		};
 	}
 	private static void Make_SoundLoop(Happen ha, ArgSet args)
 	{

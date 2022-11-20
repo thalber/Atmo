@@ -4,7 +4,7 @@
 /// <para>
 /// Args most frequently come in form of <seealso cref="ArgSet"/>s. Arg supports several primitive types: <see cref="int"/>, <see cref="float"/>, <see cref="string"/> and <see cref="bool"/>, and does its best to convert between them (for more details, see docstrings for property accessors). You can implicitly cast from supported primitive types to Arg:
 /// <code>
-///		<see cref="Arg"/> x = 1,
+///		Arg x = 1,
 ///		y = 2f,
 ///		z = "three",
 ///		w = false;
@@ -12,10 +12,10 @@
 /// and do explicit conversions the other way around
 /// (alternatively, use getters of <see cref="I32"/>/<see cref="F32"/>/<see cref="Bool"/>/<see cref="Str"/>/<see cref="Vec"/>):
 /// <code>
-///		<see cref="Arg"/> arg = new(12);
-///		<see cref="float"/> fl = (<see cref="float"/>)arg; // 12f
-///		<see cref="bool"/> bo = (<see cref="bool"/>)arg; // true
-///		<see cref="string"/> st = (<see cref="string"/>)arg; // "12"
+///		Arg arg = new(12);
+///		float fl = (float)arg; // 12f
+///		bool bo = (bool)arg; // true
+///		string st = (string)arg; // "12"
 /// </code>
 /// The reason conversions to primitives are explicit is because in Rain World modding 
 /// you will often have tangled math blocks, where an incorrectly inferred int/float division 
@@ -56,16 +56,18 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// </summary>
 	private void _parseStr()
 	{
+		//check vec parsn
 		string[] spl;
 		_vec = default;
 		Vector3 vecres = default;
 		bool vecparsed = false;
-		if ((spl = _str.Split(';')).Length is 2 or 3)
+		if ((spl = TXT.Regex.Split(_str, ";\\s*")).Length > 1)
 		{
 			vecparsed = true;
 			for (int i = 0; i < spl.Length; i++)
 			{
 				if (!float.TryParse(spl[i], out float val)) vecparsed = false;
+				plog.DbgVerbose(val);
 				vecres[i] = val;
 			}
 		}
@@ -153,7 +155,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		}
 	}
 	/// <summary>
-	/// Int value of the argument. 0 if int value couldn't be parsed; rounded if <see cref="Arg"/> is created from a float; 1 or 0 if created from a bool. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.I32"/>.
+	/// Int value of the argument. 0 if int value couldn't be parsed; rounded if <see cref="Arg"/> is created from a float; 1 or 0 if created from a bool; rounded magnitude of a vector if instance created from vector. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.I32"/>.
 	/// </summary>
 	public int I32
 	{
@@ -173,7 +175,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		}
 	}
 	/// <summary>
-	/// Float value of the argument; 0f if float value couldn't be parsed; equal to <see cref="I32"/> if <see cref="Arg"/> is created from an int (may lose precision on large values!); 1f or 0f if created from a bool. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.F32"/>.
+	/// Float value of the argument; 0f if float value couldn't be parsed; equal to <see cref="I32"/> if <see cref="Arg"/> is created from an int (may lose precision on large values!); 1f or 0f if created from a bool; magnitude of a vector if instance is created from vector. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.F32"/>.
 	/// </summary>
 	public float F32
 	{
@@ -192,7 +194,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		}
 	}
 	/// <summary>
-	/// Boolean value of the argument; false by default. False if original string is found in <see cref="falseStrings"/>, or if <see cref="Arg"/> is created from a zero int or float; True if original string is found in <see cref="trueStrings"/>, or of <see cref="Arg"/> is created from a non-zero int or float. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.BOOL"/>.
+	/// Boolean value of the argument; false by default. False if original string is found in <see cref="falseStrings"/>, or if <see cref="Arg"/> is created from a zero int or float; True if original string is found in <see cref="trueStrings"/>, or of <see cref="Arg"/> is created from a non-zero int, float or vector. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.BOOL"/>.
 	/// </summary>
 	public bool Bool
 	{
@@ -225,7 +227,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			_bool = _f32 != 0f;
 			_vec = value;
 			_skipparse = true;
-			Str = value.ToString();
+			Str = $"{value.x};{value.y};{value.z}";
 			DataType = ArgType.VEC;
 		}
 	}
