@@ -466,7 +466,9 @@ public static partial class HappenBuilding
 			NotifyArgsMissing(Make_Fling, "force");
 		}
 		Arg force = args[0],
-			filter = args.AtOr(1, ".*");
+			filter = args["filter", "select"] ?? ".*",
+			forceVar = args["variance", "var"] ?? 0f,
+			spread = args["spread", "deviation", "dev"] ?? 0f;
 		ha.On_RealUpdate += (rm) =>
 		{
 			foreach (UpdatableAndDeletable? uad in rm.updateList)
@@ -477,14 +479,14 @@ public static partial class HappenBuilding
 					string? crittype = (obj as Creature)?.Template.type.ToString();
 					if 
 					(
-					TXT.Regex.IsMatch(objtype, filter.Str) 
+					TXT.Regex.IsMatch(objtype, filter.Str, System.Text.RegularExpressions.RegexOptions.IgnoreCase) 
 					|| 
-					(crittype is not null && TXT.Regex.IsMatch(crittype, filter.Str))
+					(crittype is not null && TXT.Regex.IsMatch(crittype, filter.Str, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
 					)
 					{
 						foreach (BodyChunk ch in obj.bodyChunks)
 						{
-							ch.vel += (Vector2)force.Vec;
+							ch.vel += RotateAroundOrigo((Vector2)(force.Vec * 1f.Deviate(forceVar.F32)), 0f.Deviate(spread.F32));
 						}
 					}
 				}

@@ -387,8 +387,8 @@ public static partial class Utils
 	/// <param name="minRes">Result lower bound.</param>
 	/// <param name="maxRes">Result upper bound.</param>
 	/// <returns>The resulting value.</returns>
-	public static float ClampedFloatDeviation(
-		float start,
+	public static float Deviate(
+		this float start,
 		float mDev,
 		float minRes = float.NegativeInfinity,
 		float maxRes = float.PositiveInfinity)
