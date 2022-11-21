@@ -123,21 +123,48 @@ public sealed class HappenSet
 			if (!returned.Contains(ha)) yield return ha;
 		}
 	}
+
+	public IDictionary<string, IEnumerable<string>> GetGroups()
+	{
+		Dictionary<string, IEnumerable<string>> res = new();
+		foreach (string g in RoomsToGroups.EnumerateRight())
+		{
+			res.Add(g, RoomsToGroups.IndexFromRight(g));
+		}
+		return res;
+	}
+	public IDictionary<Happen, IEnumerable<string>> GetBinds()
+	{
+		Dictionary<Happen, IEnumerable<string>> res = new();
+		foreach (Happen ha in GroupsToHappens.EnumerateRight())
+		{
+			res.Add(ha, GroupsToHappens.IndexFromRight(ha));
+		}
+		return res;
+	}
 	#region insertion
 	/// <summary>
 	/// Binds a given happen to a set of groups. Assumes that happen has already been added via <see cref="InsertHappens(IEnumerable{Happen})"/>.
 	/// </summary>
 	/// <param name="happen">The happen that should receive group links. Must not be null.</param>
-	/// <param name="groups">A set of groups to be bound to given happen. Must not be null.</param>
-	public void AddGrouping(Happen happen, IEnumerable<string> groups)
+	/// <param name="bind">A set of groups to be bound to given happen. Must not be null.</param>
+	public void AddBind(Happen happen, IEnumerable<string> bind)
 	{
 		BangBang(happen, nameof(happen));
-		BangBang(groups, nameof(groups));
-		if (groups?.Count() is null or 0) return;
+		BangBang(bind, nameof(bind));
+		if (bind?.Count() is null or 0) return;
 		Dictionary<string, IEnumerable<string>> ins = new();
-		foreach (string? g in groups) { ins.Add(g, new List<string>(0)); }
+		foreach (string? g in bind) { ins.Add(g, new List<string>(0)); }
 		InsertGroups(ins);
-		GroupsToHappens.AddLinksBulk(groups.Select(gr => new KeyValuePair<string, Happen>(gr, happen)));
+		GroupsToHappens.AddLinksBulk(bind.Select(gr => new KeyValuePair<string, Happen>(gr, happen)));
+	}
+	public void AddBinds(IDictionary<Happen, IEnumerable<string>> binds)
+	{
+		BangBang(binds, nameof(binds));
+		foreach ((Happen ha, IEnumerable<string> bind) in binds)
+		{
+			AddBind(ha, bind);
+		}
 	}
 	/// <summary>
 	/// Adds room excludes for a given happen. In these rooms, the happen will be inactive regardless of grouping. Assumes happen has already been added via <see cref="InsertHappens(IEnumerable{Happen})"/>
@@ -298,8 +325,20 @@ public sealed class HappenSet
 		{
 			plog.LogDebug($"{ha.name}: switching ownership");
 			ha.set = res;
+			plog.DbgVerbose(res.GetRoomsForHappen(ha).Stitch());
 		}
+		plog.DbgVerbose(res.GetHappensForRoom("SU_S04").Select(x => x.name).Stitch());
 		return res;
+		//HappenSet res = new(l.world ?? r.world)
+		//{
+
+		//};
+		//res.InsertHappens(l.AllHappens.Concat(r.AllHappens));
+		//res.InsertGroups(l.GetGroups());
+		//res.InsertGroups(r.GetGroups());
+		//res.AddBinds(l.GetBinds());
+		//res.AddBinds(r.GetBinds());
+		//return res;
 	}
 	#endregion statics
 }

@@ -69,7 +69,6 @@ public static partial class VarRegistry
 			plog.LogFatal(ErrorMessage(Site.Clear, "Unhandled exception", ex));
 		}
 	}
-
 	internal static void Init()
 	{
 		plog.LogDebug("Init VarRegistry hooks");
@@ -153,7 +152,7 @@ public static partial class VarRegistry
 		int slugcat)
 	{
 		orig(self, slugcat);
-		DPSD_Slug.Add(self.GetHashCode(), slugcat);
+		DPSD_Slug.Set(self.GetHashCode(), slugcat);
 	}
 	private static void ReadPers(
 		On.DeathPersistentSaveData.orig_FromString orig,
@@ -268,29 +267,7 @@ public static partial class VarRegistry
 	#endregion
 	#region methods
 	/// <summary>
-	/// Fetches a stored variable. Creates a new one if does not exist. You can use prefixes to request death-persistent and global variables. Some examples:
-	/// <para>
-	/// <code>
-	///	<see cref="VarRegistry"/>.GetVar("flag0", 0, 2)
-	/// </code>
-	/// will try fetching variable named "flag0" for saveslot 0 (first) for hunter (character 2). 
-	/// Normal variables for a save are reset if you wipe character progress or the entire saveslot;
-	/// <code>
-	/// <see cref="VarRegistry"/>.GetVar("p_flag1", 1, 2)
-	/// </code>
-	/// will try fetching a *death-persistent* (saved with the same sort of persistence as
-	/// flags indicating whether you visited echoes, finished the game, etc) variable 
-	/// named "flag1" for saveslot 1 (second) for hunter (character 2).
-	/// Persistent variables for a save are reset if you wipe character progress
-	/// or the entire saveslot;
-	/// <code>
-	/// <see cref="VarRegistry"/>.GetVar("g_flag2", 1)
-	/// </code>
-	/// will try searching for a *global* variable called "flag2" for saveslot 1 (second).
-	/// Global variables are exempt from data resets [for now, are you sure they should be?].
-	/// Global variables are shared between all characters on a given slot,
-	/// and will also be usable in arena should Atmo ever support arena.
-	/// </para>
+	/// Fetches a stored variable. Creates a new one if does not exist. You can use prefixes to request death-persistent ("p_") and global ("g_") variables. Persistent variables follow the lifecycle of <see cref="DeathPersistentSaveData"/>; global variables are shared across the entire saveslot.
 	/// </summary>
 	/// <param name="name">Name of the variable, with prefix if needed. Must not be null.</param>
 	/// <param name="saveslot">Save slot to look up data from (<see cref="RainWorld"/>.options.saveSlot for current)</param>

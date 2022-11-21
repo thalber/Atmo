@@ -303,7 +303,7 @@ internal class HappenParser
 		{
 			var ha = new Happen(cfg, set, rwg);
 			set.InsertHappens(new[] { ha });
-			set.AddGrouping(ha, cfg.groups);
+			set.AddBind(ha, cfg.groups);
 			set.AddExcludes(ha, cfg.exclude);
 			set.AddIncludes(ha, cfg.include);
 		}

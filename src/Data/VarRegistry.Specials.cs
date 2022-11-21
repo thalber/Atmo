@@ -1,4 +1,6 @@
-﻿using Atmo.Data;
+﻿using System.Text;
+using Atmo.Data;
+
 using NamedVars = System.Collections.Generic.Dictionary<Atmo.Helpers.VarRegistry.SpVar, Atmo.Data.Arg>;
 using Save = Atmo.Helpers.VT<int, int>;
 using SerDict = System.Collections.Generic.Dictionary<string, object>;
@@ -9,22 +11,35 @@ public static partial class VarRegistry
 {
 	#region fields
 	internal static readonly NamedVars SpecialVars = new();
+	private static readonly TXT.Regex FMT_Split = new("{.+?}");
+	private static readonly TXT.Regex FMT_Match = new("(?<={).+?(?=})");
+	private static readonly TXT.Regex FMT_Is = new("\\$FMT\\((.*?)\\)");
+	
 	#endregion;
-	private static Arg? GetFmt(string text, int saveslot, int character)
+	private static Arg? GetFmt(string text, in int saveslot, in int character)
 	{
-		TXT.Match match;
-		if (!(match = TXT.Regex.Match(text, "\\$FMT\\((.*)\\)")).Success) return null;
-		text = match.Groups[1].Value;
-		plog.DbgVerbose($"Creating format string from \"{text}\"...");
-		List<PredicateInlay.Token> tokens = PredicateInlay.Tokenize(text);
-		string format = tokens.AtOr(0, new(PredicateInlay.TokenType.Literal, string.Empty)).val;
-		IEnumerable<Arg>? values = tokens.Select(x => GetVar(x.val, saveslot, character));
-		return new Arg(new GetOnlyCallbackPayload()
+		TXT.Match _is;
+		if (!(_is = FMT_Is.Match(text)).Success) return null;
+		text = _is.Groups[1].Value;
+		string[] bits = FMT_Split.Split(text);
+		TXT.MatchCollection names = FMT_Match.Matches(text);
+		Arg[] variables = new Arg[names.Count];
+		for (int i = 0; i < names.Count; i++)
 		{
-			getStr = () => string.Format(format, values
-			.Select(x => x.Str)
-			.ToArray()),
+			variables[i] = GetVar(names[i].Value, saveslot, character);
+		}
+
+		int ind = 0;
+		string format = bits.Stitch((x, y) => $"{x}{{{ind++}}}{y}");
+		object[] getStrs ()
+		{
+			return variables.Select(x => x.Str).ToArray();
+		}
+		return new(new GetOnlyCallbackPayload()
+		{
+			getStr = () => string.Format(format, getStrs())
 		});
+		//todo: update format string docs
 	}
 	internal static Arg? GetSpecial(string name)
 	{

@@ -409,8 +409,8 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "raintimer", "cycleclock" }, Make_SetRainTimer);
 		AddNamedAction(new[] { "palette", "changepalette" }, Make_ChangePalette);
 		AddNamedAction(new[] { "setvar", "setvariable" }, Make_SetVar);
-		//todo: document all below
 		AddNamedAction(new[] { "fling", "force" }, Make_Fling);
+		//todo: document all below
 		AddNamedAction(new[] { "light", "tempglow" }, Make_Tempglow);
 	}
 	private static void Make_Tempglow(Happen ha, ArgSet args)
@@ -445,7 +445,7 @@ public static partial class HappenBuilding
 					if (!playersActive.AddIfNone_Get(p, static () => false))
 					{
 						p.glowing = false;
-						if (p.graphicsModule is PlayerGraphics pgraf)
+						if (p.graphicsModule is PlayerGraphics pgraf && pgraf.lightSource is not null)
 						{
 							pgraf.lightSource.requireUpKeep = true;
 							pgraf.lightSource = null;
@@ -482,12 +482,10 @@ public static partial class HappenBuilding
 					(crittype is not null && TXT.Regex.IsMatch(crittype, filter.Str))
 					)
 					{
-						continue;
-					}
-					
-					foreach (BodyChunk ch in obj.bodyChunks)
-					{
-						ch.vel += (Vector2)force.Vec;
+						foreach (BodyChunk ch in obj.bodyChunks)
+						{
+							ch.vel += (Vector2)force.Vec;
+						}
 					}
 				}
 			}
@@ -499,14 +497,12 @@ public static partial class HappenBuilding
 		//Breaks with warp.
 		if (args.Count == 0)
 		{
-			plog.LogError($"Happen {ha.name}: soundloop action: " +
-				$"No arguments provided.");
+			NotifyArgsMissing(Make_SoundLoop, "soundid");
 			return;
 		}
 		if (!TryParseEnum(args[0].Str, out SoundID soundid))
 		{
-			plog.LogError($"Happen {ha.name}: soundloop action: " +
-				$"Invalid SoundID ({args[0]})");
+			NotifyArgsMissing(Make_SoundLoop, "soundid");
 			return;
 		}
 		Arg
@@ -514,23 +510,25 @@ public static partial class HappenBuilding
 			vol = args["vol", "volume"] ?? 1f,
 			pitch = args["pitch"] ?? 1f,
 			pan = args["pan"] ?? 0f,
-			limit = args["lim", "limit"]?.F32 ?? float.PositiveInfinity;
+			limit = args["lim", "limit"] ?? float.PositiveInfinity;
 		string lastSid = sid.Str;
 		int timeAlive = 0;
+		//int timer = 0;
+		plog.DbgVerbose(args.Select(x => x.ToString()).Stitch());
 		Dictionary<string, DisembodiedLoopEmitter> soundloops = new();//hashes = new();
 		ha.On_RealUpdate += (rm) =>
 		{
-			if (timeAlive > limit.SecAsFrames) return;
+			if (timeAlive * 40 > limit.F32) return;
 			for (int i = 0; i < rm.updateList.Count; i++)
 			{
-				if (rm.BeingViewed && rm.updateList[i] is DisembodiedLoopEmitter dle && soundloops.ContainsValue(dle))
+				if (rm.updateList[i] is DisembodiedLoopEmitter dle && soundloops.ContainsValue(dle))
 				{
 					dle.soundStillPlaying = true;
 					dle.alive = true;
+					//plog.DbgVerbose($"Found loop! {dle.room}");
 					return;
 				}
 			}
-			if (!rm.BeingViewed) return;
 			plog.DbgVerbose($"{ha.name}: Need to create a new soundloop in {rm.abstractRoom.name}! {soundloops.GetHashCode()}");
 			DisembodiedLoopEmitter? newdle = rm.PlayDisembodiedLoop(soundid, vol.F32, pitch.F32, pan.F32);
 			newdle.requireActiveUpkeep = true;
@@ -540,6 +538,16 @@ public static partial class HappenBuilding
 		};
 		ha.On_CoreUpdate += (rwg) =>
 		{
+			//timer--;
+			//if (timer < 0)
+			//{
+			//	plog.DbgVerbose(soundloops.Keys.Stitch());
+			//	plog.DbgVerbose(soundloops.Values
+			//		.Select(x => $"({x.alive}, {x.soundStillPlaying})")
+			//		.Stitch()
+			//		);
+			//	timer = 40;
+			//}
 			if (ha.Active) timeAlive++;
 			//lazy enum parsing
 			if (sid.Str != lastSid)

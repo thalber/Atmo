@@ -1,4 +1,6 @@
-﻿namespace Atmo.Data;
+﻿using System.Text;
+
+namespace Atmo.Data;
 /// <summary>
 /// Wraps a string argument for easy conversion into several other language primitives. Can be named (named arguments come in form of "name=value").
 /// <para>
@@ -61,7 +63,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		_vec = default;
 		Vector4 vecres = default;
 		bool vecparsed = false;
-		if ((spl = TXT.Regex.Split(_str, ";\\s*")).Length is 2 or 3 or 4)
+		if ((spl = TXT.Regex.Split(_str, "\\s*;\\s*")).Length is 2 or 3 or 4)
 		{
 			vecparsed = true;
 			for (int i = 0; i < spl.Length; i++)
@@ -406,7 +408,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// <inheritdoc/>
 	public override string ToString()
 	{
-		System.Text.StringBuilder sb = new();
+		StringBuilder sb = new();
 		sb.Append(Name is not null ? Name : "Arg");
 		if (IsVar)
 		{
