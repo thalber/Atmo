@@ -50,8 +50,6 @@ public static partial class VarRegistry
 		plog.LogDebug("Clear VarRegistry hooks");
 		try
 		{
-			On.RainCycle.ctor -= TrackCycleLength;
-
 			On.SaveState.LoadGame -= ReadNormal;
 			On.SaveState.SaveToString -= WriteNormal;
 
@@ -78,8 +76,6 @@ public static partial class VarRegistry
 		try
 		{
 			FillSpecials();
-
-			On.RainCycle.ctor += TrackCycleLength;
 
 			On.SaveState.LoadGame += ReadNormal;
 			On.SaveState.SaveToString += WriteNormal;

@@ -91,6 +91,10 @@ public sealed partial class Atmod : BaseUnityPlugin
 		log_verbose = Config.Bind(CFG_LOGGING, "verbose", true, "Enable more verbose logging. Can create clutter.");
 		try
 		{
+			if (RW is not null)
+			{
+				int something = RW.options.resolution;
+			}
 			On.AbstractRoom.Update += RunHappensAbstUpd;
 			On.RainWorldGame.Update += DoBodyUpdates;
 			On.Room.Update += RunHappensRealUpd;
@@ -185,14 +189,14 @@ public sealed partial class Atmod : BaseUnityPlugin
 			//maybe put something here
 			setupRan = true;
 		}
-		VarRegistry.SpecialVars[VarRegistry.SpVar.time].Str = DateTime.Now.ToString();
-		VarRegistry.SpecialVars[VarRegistry.SpVar.utctime].Str = DateTime.UtcNow.ToString();
 
 		if (RW is null || CurrentSet is null) return;
 		if (RW.processManager.currentMainLoop is RainWorldGame) return;
-		foreach (MainLoopProcess? proc in RW.processManager.sideProcesses) if (proc is RainWorldGame) return;
-		Logger.LogDebug("No RainWorldGame in processmanager, erasing currentset");
-		CurrentSet = null;
+		if (RW?.processManager.FindSubProcess<RainWorldGame>() is null)
+		{
+			Logger.LogDebug("No RainWorldGame in processmanager, erasing currentset");
+			CurrentSet = null;
+		}
 	}
 	#region lifecycle hooks
 	/// <summary>

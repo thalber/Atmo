@@ -37,37 +37,55 @@ public static partial class VarRegistry
 		SpecialVars.Clear();
 		foreach (SpVar tp in Enum.GetValues(typeof(SpVar)))
 		{
+			static RainWorldGame? FindRWG() 
+				=> inst.RW?.processManager?.FindSubProcess<RainWorldGame>();
+			static int findKarma() 
+				=> FindRWG()?.GetStorySession?.saveState.deathPersistentSaveData.karma ?? -1;
+			static int findKarmaCap() 
+				=> FindRWG()?.GetStorySession?.saveState.deathPersistentSaveData.karmaCap ?? -1;
+			static int findClock() => FindRWG()?.world.rainCycle?.cycleLength ?? -1;
 			SpecialVars.Add(tp, tp switch
 			{
 				SpVar.NONE => 0,
 				SpVar.version => Ver,
-				SpVar.time => new Arg(new GetOnlyCallbackPayload()
+				SpVar.time => new(new GetOnlyCallbackPayload()
 				{
 					getStr = () => DateTime.Now.ToString()
 				}),
-				SpVar.utctime => new Arg(new GetOnlyCallbackPayload()
+				SpVar.utctime => new(new GetOnlyCallbackPayload()
 				{
 					getStr = () => DateTime.UtcNow.ToString()
 				}),
-				SpVar.cycletime => 0,
+				SpVar.cycletime => new(new GetOnlyCallbackPayload()
+				{
+					getI32 = findClock,
+					getF32 = () => findClock()
+				}),
 				SpVar.root => RootFolderDirectory(),
 				SpVar.realm => FindAssembliesByName("Realm").Count() > 0, //check if right
 				SpVar.os => Environment.OSVersion.Platform.ToString(),
-				SpVar.memused => new Arg(new GetOnlyCallbackPayload()
+				SpVar.memused => new(new GetOnlyCallbackPayload()
 				{
 					getStr = () => GC.GetTotalMemory(false).ToString()
 				}),
-				SpVar.memtotal => new Arg(new GetOnlyCallbackPayload()
+				SpVar.memtotal => new(new GetOnlyCallbackPayload()
 				{
-					getStr = () =>
-					{
-						return System.Environment.WorkingSet.ToString();
-					}
+					getStr = () => "???"
 				}),
 				SpVar.username => Environment.UserName,
 				SpVar.machinename => Environment.MachineName,
+				SpVar.karma => new(new GetOnlyCallbackPayload()
+				{
+					getI32 = findKarma,
+					getF32 = static () => findKarma(),
+				}),
+				SpVar.karmacap => new(new GetOnlyCallbackPayload()
+				{
+					getI32 = findKarmaCap,
+					getF32 = static () => findKarmaCap(),
+				}),
 				_ => 0,
-			});
+			});;
 		}
 	}
 	private static SpVar SpecialForName(string name)
@@ -85,6 +103,8 @@ public static partial class VarRegistry
 			"memorytotal" or "memtotal" => SpVar.memtotal,
 			"user" or "username" => SpVar.username,
 			"machine" or "machinename" => SpVar.machinename,
+			"karma" => SpVar.karma,
+			"karmacap" or "maxkarma" => SpVar.karmacap,
 			_ => SpVar.NONE,
 		};
 	}
@@ -92,16 +112,18 @@ public static partial class VarRegistry
 	internal enum SpVar
 	{
 		NONE,
-		version,
 		time,
 		utctime,
-		cycletime,
+		os,
 		root,
 		realm,
-		os,
+		version,
 		memused,
 		memtotal,
 		username,
-		machinename
+		machinename,
+		karma,
+		karmacap,
+		cycletime,
 	}
 }
