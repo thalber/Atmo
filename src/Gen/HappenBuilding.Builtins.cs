@@ -412,6 +412,29 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "fling", "force" }, Make_Fling);
 		//todo: document all below
 		AddNamedAction(new[] { "light", "tempglow" }, Make_Tempglow);
+		AddNamedAction(new[] { "stun" }, Make_Stun);
+	}
+	private static void Make_Stun(Happen ha, ArgSet args)
+	{
+		Arg select = args["select", "filter", "who"] ?? ".*",
+			duration = args["duration", "dur", "st"] ?? 10;
+		plog.DbgVerbose($"Making stun:");
+		ha.On_RealUpdate += (rm) =>
+		{
+			for (int i = 0; i < rm.updateList.Count; i++)
+			{
+				UpdatableAndDeletable? uad = rm.updateList[i];
+				if 
+				(uad is Creature c && TXT.Regex.IsMatch(
+					c.Template.type.ToString(),
+					select.Str,
+					System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+				)
+				{
+					c.Stun(duration.I32);
+				}
+			}
+		};
 	}
 	private static void Make_Tempglow(Happen ha, ArgSet args)
 	{
@@ -469,6 +492,7 @@ public static partial class HappenBuilding
 			filter = args["filter", "select"] ?? ".*",
 			forceVar = args["variance", "var"] ?? 0f,
 			spread = args["spread", "deviation", "dev"] ?? 0f;
+		Dictionary<int, VT<float, float>> variance = new();
 		ha.On_RealUpdate += (rm) =>
 		{
 			foreach (UpdatableAndDeletable? uad in rm.updateList)
@@ -477,20 +501,33 @@ public static partial class HappenBuilding
 				{
 					string objtype = obj.abstractPhysicalObject.type.ToString();
 					string? crittype = (obj as Creature)?.Template.type.ToString();
-					if 
+					if
 					(
-					TXT.Regex.IsMatch(objtype, filter.Str, System.Text.RegularExpressions.RegexOptions.IgnoreCase) 
-					|| 
+					TXT.Regex.IsMatch(objtype, filter.Str, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+					||
 					(crittype is not null && TXT.Regex.IsMatch(crittype, filter.Str, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
 					)
 					{
+						VT<float, float> cvar = variance.AddIfNone_Get
+						(obj.GetHashCode(), () => new(
+							1f.Deviate(forceVar.F32),
+							0f.Deviate(spread.F32),
+							"FlingDeviation",
+							"force",
+							"angle")
+						);
+
 						foreach (BodyChunk ch in obj.bodyChunks)
 						{
-							ch.vel += RotateAroundOrigo((Vector2)(force.Vec * 1f.Deviate(forceVar.F32)), 0f.Deviate(spread.F32));
+							ch.vel += RotateAroundOrigo((Vector2)(force.Vec * cvar.a), cvar.b);
 						}
 					}
 				}
 			}
+		};
+		ha.On_CoreUpdate += (rwg) =>
+		{
+			if (!ha.Active) variance.Clear();
 		};
 	}
 	private static void Make_SoundLoop(Happen ha, ArgSet args)
