@@ -37,17 +37,11 @@ This is the list of all special variables provided by atmo.
 
 Metafunctions are specialized variables that can receive additional input. They are used in form of `$$FUNCNAME(input)` anywhere a normal argument or variable could. Typically, type coercion is not available for metafunctions.
 
-| Metafunction names	| Description	| Examples	| Output | Output type |
-| ---					| ---			| ---		|
+| Metafunction names	| Description	| Examples	| Output	| Output type	|
+| ---					| ---			| ---		| ---		| ---			|
 | FMT, FORMAT | Allows you to combine outputs of several other variables into a string. | `$$FMT(This is a format string! Current time is: {now}, running OS: {os}` | `This is a format string! Current time is: 11/19/2022 7:34:51 AM, running OS: Win32NT` | `STRING` |
 | FILEREAD, FILE | Reads contents of a specified file as string. | `$$FILEREAD(uninstall_realm.bat)` | `rmdir "BepInEx" /s /q del doorstop_config.ini...` | `STRING` |
 | WWW, WEBREQUEST | Tries fetching text resource at a specified URI. Note that HTTPS is not possible to use. Takes some time to fetch the resource. | `$$WWW(http://collapseos.org/)` | Full HTML for CollapseOS website. | `STRING` |
-
-
-**Breaking it down**:
-
-- Format macro always starts with `$$FMT(` and ends with `)`. Only what's inside the parens is considered part of the format.
-- Most of the string is treated literally, bits of text in curly braces are treated as variable names. If the value of variable `thing` is `bar`, format string `foo {thing} bazz` will turn into `foo bar bazz`.
 
 ## Code reference
 
