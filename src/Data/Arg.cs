@@ -81,14 +81,26 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		}
 		else
 		{
-			float.TryParse(_str, out _f32);
-			if (!int.TryParse(_str, out _i32))
+			if (trueStrings.Contains(_str.ToLower()))
 			{
-				_i32 = (int)_f32;
+				_bool = true;
+				_f32 = 1f;
+				_i32 = 1;
 			}
-			bool.TryParse(_str, out _bool);
-			if (trueStrings.Contains(_str.ToLower())) _bool = true;
-			if (falseStrings.Contains(_str.ToLower())) _bool = false;
+			else if (falseStrings.Contains(_str.ToLower()))
+			{
+				_bool = false;
+				_f32 = 0f;
+				_i32 = 0;
+			}
+			else
+			{
+				float.TryParse(_str, out _f32);
+				if (!int.TryParse(_str, out _i32))
+				{
+					_i32 = (int)_f32;
+				}
+			}
 		}
 		DataType = ArgType.STRING;
 	}
