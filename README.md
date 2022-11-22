@@ -50,7 +50,7 @@ You can register your own triggers and behaviour from your code mod via Atmo's [
 
 ## Additional notes
 
-In several places, Atmo uses regular expressions, or **regex**, to select text items based on user input. If you are not familiar with regex, [this site](https://www.regular-expressions.info/tutorialcnt.html) contains a tutorial about them, and [regex101](https://regex101.com/) can be used to test and debug your regex.
+In several places, Atmo uses regular expressions, or **regex**, to select text items based on user input. If you are not familiar with regex, [this site](https://www.regular-expressions.info/tutorialcnt.html) contains a tutorial about them, and [regex101](https://regex101.com/) or [regexr](https://regexr.com/) can be used to test and debug your regex in browser.
 
 ## Thanks to
 - @DryCryCrystal - commissioning the project.
