@@ -26,14 +26,14 @@ Arguments given to actions and triggers may exist in several forms. Atmo does it
 | `INTEGER`	| Whole numbers. 32-bit integer under the hood. | `10`, `-917`, `99999999` | `DECIMAL` (imprecise if large value), `BOOLEAN` (FALSE if integer is 0, TRUE otherwise), `STRING` |
 | `DECIMAL` | Fractions. 32-bit floating point number under the hood. | `-0.6`, `12.222222` | `INTEGER` (rounds down to whole), `BOOLEAN` (FALSE if decimal is 0.0, TRUE otherwise), `STRING` |
 | `BOOLEAN` | Yes/No. Needs to be put inside a string literal, which are delimited by single quote character (`'`). | `'True'`, `'true'`, `'FALSE'`, `'false'` | `INTEGER` (1 if true, 0 if false), `DECIMAL` (1.0 if true, 0.0 if false), `STRING` (Presented as `True` or `False`) |
-| `STRING` | Text. Needs to be put inside a string literal. If you want your string to contain a singlequote character, use `\q` escape. you can do the same for line breaks (`\n`) and tab characters (`\t`). | `'abcdefsdgkndsigsig'`, `'scrom'` | `INTEGER` (tries to read, 0 if failed), `DECIMAL` (tries to read from string, 0.0 if could not), `BOOLEAN` (always TRUE if text is `1`, `true` or `yes`, always false if text is `0`, `false` or `no`, always false otherwise. Case insensitive) |
+| `STRING` | Text. Needs to be put inside a string literal. If you want your string to contain a singlequote character, use `\q` escape. you can do the same for line breaks (`\n`) and tab characters (`\t`). | `'abcdefsdgkndsigsig'`, `'scrom'` | `INTEGER` (tries to read, 0 if failed), `DECIMAL` (tries to read, 0.0 if failed), `BOOLEAN` (always TRUE if text is `1`, `true` or `yes`, always false if text is `0`, `false` or `no`, always false otherwise. Case insensitive) |
 | `VECTOR` | A collection of 2 to 4 `DECIMAL` values. Needs to be put inside a string literal. Can be used as a color sometimes; in that case, value 1 is red channel, 2 is green, 3 is blue, 4 is transparency (all in range 0.0 - 1.0). Unspecified values are set to 0.0. | `'10;5;3;2'`, `'0;-22.4'`, `'999999;-1'` | `DECIMAL` (magnitude/length of the vector), `INTEGER` (same thing, but rounded to a whole number), `BOOLEAN` (magnitude is not null), `STRING` (converts into a string from which a vector can be parsed again) |
 
 ## List of default triggers
 
-| Action's names	| Arguments	| Desription 	| Example use	|
-| --- 				| --- 		| ---			| --- 			|
-| always			| none		| Always active | `always`		|
+| Names		| Arguments	| Desription 	| Example use	|
+| --- 		| --- 		| ---			| --- 			|
+| always	| none		| Always active | `always`		|
 | untilrain, beforerain | `1:delay?=0` | Works until the rain hits, with optional additional `delay` in seconds. (can be negative to stop earlier) | `untilrain` - starts right after rain, `untilrain 10` - starts 10 seconds after rain |
 | afterrain | `1:delay?=0` | Works after the rain hits, with optional additional `delay` in seconds (can be negative to start earlier) | `afterrain`, `afterrain -20` |
 | everyx, every | `1:x` | Activates for one frame every `x` seconds. | `every 5` - once every five seconds | 
