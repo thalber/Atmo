@@ -19,6 +19,7 @@ public static class API
 	#region fields
 	internal static readonly Dictionary<string, Create_RawHappenBuilder> namedActions = new();
 	internal static readonly Dictionary<string, Create_RawTriggerFactory> namedTriggers = new();
+	internal static readonly Dictionary<string, Create_RawMacroHandler> namedMacros = new();
 	#endregion
 	#region dels
 	/// <summary>
@@ -70,6 +71,8 @@ public static class API
 	/// <param name="game">Current RainWorldGame instance.</param>
 	/// <param name="happen">Happen the trigger is to be attached to.</param>
 	public delegate HappenTrigger? Create_NamedTriggerFactory(ArgSet args, RainWorldGame game, Happen happen);
+	public delegate IArgPayload? Create_RawMacroHandler(string name, string value, int saveslot, int character);
+	public delegate IArgPayload? Create_NamedMacroHandler(string value, int saveslot, int character);
 	#endregion
 	#region API proper
 	/// <summary>
@@ -162,8 +165,13 @@ public static class API
 		Create_NamedHappenBuilder builder,
 		bool ignoreCase = true)
 	{
-		StringComparer? comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
+		if (TXT.Regex.Match(name, "\\w+").Length != name.Length)
+		{
+			plog.LogWarning($"Invalid action name: {name}");
+			return false;
+		}
 		if (namedTriggers.ContainsKey(name)) { return false; }
+		StringComparer? comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
 		void newCb(Happen ha)
 		{
 			foreach (KeyValuePair<string, string[]> ac in ha.actions)
@@ -184,8 +192,8 @@ public static class API
 	/// <param name="action"></param>
 	public static void RemoveNamedAction(string action)
 	{
-		if (!namedActions.ContainsKey(action)) return;
-		EV_MakeNewHappen -= namedActions[action];
+		if (!namedActions.TryGetValue(action, out Create_RawHappenBuilder? builder)) return;
+		EV_MakeNewHappen -= builder;
 		namedActions.Remove(action);
 	}
 	/// <summary>
@@ -201,7 +209,7 @@ public static class API
 		bool ignoreCase = true)
 	{
 		return names
-				.Select((name) => AddNamedTrigger(name, fac, ignoreCase) ? 0 : 1)
+				.Select((name) => AddNamedTrigger(name, fac, ignoreCase) ? 1 : 0)
 				.Aggregate((x, y) => x + y);
 	}
 	/// <summary>
@@ -216,9 +224,14 @@ public static class API
 		Create_NamedTriggerFactory fac,
 		bool ignoreCase = true)
 	{
+		if (TXT.Regex.Match(name, "\\w+").Length != name.Length)
+		{
+			plog.LogWarning($"Invalid trigger name: {name}");
+			return false;
+		}
+		if (namedTriggers.ContainsKey(name)) { return false; }
 		StringComparer? comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
 
-		if (namedTriggers.ContainsKey(name)) { return false; }
 		HappenTrigger? newCb(string n, ArgSet args, RainWorldGame rwg, Happen ha)
 		{
 			if (comp.Compare(n, name) == 0) return fac(args, rwg, ha);
@@ -234,10 +247,44 @@ public static class API
 	/// <param name="name"></param>
 	public static void RemoveNamedTrigger(string name)
 	{
-		if (!namedTriggers.ContainsKey(name)) return;
-		EV_MakeNewTrigger -= namedTriggers[name];
+		if (!namedTriggers.TryGetValue(name, out Create_RawTriggerFactory? fac)) return;
+		EV_MakeNewTrigger -= fac;
 		namedTriggers.Remove(name);
 	}
+	//todo: consider changing names from "macro" to something else
+	public static int AddNamedMacro(
+		string[] names,
+		Create_NamedMacroHandler handler,
+		bool ignoreCase = true) 
+		=> names.Select((name) => AddNamedMacro(name, handler, ignoreCase) ? 0 : 1).Aggregate((x, y) => x + y);
+	public static bool AddNamedMacro(
+		string name,
+		Create_NamedMacroHandler handler,
+		bool ignoreCase = true)
+	{
+		if (TXT.Regex.Match(name, "\\w+").Length != name.Length)
+		{
+			plog.LogWarning($"Invalid macro name: {name}");
+			return false;
+		}
+		if (namedMacros.ContainsKey(name)) return false;
+		StringComparer comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
+		IArgPayload? newCb(string n, string val, int ss, int ch)
+		{
+			if (comp.Compare(n, name) == 0) return handler(val, ss, ch);
+			return null;
+		}
+		EV_ApplyMacro += newCb;
+		namedMacros.Add(name, newCb);
+		return true;
+	}
+	public static void RemoveNamedMacro(string name)
+	{
+		if (!namedMacros.TryGetValue(name, out Create_RawMacroHandler? handler)) return;
+		EV_ApplyMacro -= handler;
+		namedMacros.Remove(name);
+	}
+
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
 	/// <summary>
 	/// Subscribe to this to attach your custom callbacks to newly created happen objects.
@@ -253,6 +300,10 @@ public static class API
 	public static event Create_RawTriggerFactory? EV_MakeNewTrigger;
 	internal static IEnumerable<Create_RawTriggerFactory?>? MNT_invl
 		=> EV_MakeNewTrigger?.GetInvocationList()?.Cast<Create_RawTriggerFactory?>();
+
+	public static event Create_RawMacroHandler? EV_ApplyMacro;
+	internal static IEnumerable<Create_RawMacroHandler?>? AM_invl
+		=> EV_ApplyMacro?.GetInvocationList()?.Cast<Create_RawMacroHandler?>();
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
 	#endregion
 }

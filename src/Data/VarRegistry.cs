@@ -277,10 +277,11 @@ public static partial class VarRegistry
 	{
 		BangBang(name, nameof(name));
 		Arg? res;
-		if ((res = GetFmt(name, saveslot, character)) is not null)
-		{
+		if (
+			name.StartsWith("$") 
+			&& 
+			(res = GetMacro(name.Substring(1), saveslot, character)) is not null)
 			return res;
-		}
 		if ((res = GetSpecial(name)) is not null)
 		{
 			return res;

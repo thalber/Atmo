@@ -1,4 +1,6 @@
 ﻿using Atmo.Body;
+
+using static Atmo.Data.VarRegistry;
 using static Atmo.API;
 using static Atmo.Body.HappenTrigger;
 using static UnityEngine.Mathf;
@@ -8,7 +10,7 @@ public static partial class HappenBuilding
 {
 	internal static void InitBuiltins()
 	{
-		foreach (Action initfun in new[] { RegisterBuiltinActions, RegisterBuiltinTriggers })
+		foreach (Action initfun in new[] { RegisterBuiltinActions, RegisterBuiltinTriggers, RegisterBuiltinMacros })
 		{
 			try
 			{
@@ -472,7 +474,7 @@ public static partial class HappenBuilding
 						if (p.graphicsModule is PlayerGraphics pgraf && pgraf.lightSource is not null)
 						{
 							pgraf.lightSource.setRad = 300f;
-							pgraf.lightSource.color 
+							pgraf.lightSource.color
 								= PlayerGraphics.SlugcatColor(p.playerState.slugcatCharacter);
 							if (!p.glowing)
 							{
@@ -480,7 +482,7 @@ public static partial class HappenBuilding
 								pgraf.lightSource = null;
 							}
 						}
-						
+
 					}
 					else
 					{
@@ -882,6 +884,37 @@ public static partial class HappenBuilding
 				Assign();
 			}
 		};
+	}
+	#endregion
+	#region macros
+	private static readonly TXT.Regex FMT_Split = new("{.+?}");
+	private static readonly TXT.Regex FMT_Match = new("(?<={).+?(?=})");
+	internal static void RegisterBuiltinMacros()
+	{
+		AddNamedMacro(new[] { "FMT", "FORMAT" }, MMake_FMT);
+	}
+
+	private static IArgPayload? MMake_FMT(string text, int ss, int ch)
+	{
+		plog.DbgVerbose("FMT!");
+		string[] bits = FMT_Split.Split(text);
+		TXT.MatchCollection names = FMT_Match.Matches(text);
+		Arg[] variables = new Arg[names.Count];
+		for (int i = 0; i < names.Count; i++)
+		{
+			variables[i] = GetVar(names[i].Value, ss, ch);
+		}
+		int ind = 0;
+		string format = bits.Stitch((x, y) => $"{x}{{{ind++}}}{y}");
+		object[] getStrs()
+		{
+			return variables.Select(x => x.Str).ToArray();
+		}
+		return new GetOnlyCallbackPayload()
+		{
+			getStr = () => string.Format(format, getStrs())
+		};
+
 	}
 	#endregion
 	private static void NotifyArgsMissing(Delegate source, params string[] args)

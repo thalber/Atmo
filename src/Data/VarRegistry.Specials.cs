@@ -11,35 +11,42 @@ public static partial class VarRegistry
 {
 	#region fields
 	internal static readonly NamedVars SpecialVars = new();
-	private static readonly TXT.Regex FMT_Split = new("{.+?}");
-	private static readonly TXT.Regex FMT_Match = new("(?<={).+?(?=})");
 	private static readonly TXT.Regex FMT_Is = new("\\$FMT\\((.*?)\\)");
-	
+	private static readonly TXT.Regex Macro_Sub = new("(?<=\\w+\\().+?(?=\\))");
 	#endregion;
-	private static Arg? GetFmt(string text, in int saveslot, in int character)
+	private static Arg? GetMacro(string text, in int saveslot, in int character)
 	{
 		TXT.Match _is;
-		if (!(_is = FMT_Is.Match(text)).Success) return null;
-		text = _is.Groups[1].Value;
-		string[] bits = FMT_Split.Split(text);
-		TXT.MatchCollection names = FMT_Match.Matches(text);
-		Arg[] variables = new Arg[names.Count];
-		for (int i = 0; i < names.Count; i++)
+		if (!(_is = Macro_Sub.Match(text)).Success) return null;
+		string name = text.Substring(0, _is.Index - 1);
+		plog.DbgVerbose($"Attempting to create macro from {text} (name {name}, match {_is.Value})");
+		IEnumerable<API.Create_RawMacroHandler?>? invl = API.AM_invl;
+		IArgPayload? res = null;
+		if (invl is null)
 		{
-			variables[i] = GetVar(names[i].Value, saveslot, character);
+			plog.DbgVerbose("No macro handles attached");
+			return null;
 		}
-
-		int ind = 0;
-		string format = bits.Stitch((x, y) => $"{x}{{{ind++}}}{y}");
-		object[] getStrs ()
+		foreach (API.Create_RawMacroHandler? inv in invl)
 		{
-			return variables.Select(x => x.Str).ToArray();
+			try
+			{
+				if ((res = inv?.Invoke(name, _is.Value, saveslot, character)) is not null)
+				{
+					return new(res);
+				}
+			}
+			catch (Exception ex)
+			{
+				plog.LogError($"VarRegistry: Error invoking macro handler {inv}//{inv?.Method} for {name}, {_is.Value}:" +
+					$"\n{ex}");
+			}
 		}
-		return new(new GetOnlyCallbackPayload()
-		{
-			getStr = () => string.Format(format, getStrs())
-		});
-		//todo: update format string docs
+		plog.DbgVerbose($"No macro {name}, variable lookup continues as normal");
+		return null;
+		//if (!(_is = FMT_Is.Match(text)).Success) return null;
+		//text = _is.Groups[1].Value;
+		
 	}
 	internal static Arg? GetSpecial(string name)
 	{
@@ -52,11 +59,11 @@ public static partial class VarRegistry
 		SpecialVars.Clear();
 		foreach (SpVar tp in Enum.GetValues(typeof(SpVar)))
 		{
-			static RainWorldGame? FindRWG() 
+			static RainWorldGame? FindRWG()
 				=> inst.RW?.processManager?.FindSubProcess<RainWorldGame>();
-			static int findKarma() 
+			static int findKarma()
 				=> FindRWG()?.GetStorySession?.saveState.deathPersistentSaveData.karma ?? -1;
-			static int findKarmaCap() 
+			static int findKarmaCap()
 				=> FindRWG()?.GetStorySession?.saveState.deathPersistentSaveData.karmaCap ?? -1;
 			static int findClock() => FindRWG()?.world.rainCycle?.cycleLength ?? -1;
 			SpecialVars.Add(tp, tp switch
@@ -100,7 +107,7 @@ public static partial class VarRegistry
 					getF32 = static () => findKarmaCap(),
 				}),
 				_ => 0,
-			});;
+			}); ;
 		}
 	}
 	private static SpVar SpecialForName(string name)
