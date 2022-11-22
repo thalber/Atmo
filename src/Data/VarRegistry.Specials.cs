@@ -1,11 +1,11 @@
 ﻿using System.Text;
 using Atmo.Data;
 
-using NamedVars = System.Collections.Generic.Dictionary<Atmo.Helpers.VarRegistry.SpVar, Atmo.Data.Arg>;
+using NamedVars = System.Collections.Generic.Dictionary<Atmo.Data.VarRegistry.SpVar, Atmo.Data.Arg>;
 using Save = Atmo.Helpers.VT<int, int>;
 using SerDict = System.Collections.Generic.Dictionary<string, object>;
 
-namespace Atmo.Helpers;
+namespace Atmo.Data;
 
 public static partial class VarRegistry
 {

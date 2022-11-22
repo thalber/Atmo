@@ -1,9 +1,9 @@
-﻿using Atmo.Data;
+﻿using Atmo.Helpers;
 using NamedVars = System.Collections.Generic.Dictionary<string, Atmo.Data.Arg>;
 using Save = Atmo.Helpers.VT<int, int>;
 using SerDict = System.Collections.Generic.Dictionary<string, object>;
 
-namespace Atmo.Helpers;
+namespace Atmo.Data;
 /// <summary>
 /// Allows accessing a pool of variables, global or save-specific.
 /// You can use <see cref="GetVar(string, int, int)"/> to fetch variables by name.

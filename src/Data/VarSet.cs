@@ -1,5 +1,5 @@
 ﻿using System.Runtime.Serialization;
-using static Atmo.Helpers.VarRegistry;
+using static Atmo.Data.VarRegistry;
 using NamedVars = System.Collections.Generic.Dictionary<string, Atmo.Data.Arg>;
 using Save = Atmo.Helpers.VT<int, int>;
 using SerDict = System.Collections.Generic.Dictionary<string, object>;

@@ -1,7 +1,7 @@
 ﻿using Atmo.Body;
 using Atmo.Gen;
 
-namespace Atmo;
+namespace Atmo.Body;
 /// <summary>
 /// Represents a set of Happens for a single region. Binds together room names, groups and happens.
 /// Binding is done using <see cref="TwoPools{TLeft, TRight}"/> sets, living in properties:
