@@ -59,23 +59,11 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	private void _parseStr()
 	{
 		//check vec parsn
-		string[] spl;
 		_vec = default;
-		Vector4 vecres = default;
-		bool vecparsed = false;
-		if ((spl = TXT.Regex.Split(_str, "\\s*;\\s*")).Length is 2 or 3 or 4)
+		if (TryParseVec4(_str, out _vec))
 		{
-			vecparsed = true;
-			for (int i = 0; i < spl.Length; i++)
-			{
-				if (!float.TryParse(spl[i], out float val)) vecparsed = false;
-				vecres[i] = val;
-			}
-		}
-		if (vecparsed)
-		{
-			_vec = vecres;
-			_f32 = vecres.magnitude;
+			//_vec = vecres;
+			_f32 = _vec.magnitude;
 			_i32 = (int)_f32;
 			_bool = _f32 != 0f;
 		}
@@ -512,7 +500,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// Creates an instance from a vector.
 	/// </summary>
 	/// <param name="val"></param>
-	public Arg(Vector3 val)
+	public Arg(Vector4 val)
 	{
 		Vec = val;
 		_raw ??= val.ToString();
@@ -587,13 +575,13 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// Converts an instance into a vector.
 	/// </summary>
 	/// <param name="arg"></param>
-	public static explicit operator Vector3(Arg arg)
+	public static explicit operator Vector4(Arg arg)
 		=> arg.Vec;
 	/// <summary>
 	/// Creates an unnamed instance from a vector.
 	/// </summary>
 	/// <param name="src"></param>
-	public static implicit operator Arg(Vector3 src)
+	public static implicit operator Arg(Vector4 src)
 		=> new(src);
 
 	#endregion;

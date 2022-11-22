@@ -893,10 +893,19 @@ public static partial class HappenBuilding
 	{
 		AddNamedMacro(new[] { "FMT", "FORMAT" }, MMake_FMT);
 	}
-
+	private static IArgPayload? MMake_ColorFlash(string text, int ss, int ch)
+	{
+		ArgSet args = TXT.Regex.Split(text, "\\s");
+		Arg basev = args.AtOr(0, (Vector4)Color.cyan),
+			devv = args.AtOr(1, (Vector4)Color.black);
+		Color @base = basev.Vec, dev = devv.Vec;
+		return new GetOnlyCallbackPayload()
+		{
+			getVec = () => @base.RandDev(dev)
+	};
+	}
 	private static IArgPayload? MMake_FMT(string text, int ss, int ch)
 	{
-		plog.DbgVerbose("FMT!");
 		string[] bits = FMT_Split.Split(text);
 		TXT.MatchCollection names = FMT_Match.Matches(text);
 		Arg[] variables = new Arg[names.Count];

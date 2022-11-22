@@ -463,6 +463,26 @@ public static partial class Utils
 		return false;
 	}
 	/// <summary>
+	/// Attempts to parse a vector4 from string; expected format is "x;y;z;w", z or w may be absent.
+	/// </summary>
+	public static bool TryParseVec4(string str, out Vector4 vec)
+	{
+		string[] spl;
+		Vector4 vecres = default;
+		bool vecparsed = false;
+		if ((spl = TXT.Regex.Split(str, "\\s*;\\s*")).Length is 2 or 3 or 4)
+		{
+			vecparsed = true;
+			for (int i = 0; i < spl.Length; i++)
+			{
+				if (!float.TryParse(spl[i], out float val)) vecparsed = false;
+				vecres[i] = val;
+			}
+		}
+		vec = vecres;
+		return vecparsed;
+	}
+	/// <summary>
 	/// Joins two strings with a comma and a space.
 	/// </summary>
 	/// <param name="x"></param>
