@@ -35,10 +35,10 @@ This is the list of all special variables provided by atmo.
 
 This is a special variable that allows you to combine outputs of several other variables into a string.
 
-It appears in the following form: `$$FMT(\q Format String \q variableName1 variableName2)`. Putting this example
+It appears in the following form: `$$FMT(Format String {variableName1} {variableName2})`. Putting this example
 
 ```
-WHAT: log 'init=$$FMT(\qThis is a format string! Current time is: {1}, running OS: {2}\q time os)' 'sev=Warning'
+WHAT: log 'init=$$FMT(This is a format string! Current time is: {now}, running OS: {os})' 'sev=Warning'
 ```
 
 in a happen body will cause `log` action to output the following into console:
@@ -49,9 +49,8 @@ in a happen body will cause `log` action to output the following into console:
 
 **Breaking it down**:
 
-* Format macro always starts with `$$FMT(` and ends with `)`. Only what's inside the parens is considered part of the format.
-* The text inside is structured the same as action/trigger names and arguments. First item is considered the format, while the rest are then applied to that format. Since you can't use single-quotes (`'`) directly inside the literal that contains the entire macro, you can instead use `\q` escape sequence, which gets replaced with a singlequote. You can double-escape (`\\q`) if you actually want backslash+Q in your resulting string, `\\\q` if you want the resulting string to have `\'` and so on.
-* Inside the format, items are referenced by index. To use item 1 (`time` in the example), you insert `{1}` into the format. Make sure you supply enough items! If you don't, an error will be thrown.
+- Format macro always starts with `$$FMT(` and ends with `)`. Only what's inside the parens is considered part of the format.
+- Most of the string is treated literally, bits of text in curly braces are treated as variable names. If the value of variable `thing` is `bar`, format string `foo {thing} bazz` will turn into `foo bar bazz`.
 
 ## Code reference
 

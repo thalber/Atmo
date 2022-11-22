@@ -12,11 +12,24 @@ Atmo searches regionpack subfolders `[regpack]/World/[region]/[region-acronym].a
 
 `.atmo` files should be plaintext files encoded in UTF-8.
 
-File format example can be found [here](syntax.txt).
+A shorter example of how an atmo script file could look:
 
-Groups must be defined before Happens that use them.
+```
+GROUP: group1
+SU_S01 SU_S03 SU_S04
+END GROUP
+
+HAPPEN: ReduceGravity
+WHAT: fling '0;0.5'
+WHERE: group1
+WHEN: always
+```
+
+This would reduce gravity in all shelters in Outskirts.
+
+Full file format example (with comments) can be found [here](syntax.txt). If you are using Notepad++, there is a User-Defined Language config for it in this repo, which gives you syntax highlighting (for [dark mode](extras/atmoscript.udl.xml) and [light mode](extras/atmoscript.lightmode.udl.xml)).
+
 A happen block can have multiple `WHAT:` and `WHERE:` clauses, but *only one* `WHEN:` clause.
-Inside a happen block, the `WHEN:` clause should always be the last.
 Inside each `WHERE:` clause line, parsing starts with reading *group names*. After you've switched to included or excluded rooms by using a `+`/`-` separator, you can switch back to groups by using a `=` separator.
 
 ## Actions
