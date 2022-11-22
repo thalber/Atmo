@@ -4,8 +4,7 @@ using Atmo.Body;
 namespace Atmo.Gen;
 internal class HappenParser
 {
-	//god this is a mess
-	//todo: find a way to make the parser less painful
+	//this is still a mess but manageable
 	#region fields
 	#region statfields
 	private const TXT.RegexOptions Options = TXT.RegexOptions.IgnoreCase;
@@ -92,14 +91,9 @@ internal class HappenParser
 			phase = ParsePhase.None;
 			return;
 		}
-
 		if ((ge = LineMatchers[LineKind.GroupEnd].Match(cline)).Success && ge.Index == 0)
 		{
-			plog.DbgVerbose($"HappenParse: ending group: {cGroupName}. " +
-				$"Regex patterns: {cGroupContents.matchers.Count}, " +
-				$"Literal rooms: {cGroupContents.rooms.Count}");
-			allGroupContents.Add(cGroupName, cGroupContents);
-			ResetGroup();
+			FinalizeGroup();
 			phase = ParsePhase.None;
 			return;
 		}
@@ -124,6 +118,7 @@ internal class HappenParser
 			cGroupContents.rooms.Add(ss);
 		}
 	}
+
 	private void ParseHappen()
 	{
 		foreach (LineKind prop in happenProps)
@@ -203,8 +198,7 @@ internal class HappenParser
 					break;
 				case LineKind.HappenEnd:
 					plog.DbgVerbose("HappenParse: finishing a happen block");
-					retrievedHappens.Add(cHapp);
-					cHapp = default;
+					FinalizeHappen();
 					phase = ParsePhase.None;
 					break;
 				default:
@@ -214,8 +208,27 @@ internal class HappenParser
 			}
 		}
 	}
-	private void ResetGroup()
+
+	private void FinalizeHappen()
 	{
+		retrievedHappens.Add(cHapp);
+		cHapp = default;
+	}
+
+	private void FinalizeGroup()
+	{
+		if (cGroupName is null)
+		{
+			plog.LogWarning("HappenParse: attempted to finalize group while group is null!");
+
+		}
+		else
+		{
+			plog.DbgVerbose($"HappenParse: ending group: {cGroupName}. " +
+							$"Regex patterns: {cGroupContents.matchers.Count}, " +
+							$"Literal rooms: {cGroupContents.rooms.Count}");
+			allGroupContents.Add(cGroupName, cGroupContents);
+		}
 		cGroupName = null;
 		cGroupContents = new();
 	}
@@ -291,6 +304,16 @@ internal class HappenParser
 		for (int i = 0; i < p.allLines.Length; i++)
 		{
 			p.Advance();
+		}
+		if (p.cGroupName is not null)
+		{
+			plog.LogWarning($"HappenParse: Group {p.cGroupName} missing END! Last block in file, auto wrapping");
+			p.FinalizeGroup();
+		}
+		if (p.cHapp.name is not null)
+		{
+			plog.LogWarning($"HappenParse: Happen {p.cHapp.name} missing END! Last block in file, auto wrapping");
+
 		}
 		Dictionary<string, IEnumerable<string>> groupsFinal = new();
 		foreach (KeyValuePair<string, GroupContents> groupPre in p.allGroupContents)

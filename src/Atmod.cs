@@ -79,7 +79,6 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// Reference to current RainWorld vanilla object.
 	/// </summary>
 	public RainWorld? RW { get; private set; }
-	//todo: make it smoothly work with region switching.
 	#endregion
 	/// <summary>
 	/// Applies hooks and sets <see cref="inst"/>.

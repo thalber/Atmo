@@ -410,9 +410,9 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "palette", "changepalette" }, Make_ChangePalette);
 		AddNamedAction(new[] { "setvar", "setvariable" }, Make_SetVar);
 		AddNamedAction(new[] { "fling", "force" }, Make_Fling);
-		//todo: document all below
 		AddNamedAction(new[] { "light", "tempglow" }, Make_Tempglow);
 		AddNamedAction(new[] { "stun" }, Make_Stun);
+		//todo: document all below
 	}
 	private static void Make_Stun(Happen ha, ArgSet args)
 	{
@@ -424,7 +424,7 @@ public static partial class HappenBuilding
 			for (int i = 0; i < rm.updateList.Count; i++)
 			{
 				UpdatableAndDeletable? uad = rm.updateList[i];
-				if 
+				if
 				(uad is Creature c && TXT.Regex.IsMatch(
 					c.Template.type.ToString(),
 					select.Str,
@@ -438,12 +438,12 @@ public static partial class HappenBuilding
 	}
 	private static void Make_Tempglow(Happen ha, ArgSet args)
 	{
-		//todo: make it turn off!
 		if (args.Count < 1)
 		{
 			NotifyArgsMissing(Make_Tempglow, "color");
 		}
-		Arg argcol = args[0];
+		Arg argcol = args[0],
+			radius = args.AtOr(1, 300f);
 		Dictionary<Player, bool> playersActive = new();
 		ha.On_RealUpdate += (rm) =>
 		{
@@ -456,6 +456,7 @@ public static partial class HappenBuilding
 					playersActive.Set(p, true);
 					if (pgraf?.lightSource is null) continue;
 					pgraf.lightSource.color = argcol.Vec.ToOpaqueCol();
+					pgraf.lightSource.setRad = radius.F32;
 				}
 			}
 		};
@@ -467,12 +468,19 @@ public static partial class HappenBuilding
 				{
 					if (!playersActive.AddIfNone_Get(p, static () => false))
 					{
-						p.glowing = false;
+						p.glowing = game.GetStorySession?.saveState.theGlow ?? false;
 						if (p.graphicsModule is PlayerGraphics pgraf && pgraf.lightSource is not null)
 						{
-							pgraf.lightSource.requireUpKeep = true;
-							pgraf.lightSource = null;
+							pgraf.lightSource.setRad = 300f;
+							pgraf.lightSource.color 
+								= PlayerGraphics.SlugcatColor(p.playerState.slugcatCharacter);
+							if (!p.glowing)
+							{
+								pgraf.lightSource.stayAlive = false;
+								pgraf.lightSource = null;
+							}
 						}
+						
 					}
 					else
 					{
@@ -809,12 +817,70 @@ public static partial class HappenBuilding
 	}
 	private static void Make_SetVar(Happen ha, ArgSet args)
 	{
-		Arg argn = args.AtOr(0, "testvar"),
-			argv = args.AtOr(1, "TESTVALUE");
+		if (args.Count < 2)
+		{
+			NotifyArgsMissing(Make_SetVar, "varname", "value");
+			return;
+		}
+		Arg argn = args[0],
+			argv = args[1],
+			continuous = args.AtOr(2, false),
+			forceType = args["dt", "datatype", "format"] ?? nameof(ArgType.STRING),
+			target = VarRegistry.GetVar(argn.Str, CurrentSaveslot ?? 0, CurrentCharacter ?? 0)
+			;
+		forceType.GetEnum(out ArgType datatype);
+		string? dt_last_str = forceType.Str;
+
+		void Assign()
+		{
+			switch (datatype)
+			{
+			case ArgType.DECIMAL:
+			{
+				target.F32 = argv.F32;
+				break;
+			}
+			case ArgType.INTEGER:
+			{
+				target.I32 = argv.I32;
+				break;
+			}
+			case ArgType.BOOLEAN:
+			{
+				target.Bool = argv.Bool;
+				break;
+			}
+			case ArgType.VECTOR:
+			{
+				target.Vec = argv.Vec;
+				break;
+			}
+			case ArgType.STRING:
+			case ArgType.ENUM:
+			case ArgType.OTHER:
+			default:
+			{
+				target.Str = argv.Str;
+				break;
+			}
+			}
+		}
 		ha.On_Init += (_) =>
 		{
-			Arg target = VarRegistry.GetVar(argn.Str, CurrentSaveslot ?? 0, CurrentCharacter ?? 0);
-			target.Str = argv.Str;
+			Assign();
+		};
+		ha.On_CoreUpdate += (_) =>
+		{
+			if (dt_last_str != forceType.Str)
+			{
+				forceType.GetEnum(out datatype);
+				plog.DbgVerbose($"Updating DT preference to {datatype}");
+			}
+			dt_last_str = forceType.Str;
+			if (continuous.Bool)
+			{
+				Assign();
+			}
 		};
 	}
 	#endregion

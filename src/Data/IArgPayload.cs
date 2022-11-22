@@ -24,7 +24,6 @@ public interface IArgPayload
 	/// Boolean value of the instance.
 	/// </summary>
 	public bool Bool { get; set; }
-	//todo: integrate fv2/fv3 into normal inst
 	/// <summary>
 	/// Vector value of the instance.
 	/// </summary>

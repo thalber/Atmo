@@ -43,7 +43,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 {
 	private bool _skipparse = false;
 	private bool _readonly = false;
-	private ArgType _dt = ArgType.STR;
+	private ArgType _dt = ArgType.STRING;
 	#region backing
 	private IArgPayload? _payload;
 	private string _raw;
@@ -51,10 +51,10 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	private int _i32;
 	private float _f32;
 	private bool _bool;
-	private Vector4 _vec; //todo: add autoconverts
+	private Vector4 _vec;
 	#endregion backing
 	/// <summary>
-	/// Parses contents of <see cref="_str"/> to fill other fields. Sets <see cref="DataType"/> to <see cref="ArgType.STR"/>.
+	/// Parses contents of <see cref="_str"/> to fill other fields. Sets <see cref="DataType"/> to <see cref="ArgType.STRING"/>.
 	/// </summary>
 	private void _parseStr()
 	{
@@ -87,11 +87,11 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			if (trueStrings.Contains(_str.ToLower())) _bool = true;
 			if (falseStrings.Contains(_str.ToLower())) _bool = false;
 		}
-		DataType = ArgType.STR;
+		DataType = ArgType.STRING;
 	}
 	#region convert
 	/// <summary>
-	/// Raw string previously used to create the argument. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.STR"/>.
+	/// Raw string previously used to create the argument. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.STRING"/>.
 	/// </summary>
 	public string Raw
 	{
@@ -138,7 +138,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		}
 	}
 	/// <summary>
-	/// String value of the argument. If the argument is unnamed, this is equivalent to <see cref="Raw"/>; if the argument is named, returns everything after first "=" character. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.STR"/>.
+	/// String value of the argument. If the argument is unnamed, this is equivalent to <see cref="Raw"/>; if the argument is named, returns everything after first "=" character. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.STRING"/>.
 	/// </summary>
 	public string Str
 	{
@@ -156,7 +156,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		}
 	}
 	/// <summary>
-	/// Int value of the argument. 0 if int value couldn't be parsed; rounded if <see cref="Arg"/> is created from a float; 1 or 0 if created from a bool; rounded magnitude of a vector if instance created from vector. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.I32"/>.
+	/// Int value of the argument. 0 if int value couldn't be parsed; rounded if <see cref="Arg"/> is created from a float; 1 or 0 if created from a bool; rounded magnitude of a vector if instance created from vector. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.INTEGER"/>.
 	/// </summary>
 	public int I32
 	{
@@ -172,11 +172,11 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			_bool = value is not 0;
 			_vec = default;
 			Str = value.ToString();
-			DataType = ArgType.I32;
+			DataType = ArgType.INTEGER;
 		}
 	}
 	/// <summary>
-	/// Float value of the argument; 0f if float value couldn't be parsed; equal to <see cref="I32"/> if <see cref="Arg"/> is created from an int (may lose precision on large values!); 1f or 0f if created from a bool; magnitude of a vector if instance is created from vector. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.F32"/>.
+	/// Float value of the argument; 0f if float value couldn't be parsed; equal to <see cref="I32"/> if <see cref="Arg"/> is created from an int (may lose precision on large values!); 1f or 0f if created from a bool; magnitude of a vector if instance is created from vector. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.DECIMAL"/>.
 	/// </summary>
 	public float F32
 	{
@@ -191,11 +191,11 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			_vec = default;
 			_skipparse = true;
 			Str = value.ToString();
-			DataType = ArgType.F32;
+			DataType = ArgType.DECIMAL;
 		}
 	}
 	/// <summary>
-	/// Boolean value of the argument; false by default. False if original string is found in <see cref="falseStrings"/>, or if <see cref="Arg"/> is created from a zero int or float; True if original string is found in <see cref="trueStrings"/>, or of <see cref="Arg"/> is created from a non-zero int, float or vector. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.BOOL"/>.
+	/// Boolean value of the argument; false by default. False if original string is found in <see cref="falseStrings"/>, or if <see cref="Arg"/> is created from a zero int or float; True if original string is found in <see cref="trueStrings"/>, or of <see cref="Arg"/> is created from a non-zero int, float or vector. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.BOOLEAN"/>.
 	/// </summary>
 	public bool Bool
 	{
@@ -210,7 +210,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			_skipparse = true;
 			_vec = default;
 			Str = value.ToString();
-			DataType = ArgType.BOOL;
+			DataType = ArgType.BOOLEAN;
 		}
 	}
 	/// <summary>
@@ -229,7 +229,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			_vec = value;
 			_skipparse = true;
 			Str = $"{value.x};{value.y};{value.z};{value.w}";
-			DataType = ArgType.VEC;
+			DataType = ArgType.VECTOR;
 		}
 	}
 
@@ -388,11 +388,11 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		{
 			return DataType switch
 			{
-				ArgType.F32 => other.F32 == F32,
-				ArgType.I32 => other.I32 == I32,
-				ArgType.STR => other.Str == Str,
+				ArgType.DECIMAL => other.F32 == F32,
+				ArgType.INTEGER => other.I32 == I32,
+				ArgType.STRING => other.Str == Str,
 				ArgType.ENUM => other.I32 == I32 || other.Str == Str,
-				ArgType.BOOL => other.Bool == Bool,
+				ArgType.BOOLEAN => other.Bool == Bool,
 				ArgType.OTHER => false,
 				_ => throw new InvalidOperationException("Impossible data type value!"),
 			};
@@ -418,11 +418,11 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		}
 		sb.Append(string.Format("{{ {0} : {1} }}", DataType, DataType switch
 		{
-			ArgType.F32 => F32,
-			ArgType.I32 => I32,
-			ArgType.STR => Str,
+			ArgType.DECIMAL => F32,
+			ArgType.INTEGER => I32,
+			ArgType.STRING => Str,
 			ArgType.ENUM => $"{Str} / {I32}",
-			ArgType.BOOL => Bool,
+			ArgType.BOOLEAN => Bool,
 			_ => Str
 		}));
 

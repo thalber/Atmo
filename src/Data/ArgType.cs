@@ -8,15 +8,15 @@ public enum ArgType
 	/// <summary>
 	/// Value was originally assigned as float.
 	/// </summary>
-	F32,
+	DECIMAL,
 	/// <summary>
 	/// Value was originally assigned as int.
 	/// </summary>
-	I32,
+	INTEGER,
 	/// <summary>
 	/// Value was originally assigned as string.
 	/// </summary>
-	STR,
+	STRING,
 	/// <summary>
 	/// Value was originally assigned as an enum.
 	/// </summary>
@@ -24,11 +24,11 @@ public enum ArgType
 	/// <summary>
 	/// Value was originally assigned as boolean.
 	/// </summary>
-	BOOL,
+	BOOLEAN,
 	/// <summary>
 	/// Value was orignally assigned as a vector.
 	/// </summary>
-	VEC,
+	VECTOR,
 	/// <summary>
 	/// The data type is unspecified.
 	/// </summary>
