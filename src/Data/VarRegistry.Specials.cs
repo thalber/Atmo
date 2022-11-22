@@ -12,22 +12,22 @@ public static partial class VarRegistry
 	#region fields
 	internal static readonly NamedVars SpecialVars = new();
 	private static readonly TXT.Regex FMT_Is = new("\\$FMT\\((.*?)\\)");
-	private static readonly TXT.Regex Macro_Sub = new("(?<=\\w+\\().+?(?=\\))");
+	private static readonly TXT.Regex Metaf_Sub = new("(?<=\\w+\\().+?(?=\\))");
 	#endregion;
-	private static Arg? GetMacro(string text, in int saveslot, in int character)
+	private static Arg? GetMetaf(string text, in int saveslot, in int character)
 	{
 		TXT.Match _is;
-		if (!(_is = Macro_Sub.Match(text)).Success) return null;
+		if (!(_is = Metaf_Sub.Match(text)).Success) return null;
 		string name = text.Substring(0, _is.Index - 1);
-		plog.DbgVerbose($"Attempting to create macro from {text} (name {name}, match {_is.Value})");
-		IEnumerable<API.Create_RawMacroHandler?>? invl = API.AM_invl;
+		plog.DbgVerbose($"Attempting to create metafun from {text} (name {name}, match {_is.Value})");
+		IEnumerable<API.Create_RawMetaFunction?>? invl = API.AM_invl;
 		IArgPayload? res = null;
 		if (invl is null)
 		{
-			plog.DbgVerbose("No macro handles attached");
+			plog.DbgVerbose("No metafun handlers attached");
 			return null;
 		}
-		foreach (API.Create_RawMacroHandler? inv in invl)
+		foreach (API.Create_RawMetaFunction? inv in invl)
 		{
 			try
 			{
@@ -38,11 +38,11 @@ public static partial class VarRegistry
 			}
 			catch (Exception ex)
 			{
-				plog.LogError($"VarRegistry: Error invoking macro handler {inv}//{inv?.Method} for {name}, {_is.Value}:" +
+				plog.LogError($"VarRegistry: Error invoking metafun handler {inv}//{inv?.Method} for {name}, {_is.Value}:" +
 					$"\n{ex}");
 			}
 		}
-		plog.DbgVerbose($"No macro {name}, variable lookup continues as normal");
+		plog.DbgVerbose($"No metafun {name}, variable lookup continues as normal");
 		return null;
 		//if (!(_is = FMT_Is.Match(text)).Success) return null;
 		//text = _is.Groups[1].Value;

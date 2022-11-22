@@ -41,6 +41,61 @@ public struct CallbackPayload : IArgPayload
 		this.prop_Str = prop_Str ?? new(null, null);
 		this.prop_Vec = prop_Vec ?? new(null, null);
 	}
+	/// <summary>
+	/// Wraps a callback-payload around another arbitrary <see cref="IArgPayload"/>
+	/// </summary>
+	/// <param name="wrap"></param>
+	/// <exception cref="InvalidOperationException"></exception>
+	public CallbackPayload(IArgPayload wrap)
+	{
+		prop_I32 = null!;
+		prop_F32 = null!;
+		prop_Bool = null!;
+		prop_Str = null!;
+		prop_Vec = null!;
+		Type t = wrap.GetType();
+		RFL.PropertyInfo? prop;
+		string[] req = new[] { "F32", "I32", "Bool", "Str", "Vec" };
+		foreach (string propname in req)
+		{
+			if ((prop = t.GetPropertyAllContexts(propname)) is null) throw new InvalidOperationException("Property missing!");
+			switch (propname)
+			{
+			case "F32":
+			{
+				prop_F32 = new(prop, wrap);
+				break;
+			}
+			case "I32":
+			{
+				prop_I32 = new(prop, wrap);
+				break;
+			}
+			case "Str":
+			{
+				prop_Str = new(prop, wrap);
+				break;
+			}
+			case "Bool":
+			{
+				prop_Bool = new(prop, wrap);
+				break;
+			}
+			case "Vec":
+			{
+				prop_Vec = new(prop, wrap);
+				break;
+			}
+			default:
+				break;
+			} //bind fakeprops to realprops somewhere here
+		}
+		prop_I32 ??= new(null, null);
+		prop_F32 ??= new(null, null);
+		prop_Bool ??= new(null, null);
+		prop_Str ??= new(null, null);
+		prop_Vec ??= new(null, null);
+	}
 
 	/// <inheritdoc/>
 	public string Raw

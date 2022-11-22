@@ -1,3 +1,5 @@
+
+
 # Variable system
 
 Atmo features a variable system, which allows you to read and write data from a shared registry.
@@ -31,21 +33,16 @@ This is the list of all special variables provided by atmo.
 | realm | Whether the game is running Realm |
 | memoryused, memused | Current size of used memory in bytes. Can only be fetched as string |
 
-### Format macro
+## Metafunctions
 
-This is a special variable that allows you to combine outputs of several other variables into a string.
+Metafunctions are specialized variables that can receive additional input. They are used in form of `$$FUNCNAME(input)` anywhere a normal argument or variable could. Typically, type coercion is not available for metafunctions.
 
-It appears in the following form: `$$FMT(Format String {variableName1} {variableName2})`. Putting this example
+| Metafunction names	| Description	| Examples	| Output | Output type |
+| ---					| ---			| ---		|
+| FMT, FORMAT | Allows you to combine outputs of several other variables into a string. | `$$FMT(This is a format string! Current time is: {now}, running OS: {os}` | `This is a format string! Current time is: 11/19/2022 7:34:51 AM, running OS: Win32NT` | `STRING` |
+| FILEREAD, FILE | Reads contents of a specified file as string. | `$$FILEREAD(uninstall_realm.bat)` | `rmdir "BepInEx" /s /q del doorstop_config.ini...` | `STRING` |
+| WWW, WEBREQUEST | Tries fetching text resource at a specified URI. Note that HTTPS is not possible to use. Takes some time to fetch the resource. | `$$WWW(http://collapseos.org/)` | Full HTML for CollapseOS website. | `STRING` |
 
-```
-WHAT: log 'init=$$FMT(This is a format string! Current time is: {now}, running OS: {os})' 'sev=Warning'
-```
-
-in a happen body will cause `log` action to output the following into console:
-
-```
-[Warning: Atmo] test:"This is a format string! Current time is: 11/19/2022 7:34:51 AM, running OS: Win32NT"
-```
 
 **Breaking it down**:
 

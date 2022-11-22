@@ -15,4 +15,17 @@ public sealed record FakeProp<T> : VT<Func<T>?, Action<T>?>
 		: base(_a, _b, "PropBacking", "getter", "setter")
 	{
 	}
+	/// <summary>
+	/// Creates a new instance from a real instance property.
+	/// </summary>
+	/// <param name="rpi">Reflection property info</param>
+	/// <param name="instance">Instance the property is bound to. Null if static</param>
+	public FakeProp(RFL.PropertyInfo rpi, object? instance)
+		: this(
+			  (Func<T>?)Delegate.CreateDelegate(typeof(Func<T>), instance, rpi.GetGetMethod()),
+			  (Action<T>)Delegate.CreateDelegate(typeof(Action<T>), instance, rpi.GetSetMethod())
+			  )
+	{
+
+	}
 }

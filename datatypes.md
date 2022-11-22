@@ -1,0 +1,11 @@
+## Data types
+
+Arguments given to actions and triggers may exist in several forms. Atmo does its best to coerce between types, but for the best experience it is recommended to give arguments that make sense. This table describes data types that can be expected by different things.
+
+| Data type	| Description	| Example inputs	| Convertible to	|
+| ---		| ---			| ---				| ---				|
+| `INTEGER`	| Whole numbers. 32-bit integer under the hood. | `10`, `-917`, `99999999` | `DECIMAL` (imprecise if large value), `BOOLEAN` (FALSE if integer is 0, TRUE otherwise), `STRING` |
+| `DECIMAL` | Fractions. 32-bit floating point number under the hood. | `-0.6`, `12.222222` | `INTEGER` (rounds down to whole), `BOOLEAN` (FALSE if decimal is 0.0, TRUE otherwise), `STRING` |
+| `BOOLEAN` | Yes/No value. Needs to be put inside a string literal, which are delimited by single quote character (`'`). | `'True'`, `'true'`, `'FALSE'`, `'false'` | `INTEGER` (1 if true, 0 if false), `DECIMAL` (1.0 if true, 0.0 if false), `STRING` (Presented as `True` or `False`) |
+| `VECTOR` | A collection of 2 to 4 `DECIMAL` values: a point in space, a direction, etc. Needs to be put inside a string literal. Can be used as a color sometimes; in that case, value 1 is red channel, 2 is green, 3 is blue, 4 is transparency (all in range 0.0 - 1.0). Unspecified values are set to 0.0. | `'10;5;3;2'`, `'0;-22.4'`, `'999999;-1'` | `DECIMAL` (magnitude/length of the vector), `INTEGER` (same thing, but rounded to a whole number), `BOOLEAN` (magnitude is not null), `STRING` (converts into a string from which a vector can be parsed again) |
+| `STRING` | Any text that is not recognized as a `BOOLEAN` or a `VECTOR`. Needs to be put inside a string literal. If you want your string to contain a singlequote character, use `\q` escape. you can do the same for line breaks (`\n`) and tab characters (`\t`). | `'abcdefsdgkndsigsig'`, `'s\qc\qr\qo\qm'` | `INTEGER` (tries to read, 0 if failed), `DECIMAL` (tries to read, 0.0 if failed), `BOOLEAN` (always TRUE if text is `1`, `true` or `yes`, always false if text is `0`, `false` or `no`, always false otherwise. Case insensitive) |

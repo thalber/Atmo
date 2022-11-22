@@ -10,7 +10,7 @@ public static partial class HappenBuilding
 {
 	internal static void InitBuiltins()
 	{
-		foreach (Action initfun in new[] { RegisterBuiltinActions, RegisterBuiltinTriggers, RegisterBuiltinMacros })
+		foreach (Action initfun in new[] { RegisterBuiltinActions, RegisterBuiltinTriggers, RegisterBuiltinMetafun })
 		{
 			try
 			{
@@ -886,12 +886,104 @@ public static partial class HappenBuilding
 		};
 	}
 	#endregion
-	#region macros
+	#region metafunctions
 	private static readonly TXT.Regex FMT_Split = new("{.+?}");
 	private static readonly TXT.Regex FMT_Match = new("(?<={).+?(?=})");
-	internal static void RegisterBuiltinMacros()
+	internal static void RegisterBuiltinMetafun()
 	{
-		AddNamedMacro(new[] { "FMT", "FORMAT" }, MMake_FMT);
+		AddNamedMetafun(new[] { "FMT", "FORMAT" }, MMake_FMT);
+		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite);
+		AddNamedMetafun(new[] { "FILEREAD", "FILE" }, MMAke_FileRead);
+		AddNamedMetafun(new[] { "WWW", "WEBREQUEST" }, MMake_WWW);
+	}
+
+	private static IArgPayload? MMake_WWW(string text, int ss, int ch)
+	{
+		WWW? www = new WWW(text);
+		string? failed = null;
+		return new GetOnlyCallbackPayload()
+		{
+			getStr = () =>
+			{
+				if (failed is not null) return $"ERROR:{failed}";
+				try
+				{
+					return www.isDone ? www.text : "[LOADING]";
+				}
+				catch (Exception ex)
+				{
+					failed = ex.Message;
+					return failed;
+				}
+			}
+		};
+	}
+	private static IArgPayload? MMAke_FileRead(string text, int ss, int ch)
+	{
+		IO.FileInfo fi = new(text);
+		DateTime? lw = null;
+		string? contents = null;
+		return new GetOnlyCallbackPayload()
+		{
+			getStr = () =>
+			{
+				fi.Refresh();
+				if (fi.Exists)
+				{
+					if (lw != fi.LastWriteTimeUtc)
+					{
+						using IO.StreamReader? sr = fi.OpenText();
+						contents = sr?.ReadToEnd();
+					}
+					lw = fi.LastAccessTimeUtc;
+				}
+				return contents ?? string.Empty;
+			}
+		};
+	}
+	private static IArgPayload? MMake_FileReadWrite(string text, int ss, int ch)
+	{
+		plog.LogWarning($"CAUTION: {nameof(MMake_FileReadWrite)} DOES NO SAFETY CHECKS! Atmo developers are not responsible for any accidental damage by write");
+		IO.FileInfo file = new(text);
+		DateTime? lwt = null;//file.LastWriteTimeUtc;
+		Arg pl = new(string.Empty);
+		void UpdateFile()
+		{
+			file.Refresh();
+			try
+			{
+				if (file.Exists)
+				{
+					if (file.LastWriteTimeUtc == lwt)
+					{
+						return;
+					}
+					lwt = file.LastWriteTimeUtc;
+					using IO.StreamReader sr = file.OpenText();
+					pl.Str = sr.ReadToEnd();
+				}
+			}
+			catch (IO.IOException ex)
+			{
+				plog.LogError($"Could not sync with file {file.FullName}: {ex}");
+			}
+		}
+		string ReadFromFile()
+		{
+			UpdateFile();
+			return pl.Str;
+		}
+		void WriteToFile(string val)
+		{
+			pl.Str = val;
+			using IO.StreamWriter sw = file.CreateText();
+			sw.Write(val);
+			sw.Flush();
+		}
+		return new CallbackPayload()
+		{
+			prop_Str = new(ReadFromFile, WriteToFile)
+		};
 	}
 	private static IArgPayload? MMake_ColorFlash(string text, int ss, int ch)
 	{
@@ -902,7 +994,7 @@ public static partial class HappenBuilding
 		return new GetOnlyCallbackPayload()
 		{
 			getVec = () => @base.RandDev(dev)
-	};
+		};
 	}
 	private static IArgPayload? MMake_FMT(string text, int ss, int ch)
 	{

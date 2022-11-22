@@ -18,7 +18,7 @@ public static class API
 	#region fields
 	internal static readonly Dictionary<string, Create_RawHappenBuilder> namedActions = new();
 	internal static readonly Dictionary<string, Create_RawTriggerFactory> namedTriggers = new();
-	internal static readonly Dictionary<string, Create_RawMacroHandler> namedMacros = new();
+	internal static readonly Dictionary<string, Create_RawMetaFunction> namedMetafuncs = new();
 	#endregion
 	#region dels
 	/// <summary>
@@ -71,22 +71,22 @@ public static class API
 	/// <param name="happen">Happen the trigger is to be attached to.</param>
 	public delegate HappenTrigger? Create_NamedTriggerFactory(ArgSet args, RainWorldGame game, Happen happen);
 	/// <summary>
-	/// Delegate for registering macro-variables, for use in <see cref="VarRegistry.GetVar(string, int, int)"/>. Can be directly attached to <see cref="EV_ApplyMacro"/>. Make sure to check the first parameter (name) and see if it is fitting.
+	/// Delegate for registering metafunctions, for use in <see cref="VarRegistry.GetVar"/>. Can be directly attached to <see cref="EV_ApplyMetafunctions"/>. Make sure to check the first parameter (name) and see if it is fitting.
 	/// </summary>
-	/// <param name="name">Supposed name of the macro.</param>
-	/// <param name="value">Body text passed to the macro.</param>
+	/// <param name="name">Supposed name of the metafun.</param>
+	/// <param name="value">Body text passed to the metafun.</param>
 	/// <param name="saveslot">Current saveslot number.</param>
 	/// <param name="character">Current character number.</param>
-	/// <returns><see cref="IArgPayload"/> object linking to macro's output; null if name does not fit or there was an error.</returns>
-	public delegate IArgPayload? Create_RawMacroHandler(string name, string value, int saveslot, int character);
+	/// <returns><see cref="IArgPayload"/> object linking to metafun's output; null if name does not fit or there was an error.</returns>
+	public delegate IArgPayload? Create_RawMetaFunction(string name, string value, int saveslot, int character);
 	/// <summary>
-	/// Delegate for registering named macros. Used by <see cref="AddNamedMacro"/> overloads.
+	/// Delegate for registering named metafunctions. Used by <see cref="AddNamedMetafun"/> overloads.
 	/// </summary>
-	/// <param name="value">Body text passed to the macro.</param>
+	/// <param name="value">Body text passed to the metafun.</param>
 	/// <param name="saveslot">Current saveslot number.</param>
 	/// <param name="character">Current character number.</param>
-	/// <returns><see cref="IArgPayload"/> object linking to macro's output; null if there was an error.</returns>
-	public delegate IArgPayload? Create_NamedMacroHandler(string value, int saveslot, int character);
+	/// <returns><see cref="IArgPayload"/> object linking to metafun's output; null if there was an error.</returns>
+	public delegate IArgPayload? Create_NamedMetaFunction(string value, int saveslot, int character);
 	#endregion
 	#region API proper
 	/// <summary>
@@ -266,54 +266,54 @@ public static class API
 		namedTriggers.Remove(name);
 	}
 	/// <summary>
-	/// Registers a macro with a given set of names.
+	/// Registers a metafunction with a given set of names.
 	/// </summary>
-	/// <param name="names">Array of names for the macro.</param>
+	/// <param name="names">Array of names for the metafun.</param>
 	/// <param name="handler">User handler callback.</param>
 	/// <param name="ignoreCase">Whether name matching should be case insensitive.</param>
 	/// <returns>Number of errors and name collisions encountered.</returns>
-	public static int AddNamedMacro(
+	public static int AddNamedMetafun(
 		string[] names,
-		Create_NamedMacroHandler handler,
+		Create_NamedMetaFunction handler,
 		bool ignoreCase = true)
-		=> names.Select((name) => AddNamedMacro(name, handler, ignoreCase) ? 0 : 1).Aggregate((x, y) => x + y);
+		=> names.Select((name) => AddNamedMetafun(name, handler, ignoreCase) ? 0 : 1).Aggregate((x, y) => x + y);
 	/// <summary>
-	/// Registers a macro with a given single name.
+	/// Registers a metafunction with a given single name.
 	/// </summary>
-	/// <param name="name">Name of the macro.</param>
+	/// <param name="name">Name of the metafun.</param>
 	/// <param name="handler">User handler callback.</param>
 	/// <param name="ignoreCase">Whether macro name matching should be case insensitive.</param>
 	/// <returns>True if successfully attached; false otherwise.</returns>
-	public static bool AddNamedMacro(
+	public static bool AddNamedMetafun(
 		string name,
-		Create_NamedMacroHandler handler,
+		Create_NamedMetaFunction handler,
 		bool ignoreCase = true)
 	{
 		if (TXT.Regex.Match(name, "\\w+").Length != name.Length)
 		{
-			plog.LogWarning($"Invalid macro name: {name}");
+			plog.LogWarning($"Invalid metafun name: {name}");
 			return false;
 		}
-		if (namedMacros.ContainsKey(name)) return false;
+		if (namedMetafuncs.ContainsKey(name)) return false;
 		StringComparer comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
 		IArgPayload? newCb(string n, string val, int ss, int ch)
 		{
 			if (comp.Compare(n, name) == 0) return handler(val, ss, ch);
 			return null;
 		}
-		EV_ApplyMacro += newCb;
-		namedMacros.Add(name, newCb);
+		EV_ApplyMetafunctions += newCb;
+		namedMetafuncs.Add(name, newCb);
 		return true;
 	}
 	/// <summary>
-	/// Clears a macro name binding.
+	/// Clears a metafunction name binding.
 	/// </summary>
 	/// <param name="name"></param>
-	public static void RemoveNamedMacro(string name)
+	public static void RemoveNamedMetafun(string name)
 	{
-		if (!namedMacros.TryGetValue(name, out Create_RawMacroHandler? handler)) return;
-		EV_ApplyMacro -= handler;
-		namedMacros.Remove(name);
+		if (!namedMetafuncs.TryGetValue(name, out Create_RawMetaFunction? handler)) return;
+		EV_ApplyMetafunctions -= handler;
+		namedMetafuncs.Remove(name);
 	}
 	/// <summary>
 	/// Subscribe to this to attach your custom callbacks to newly created happen objects.
@@ -330,11 +330,11 @@ public static class API
 	internal static IEnumerable<Create_RawTriggerFactory?>? MNT_invl
 		=> EV_MakeNewTrigger?.GetInvocationList()?.Cast<Create_RawTriggerFactory?>();
 	/// <summary>
-	/// Subscribe to this to register custom variables-macros. You can also use <see cref="AddNamedMacro"/> overloads as name-safe wrappers.
+	/// Subscribe to this to register custom variables-macros. You can also use <see cref="AddNamedMetafun"/> overloads as name-safe wrappers.
 	/// </summary>
-	public static event Create_RawMacroHandler? EV_ApplyMacro;
-	internal static IEnumerable<Create_RawMacroHandler?>? AM_invl
-		=> EV_ApplyMacro?.GetInvocationList()?.Cast<Create_RawMacroHandler?>();
+	public static event Create_RawMetaFunction? EV_ApplyMetafunctions;
+	internal static IEnumerable<Create_RawMetaFunction?>? AM_invl
+		=> EV_ApplyMetafunctions?.GetInvocationList()?.Cast<Create_RawMetaFunction?>();
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
 	#endregion
 }

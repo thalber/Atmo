@@ -9,7 +9,7 @@ This document describes all actions and triggers you can use out of the box. Mos
 | `d/dur:duration`	| the argument `duration` is *named*, and can go under one of several names. Here, both `'d=value'` and `'dur=value'` would work.
 | `1:duration?` | any argument where name is postfixed with question mark is *optional* and can be omitted.|
 | `1:duration?=15`	| argument `duration` is *optional*, and, if you omit it, will have value `15`. |
-| `1:duration$`| if the argument is postfixed with the dollar sign, *you can use a variable for one of the arguments, and it will handle value changes in real time*. For all other arguments, you can still use a variable, but its value will only be read once and will not be updated in real time. For example, you can use  `log` action like this: `log 'abst=$time'`, and it will print current value of `time` variable to the console every abstract update. More info about variables in [this reference](variables.md). |
+| `1:duration$`| if the argument is postfixed with the dollar sign, *you can use a variable for one of the arguments, and it will handle value changes in real time*. For all other arguments, you can still use a variable, but its value will only be read once and will not be updated in real time. For example, you can use  `log` action like this: `log 'abst=$time'`, and it will print current value of `time` variable to the console every abstract update. |
 | `1:choice(OPTION1, OPTION2, OPTION3)` | If the argument is written like this, it can only have one of the listed states. Here, `choice` can be `OPTION1`, `OPTION2` or `OPTION3`. If you set it to something else, things will probably break.|
 | `3..:options...` | Indicates that `options` is actually multiple arguments, and any arguments at position 3 and further will be treated as one of them. Consider this example action, that has `3..:options...`, as shown in the cell on the left: `action 'arg1' 'arg2' 10 15 999 'extra'` - here 10, 15, 999 and `'extra'` are all part of `options`. If an argument like this is marked as optional, it is legal to leave it empty. |
 
@@ -17,17 +17,7 @@ If an action or a trigger can receive several mutually exclusive sets of argumen
 
 It is encouraged that whoever adds new behaviours, documents argument use in the same way.
 
-## Data types
-
-Arguments given to actions and triggers may exist in several forms. Atmo does its best to convert between types, but for the best experience it is recommended to give arguments that make sense. This table describes data types that can be expected.
-
-| Data type	| Description	| Example inputs	| Convertible to	|
-| ---		| ---			| ---				| ---				|
-| `INTEGER`	| Whole numbers. 32-bit integer under the hood. | `10`, `-917`, `99999999` | `DECIMAL` (imprecise if large value), `BOOLEAN` (FALSE if integer is 0, TRUE otherwise), `STRING` |
-| `DECIMAL` | Fractions. 32-bit floating point number under the hood. | `-0.6`, `12.222222` | `INTEGER` (rounds down to whole), `BOOLEAN` (FALSE if decimal is 0.0, TRUE otherwise), `STRING` |
-| `BOOLEAN` | Yes/No value. Needs to be put inside a string literal, which are delimited by single quote character (`'`). | `'True'`, `'true'`, `'FALSE'`, `'false'` | `INTEGER` (1 if true, 0 if false), `DECIMAL` (1.0 if true, 0.0 if false), `STRING` (Presented as `True` or `False`) |
-| `VECTOR` | A collection of 2 to 4 `DECIMAL` values: a point in space, a direction, etc. Needs to be put inside a string literal. Can be used as a color sometimes; in that case, value 1 is red channel, 2 is green, 3 is blue, 4 is transparency (all in range 0.0 - 1.0). Unspecified values are set to 0.0. | `'10;5;3;2'`, `'0;-22.4'`, `'999999;-1'` | `DECIMAL` (magnitude/length of the vector), `INTEGER` (same thing, but rounded to a whole number), `BOOLEAN` (magnitude is not null), `STRING` (converts into a string from which a vector can be parsed again) |
-| `STRING` | Any text that is not recognized as a `BOOLEAN` or a `VECTOR`. Needs to be put inside a string literal. If you want your string to contain a singlequote character, use `\q` escape. you can do the same for line breaks (`\n`) and tab characters (`\t`). | `'abcdefsdgkndsigsig'`, `'s\qc\qr\qo\qm'` | `INTEGER` (tries to read, 0 if failed), `DECIMAL` (tries to read, 0.0 if failed), `BOOLEAN` (always TRUE if text is `1`, `true` or `yes`, always false if text is `0`, `false` or `no`, always false otherwise. Case insensitive) |
+Arguments (and [variables](variables.md)) can have different data types. Atmo does its best to coerce between types as intuitively as possible, but it is still recommended you read [this file](datatypes.md) to avoid potential confusion.
 
 ## List of default triggers
 
