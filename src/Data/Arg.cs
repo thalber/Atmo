@@ -82,7 +82,10 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		else
 		{
 			float.TryParse(_str, out _f32);
-			int.TryParse(_str, out _i32);
+			if (!int.TryParse(_str, out _i32))
+			{
+				_i32 = (int)_f32;
+			}
 			bool.TryParse(_str, out _bool);
 			if (trueStrings.Contains(_str.ToLower())) _bool = true;
 			if (falseStrings.Contains(_str.ToLower())) _bool = false;
