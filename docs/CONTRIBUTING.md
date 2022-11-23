@@ -1,7 +1,7 @@
 ## Project file-structure
 
-- Try to keep size of individual files below 1.5-2K LOC <!--([Helpers](src/Helpers/) folder is an exception)-->
-- Try to keep file count per namespace folder below 15 <!--([Helpers](src/Helpers/) folder is an exception)-->
+- Try to keep size of individual files below 1.5-2K LOC
+- Try to keep file count per namespace folder below 15
 - Keep the number of classes in main namespace to a minimum
 
 ## Code style
@@ -16,7 +16,7 @@
 
 - Try to make class and member names as short as possible without making them counterintuitive (`GetVar` > `GetVariable`, `EnsureAndGet` > `SetIfMissingAndGet`)
 - Using type and namespace aliases for long external names is encouraged. Type aliases should preferably be all-caps acronyms (`TXT` <- `System.Text.RegularExpressions`).
-- Project-wide usings, including type aliases, are in [the Prelude file](src/Helpers/Prelude.cs) 
+- Project-wide usings, including type aliases, are in [the Prelude file](../src/Helpers/Prelude.cs) 
 
 ## Functionality distribution
 
@@ -27,3 +27,8 @@
 | Atmo.Gen		| Populating Body with behaviours |
 | Atmo.Data		| Handling user input, data storage and serialization |
 | Atmo.Helpers	| Additional utilities not specifically belonging to any of the above |
+
+## Branches
+
+- `main` branch is locked behind a build-verify action. It is recommended you only push stable tested code to it.
+- `worker` branch is to be actively used by any maintainers.
