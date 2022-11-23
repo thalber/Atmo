@@ -1,0 +1,27 @@
+name: Build
+
+on:  
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:  
+  build:    
+    runs-on: windows-latest
+    
+    steps:      
+      - uses: actions/checkout@v2
+      
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1.0.5
+
+      - name: Restore Packages
+        run: nuget restore Sandbox.sln
+
+      - name: Build Solution
+        run: |
+          msbuild.exe Atmo.sln /p:platform="Any CPU" /p:configuration="Release"
