@@ -49,7 +49,7 @@ public class VarSet
 	{
 		NamedVars vars = DictForSection(section);
 		Arg _def = Defarg;
-		return vars.AddIfNone_Get(name, () => _def);
+		return vars.EnsureAndGet(name, () => _def);
 	}
 	internal SerDict GetSer(DataSection section)
 	{

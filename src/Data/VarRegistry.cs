@@ -173,7 +173,7 @@ public static partial class VarRegistry
 			SerDict? data = TryReadData(save, DataSection.Persistent);
 			if (data is null) plog.LogDebug("Could not load file, varset will be empty");
 			VarsPerSave
-				.AddIfNone_Get(save, () => new(save))
+				.EnsureAndGet(save, () => new(save))
 				.FillFrom(data ?? new(), DataSection.Persistent);
 		}
 		catch (Exception ex)
@@ -199,7 +199,7 @@ public static partial class VarRegistry
 			Save save = MakeSD(ss.Value, DPSD_Slug[self.GetHashCode()]);
 			plog.LogDebug($"Attempting to write persistent vars for {save}");
 			SerDict? data = VarsPerSave
-				.AddIfNone_Get(save, () => new(save))
+				.EnsureAndGet(save, () => new(save))
 				.GetSer(DataSection.Normal);
 			TryWriteData(save, DataSection.Persistent, data);
 		}
@@ -231,7 +231,7 @@ public static partial class VarRegistry
 			SerDict? data = TryReadData(save, DataSection.Normal);
 			if (data is null) plog.LogDebug("Could not load file, varset will be empty");
 			VarsPerSave
-				.AddIfNone_Get(save, () => new(save))
+				.EnsureAndGet(save, () => new(save))
 				.FillFrom(data ?? new(), DataSection.Normal);
 		}
 		catch (Exception ex)
@@ -253,7 +253,7 @@ public static partial class VarRegistry
 			}
 			Save save = MakeSD(ss.Value, self.saveStateNumber);
 			SerDict? data = VarsPerSave
-				.AddIfNone_Get(save, () => new(save))
+				.EnsureAndGet(save, () => new(save))
 				.GetSer(DataSection.Normal);
 			TryWriteData(save, DataSection.Normal, data);
 		}
@@ -291,22 +291,22 @@ public static partial class VarRegistry
 			name = name.Substring(PREFIX_GLOBAL.Length);
 			plog.LogDebug($"Reading global var {name} for slot {saveslot}");
 			return VarsGlobal
-				.AddIfNone_Get(saveslot, () =>
+				.EnsureAndGet(saveslot, () =>
 				{
 					plog.LogDebug("No global record found, creating");
 					return ReadGlobal(saveslot);
 				})
-				.AddIfNone_Get(name, () => Defarg);
+				.EnsureAndGet(name, () => Defarg);
 		}
 		else if (name.StartsWith(PREFIX_VOLATILE))
 		{
 			name = name.Substring(PREFIX_VOLATILE.Length);
 			return VarsVolatile
-				.AddIfNone_Get(name, () => Defarg);
+				.EnsureAndGet(name, () => Defarg);
 		}
 		Save save = MakeSD(saveslot, character);
 		return VarsPerSave
-			.AddIfNone_Get(save, () => new(save))
+			.EnsureAndGet(save, () => new(save))
 			.GetVar(name);
 	}
 	#region filemanip
@@ -338,7 +338,7 @@ public static partial class VarRegistry
 		{
 			if (!dir.Exists) dir.Create();
 			fi.Refresh();
-			NamedVars dict = VarsGlobal.AddIfNone_Get(slot, () => new());
+			NamedVars dict = VarsGlobal.EnsureAndGet(slot, () => new());
 
 			using IO.StreamWriter writer = fi.CreateText();
 			plog.LogDebug($"Writing global vars for slot {slot}, {fi.FullName}");
@@ -404,7 +404,7 @@ public static partial class VarRegistry
 	/// </summary>
 	public static VarSet VarsForSave(Save save)
 	{
-		return VarsPerSave.AddIfNone_Get(save, () => new(save));
+		return VarsPerSave.EnsureAndGet(save, () => new(save));
 	}
 
 	/// <summary>

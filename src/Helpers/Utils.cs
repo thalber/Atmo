@@ -72,7 +72,7 @@ public static partial class Utils
 	/// <param name="key">Key to look up</param>
 	/// <param name="defval">Default value callback. Executed if item is not found; its return is added to the dictionary, then returned from the extension method.</param>
 	/// <returns>Resulting item.</returns>
-	public static Tval AddIfNone_Get<Tkey, Tval>(
+	public static Tval EnsureAndGet<Tkey, Tval>(
 		this IDictionary<Tkey, Tval> dict,
 		Tkey key,
 		Func<Tval> defval)
@@ -662,7 +662,7 @@ public static partial class Utils
 	/// <returns>Resulting name for the slugcat; <see cref="SlugNotFound"/> if the index is below zero, </returns>
 	internal static string SlugName(int slugNumber)
 	{
-		return SlugNameCache.AddIfNone_Get(slugNumber, () =>
+		return SlugNameCache.EnsureAndGet(slugNumber, () =>
 		{
 			string? res = slugNumber switch
 			{

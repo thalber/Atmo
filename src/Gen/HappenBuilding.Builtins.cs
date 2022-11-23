@@ -468,7 +468,7 @@ public static partial class HappenBuilding
 			{
 				if (absp.realizedCreature is Player p)
 				{
-					if (!playersActive.AddIfNone_Get(p, static () => false))
+					if (!playersActive.EnsureAndGet(p, static () => false))
 					{
 						p.glowing = game.GetStorySession?.saveState.theGlow ?? false;
 						if (p.graphicsModule is PlayerGraphics pgraf && pgraf.lightSource is not null)
@@ -518,7 +518,7 @@ public static partial class HappenBuilding
 					(crittype is not null && TXT.Regex.IsMatch(crittype, filter.Str, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
 					)
 					{
-						VT<float, float> cvar = variance.AddIfNone_Get
+						VT<float, float> cvar = variance.EnsureAndGet
 						(obj.GetHashCode(), () => new(
 							1f.Deviate(forceVar.F32),
 							0f.Deviate(spread.F32),
