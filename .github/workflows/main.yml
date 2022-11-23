@@ -20,7 +20,7 @@ jobs:
         uses: NuGet/setup-nuget@v1.0.5
 
       - name: Restore Packages
-        run: nuget restore Sandbox.sln
+        run: nuget restore Atmo.sln
 
       - name: Build Solution
         run: |
