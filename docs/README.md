@@ -27,7 +27,7 @@ WHEN: always
 
 This would reduce gravity in all shelters in Outskirts.
 
-Full file format example (with comments) can be found [here](syntax.txt). If you are using Notepad++, there is a User-Defined Language config for it in this repo, which gives you syntax highlighting (for [dark mode](extras/atmoscript.udl.xml) and [light mode](extras/atmoscript.lightmode.udl.xml)).
+Full file format example (with comments) can be found [here](syntax.txt). If you are using Notepad++, there is a User-Defined Language config for it in this repo, which gives you syntax highlighting (for [dark mode](../extras/atmoscript.udl.xml) and [light mode](../extras/atmoscript.lightmode.udl.xml)).
 
 A happen block can have multiple `WHAT:` and `WHERE:` clauses, but *only one* `WHEN:` clause.
 Inside each `WHERE:` clause line, parsing starts with reading *group names*. After you've switched to included or excluded rooms by using a `+`/`-` separator, you can switch back to groups by using a `=` separator.
@@ -46,7 +46,7 @@ For a list of triggers you can use out of the box, see [this reference](builtins
 
 ## Custom behaviours
 
-You can register your own triggers and behaviour from your code mod via Atmo's [API](src/API.cs). API documentation can be found [here](API.md).
+You can register your own triggers and behaviour from your code mod via Atmo's [API](../src/API.cs). API documentation can be found [here](API.md).
 
 ## Additional notes
 
