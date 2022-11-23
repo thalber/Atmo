@@ -1,5 +1,5 @@
 ﻿using DC = DevConsole;
-using DCMD = DevConsole.Commands;
+using CMD = DevConsole.Commands;
 using DCLI = DevConsole.GameConsole;
 
 namespace Atmo;
@@ -11,7 +11,7 @@ internal static class ConsoleFace
 	#endregion;
 	public static void Apply()
 	{
-		new DCMD.CommandBuilder("atmo_var")
+		new CMD.CommandBuilder("atmo_var")
 			.AutoComplete(AtmoVar_ac)
 			.Run(AtmoVar_run)
 			.Help("""
@@ -21,7 +21,7 @@ internal static class ConsoleFace
 				Sets specified variable to value
 			""")
 			.Register();
-		new DCMD.CommandBuilder("atmo_metafunc")
+		new CMD.CommandBuilder("atmo_metafunc")
 			.AutoComplete(MetafunInv_ac)
 			.Run(MetafunInv_run)
 			.Help("""
@@ -33,7 +33,7 @@ internal static class ConsoleFace
 					b) stores result in a variable with a set name
 			""")
 			.Register();
-		new DCMD.CommandBuilder("atmo_perf")
+		new CMD.CommandBuilder("atmo_perf")
 			.RunGame((game, args) =>
 			{
 				DCLI.WriteLine("""

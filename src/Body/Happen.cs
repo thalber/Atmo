@@ -147,7 +147,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		int time)
 	{
 		if (On_AbstUpdate is null) return;
-		foreach (API.lc_AbstractUpdate cb in On_AbstUpdate.GetInvocationList())
+		foreach (API.lc_AbstractUpdate cb in On_AbstUpdate.GetInvocationList().Cast<API.lc_AbstractUpdate>())
 		{
 			try
 			{
@@ -168,7 +168,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	{
 		sw.Start();
 		if (On_RealUpdate is null) return;
-		foreach (API.lc_RealizedUpdate cb in On_RealUpdate.GetInvocationList())
+		foreach (API.lc_RealizedUpdate cb in On_RealUpdate.GetInvocationList().Cast<API.lc_RealizedUpdate>())
 		{
 			try
 			{
@@ -191,7 +191,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	{
 		InitRan = true;
 		if (On_Init is null) return;
-		foreach (API.lc_Init cb in On_Init.GetInvocationList())
+		foreach (API.lc_Init cb in On_Init.GetInvocationList().Cast<API.lc_Init>())
 		{
 			try
 			{
@@ -242,7 +242,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 #pragma warning restore IDE0031 // Use null propagation
 		}
 		if (On_CoreUpdate is null) return;
-		foreach (API.lc_CoreUpdate cb in On_CoreUpdate.GetInvocationList())
+		foreach (API.lc_CoreUpdate cb in On_CoreUpdate.GetInvocationList().Cast<API.lc_CoreUpdate>())
 		{
 			try
 			{
