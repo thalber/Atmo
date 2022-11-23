@@ -35,40 +35,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Reference Include="DevConsole">
-		  <HintPath>lib\DevConsole.dll</HintPath>
-		</Reference>
-		<Reference Include="lib/BepInEx.dll">
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="lib/CustomRegions.dll">
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="lib/UnityEngine.dll">
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="lib/Assembly-CSharp.dll">
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="lib/HOOKS-Assembly-CSharp.dll">
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="lib/Mono.Cecil.dll">
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="lib/MonoMod.RuntimeDetour.dll">
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="lib/MonoMod.Utils.dll">
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="SlugBase">
-		  <HintPath>lib\SlugBase.dll</HintPath>
-		  <Private>False</Private>
-		</Reference>
-	</ItemGroup>
-
-	<ItemGroup>
 		<Compile Include="../modules/TwoPools/src/TwoPools.cs"></Compile>
 		<Compile Include="../modules/PredicateInlay/src/PredicateInlay.cs"></Compile>
 	</ItemGroup>
@@ -87,6 +53,85 @@
 
 	<ItemGroup>
 		<EditorConfigFiles Remove="C:\Users\thalber\Documents\GitHub\Atmo\src\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="0Harmony">
+	    <HintPath>lib\0Harmony.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="Assembly-CSharp">
+	    <HintPath>lib\Assembly-CSharp.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="BepInEx.Harmony">
+	    <HintPath>lib\BepInEx.Harmony.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="BepInEx.Preloader">
+	    <HintPath>lib\BepInEx.Preloader.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="BepInEx">
+	    <HintPath>lib\BepInEx.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="ConfigMachine">
+	    <HintPath>lib\ConfigMachine.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="CustomRegions">
+	    <HintPath>lib\CustomRegions.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="DevConsole">
+	    <HintPath>lib\DevConsole.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="EnumExtender">
+	    <HintPath>lib\EnumExtender.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="HOOKS-Assembly-CSharp">
+	    <HintPath>lib\HOOKS-Assembly-CSharp.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="Mono.Cecil.Mdb">
+	    <HintPath>lib\Mono.Cecil.Mdb.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="Mono.Cecil.Pdb">
+	    <HintPath>lib\Mono.Cecil.Pdb.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="Mono.Cecil">
+	    <HintPath>lib\Mono.Cecil.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="Mono.Cecil.Rocks">
+	    <HintPath>lib\Mono.Cecil.Rocks.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="MonoMod">
+	    <HintPath>lib\MonoMod.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="MonoMod.RuntimeDetour">
+	    <HintPath>lib\MonoMod.RuntimeDetour.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="MonoMod.Utils">
+	    <HintPath>lib\MonoMod.Utils.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="SlugBase">
+	    <HintPath>lib\SlugBase.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="UnityEngine">
+	    <HintPath>lib\UnityEngine.refstub.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
 	</ItemGroup>
 
 </Project>
