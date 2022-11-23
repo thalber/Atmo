@@ -13,7 +13,7 @@ public static partial class VarRegistry
 	internal static readonly NamedVars SpecialVars = new();
 	private static readonly TXT.Regex Metaf_Sub = new("(?<=\\w+\\s).+$");
 	#endregion;
-	internal static Arg? GetMetaf(string text, in int saveslot, in int character)
+	internal static Arg? GetMetaFunction(string text, in int saveslot, in int character)
 	{
 		TXT.Match _is;
 		if (!(_is = Metaf_Sub.Match(text)).Success) return null;

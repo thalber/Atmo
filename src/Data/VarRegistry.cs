@@ -280,7 +280,7 @@ public static partial class VarRegistry
 		if (
 			name.StartsWith("$") 
 			&& 
-			(res = GetMetaf(name.Substring(1), saveslot, character)) is not null)
+			(res = GetMetaFunction(name.Substring(1), saveslot, character)) is not null)
 			return res;
 		if ((res = GetSpecial(name)) is not null)
 		{

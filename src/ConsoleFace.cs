@@ -12,8 +12,8 @@ internal static class ConsoleFace
 	public static void Apply()
 	{
 		new DCMD.CommandBuilder("atmo_var")
-			.AutoComplete(atvar_ac)
-			.Run(atvar_run)
+			.AutoComplete(AtmoVar_ac)
+			.Run(AtmoVar_run)
 			.Help("""
 			atmo_var get varname
 				fetches value of specified variable
@@ -22,8 +22,8 @@ internal static class ConsoleFace
 			""")
 			.Register();
 		new DCMD.CommandBuilder("atmo_metafunc")
-			.AutoComplete(mfinv_ac)
-			.Run(atmf_run)
+			.AutoComplete(MetafunInv_ac)
+			.Run(MetafunInv_run)
 			.Help("""
 			atmo_metafunc list
 				Lists available Atmo metafunctions
@@ -34,7 +34,7 @@ internal static class ConsoleFace
 			""")
 			.Register();
 	}
-	private static IEnumerable<string> atvar_ac(string[] args)
+	private static IEnumerable<string> AtmoVar_ac(string[] args)
 	{
 		switch (args.Length)
 		{
@@ -46,11 +46,11 @@ internal static class ConsoleFace
 		}
 		}
 	}
-	private static void atvar_run(string[] args)
+	private static void AtmoVar_run(string[] args)
 	{
 		if (args.Length < 2)
 		{
-			NotifyArgsMissing(atvar_run, "action", "name");
+			NotifyArgsMissing(AtmoVar_run, "action", "name");
 			return;
 		}
 		Arg target = VarRegistry.GetVar(args[1], CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
@@ -62,7 +62,7 @@ internal static class ConsoleFace
 		{
 			if (args.Length < 3)
 			{
-				NotifyArgsMissing(atvar_run, "value");
+				NotifyArgsMissing(AtmoVar_run, "value");
 				return;
 			}
 			target.Str = args[1];
@@ -70,7 +70,7 @@ internal static class ConsoleFace
 
 	}
 
-	private static IEnumerable<string> mfinv_ac(string[] args)
+	private static IEnumerable<string> MetafunInv_ac(string[] args)
 	{
 		switch (args.Length)
 		{
@@ -107,7 +107,7 @@ internal static class ConsoleFace
 		}
 		}
 	}
-	private static void atmf_run(string[] args)
+	private static void MetafunInv_run(string[] args)
 	{
 		switch (args.AtOr(0, "list"))
 		{
@@ -122,22 +122,22 @@ internal static class ConsoleFace
 				ch = CurrentCharacter ?? -1;
 			if (args.Length < 3)
 			{
-				NotifyArgsMissing(atmf_run, "name", "input");
+				NotifyArgsMissing(MetafunInv_run, "name", "input");
 				break;
 			}
-			Arg? res = VarRegistry.GetMetaf($"{args[1]} {args[2]}", ss, ch);
+			Arg? res = VarRegistry.GetMetaFunction($"{args[1]} {args[2]}", ss, ch);
 			if (res is null)
 			{
 				DCLI.WriteLine("Metafunction not found!");
 				break;
 			}
 
-			string def = $"v_DCLI_DUMP_{mfinv_uid++}";
-			Arg target = VarRegistry.GetVar(args.AtOr(4, def), ss, ch);
+			var dest = args.AtOr(4, $"v_DCLI_DUMP_{mfinv_uid++}");
+			Arg target = VarRegistry.GetVar(dest, ss, ch);
 			TryParseEnum(args.AtOr(5, nameof(ArgType.STRING)), out ArgType at);
 			if (args.AtOr(3, "print") is "save")
 			{
-				plog.DbgVerbose($"Saving {res} to {def}");
+				plog.DbgVerbose($"Saving {res} to {dest}");
 				Assign(res, target, at);
 			}
 			else
