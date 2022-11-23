@@ -3,7 +3,7 @@
 		<TargetFramework>net35</TargetFramework>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<LangVersion>10</LangVersion>
+		<LangVersion>11</LangVersion>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
@@ -35,6 +35,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Reference Include="DevConsole">
+		  <HintPath>lib\DevConsole.dll</HintPath>
+		</Reference>
 		<Reference Include="lib/BepInEx.dll">
 			<Private>False</Private>
 		</Reference>
@@ -61,6 +64,7 @@
 		</Reference>
 		<Reference Include="SlugBase">
 		  <HintPath>lib\SlugBase.dll</HintPath>
+		  <Private>False</Private>
 		</Reference>
 	</ItemGroup>
 

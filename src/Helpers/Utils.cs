@@ -734,6 +734,40 @@ public static partial class Utils
 		}
 		return res.ToString();
 	}
+	internal static void Assign(Arg argv, Arg target, ArgType datatype = ArgType.STRING)
+	{
+		switch (datatype)
+		{
+		case ArgType.DECIMAL:
+		{
+			target.F32 = argv.F32;
+			break;
+		}
+		case ArgType.INTEGER:
+		{
+			target.I32 = argv.I32;
+			break;
+		}
+		case ArgType.BOOLEAN:
+		{
+			target.Bool = argv.Bool;
+			break;
+		}
+		case ArgType.VECTOR:
+		{
+			target.Vec = argv.Vec;
+			break;
+		}
+		case ArgType.STRING:
+		case ArgType.ENUM:
+		case ArgType.OTHER:
+		default:
+		{
+			target.Str = argv.Str;
+			break;
+		}
+		}
+	}
 #endif
 	#endregion
 }

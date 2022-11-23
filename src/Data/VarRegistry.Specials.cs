@@ -11,10 +11,9 @@ public static partial class VarRegistry
 {
 	#region fields
 	internal static readonly NamedVars SpecialVars = new();
-	private static readonly TXT.Regex FMT_Is = new("\\$FMT\\((.*?)\\)");
-	private static readonly TXT.Regex Metaf_Sub = new("(?<=\\w+\\().+?(?=\\))");
+	private static readonly TXT.Regex Metaf_Sub = new("(?<=\\w+\\s).+$");
 	#endregion;
-	private static Arg? GetMetaf(string text, in int saveslot, in int character)
+	internal static Arg? GetMetaf(string text, in int saveslot, in int character)
 	{
 		TXT.Match _is;
 		if (!(_is = Metaf_Sub.Match(text)).Success) return null;

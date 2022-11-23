@@ -35,7 +35,7 @@ This is the list of all special variables provided by atmo.
 
 ## Metafunctions
 
-Metafunctions are specialized variables that can receive additional input. They are used in form of `$$FUNCNAME(input)` anywhere a normal argument or variable could. Typically, type coercion is not available for metafunctions.
+Metafunctions are specialized variables that can receive additional input. They are used in form of `'$$FUNCNAME input'` anywhere a normal argument or variable could. Typically, type coercion is not available for metafunctions. **NOTE:** the first dollar sign is *not* part of a metafunction name. If some metafunction`FUNC` can be assigned to with `setvar` action, you would need to specify it as `setvar '$FUNC input' 'value'`.
 
 | Metafunction names	| Description	| Examples	| Output	| Output type	|
 | ---					| ---			| ---		| ---		| ---			|

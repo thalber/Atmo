@@ -377,6 +377,18 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			_dt = value;
 		}
 	}
+	/// <summary>
+	/// Gets value of the specified type from the instance.
+	/// </summary>
+	public object this[ArgType at] => at switch
+	{
+		ArgType.DECIMAL => F32,
+		ArgType.INTEGER => I32,
+		ArgType.BOOLEAN => Bool,
+		ArgType.VECTOR => Vec,
+		_ => Str,
+	};
+
 	#region general
 	/// <summary>
 	/// Compares against another instance. Uses raw contents of <see cref="Str"/> for comparison.

@@ -105,6 +105,19 @@ public sealed partial class Atmod : BaseUnityPlugin
 		{
 			Logger.LogFatal($"Error on enable!\n{ex}");
 		}
+		try
+		{
+			ConsoleFace.Apply();
+		}
+		catch (TypeLoadException)
+		{
+			Logger.LogMessage("DevConsole not present");
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError($"Unexpected error on devconsole apply:" +
+				$"\n{ex}");
+		}
 	}
 	/// <summary>
 	/// Undoes hooks and spins up a static cleanup member cleanup procedure.

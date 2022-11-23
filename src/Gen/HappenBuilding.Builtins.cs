@@ -832,44 +832,9 @@ public static partial class HappenBuilding
 			;
 		forceType.GetEnum(out ArgType datatype);
 		string? dt_last_str = forceType.Str;
-
-		void Assign()
-		{
-			switch (datatype)
-			{
-			case ArgType.DECIMAL:
-			{
-				target.F32 = argv.F32;
-				break;
-			}
-			case ArgType.INTEGER:
-			{
-				target.I32 = argv.I32;
-				break;
-			}
-			case ArgType.BOOLEAN:
-			{
-				target.Bool = argv.Bool;
-				break;
-			}
-			case ArgType.VECTOR:
-			{
-				target.Vec = argv.Vec;
-				break;
-			}
-			case ArgType.STRING:
-			case ArgType.ENUM:
-			case ArgType.OTHER:
-			default:
-			{
-				target.Str = argv.Str;
-				break;
-			}
-			}
-		}
 		ha.On_Init += (_) =>
 		{
-			Assign();
+			Assign(argv, target, datatype);
 		};
 		ha.On_CoreUpdate += (_) =>
 		{
@@ -881,20 +846,22 @@ public static partial class HappenBuilding
 			dt_last_str = forceType.Str;
 			if (continuous.Bool)
 			{
-				Assign();
+				Assign(argv, target, datatype);
 			}
 		};
 	}
 	#endregion
 	#region metafunctions
+	private static readonly TXT.Regex FMT_Is = new("\\$FMT\\((.*?)\\)");
 	private static readonly TXT.Regex FMT_Split = new("{.+?}");
 	private static readonly TXT.Regex FMT_Match = new("(?<={).+?(?=})");
 	internal static void RegisterBuiltinMetafun()
 	{
 		AddNamedMetafun(new[] { "FMT", "FORMAT" }, MMake_FMT);
-		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite);
+		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite); //do not document
 		AddNamedMetafun(new[] { "FILEREAD", "FILE" }, MMAke_FileRead);
 		AddNamedMetafun(new[] { "WWW", "WEBREQUEST" }, MMake_WWW);
+		
 	}
 
 	private static IArgPayload? MMake_WWW(string text, int ss, int ch)
@@ -983,17 +950,6 @@ public static partial class HappenBuilding
 		return new CallbackPayload()
 		{
 			prop_Str = new(ReadFromFile, WriteToFile)
-		};
-	}
-	private static IArgPayload? MMake_ColorFlash(string text, int ss, int ch)
-	{
-		ArgSet args = TXT.Regex.Split(text, "\\s");
-		Arg basev = args.AtOr(0, (Vector4)Color.cyan),
-			devv = args.AtOr(1, (Vector4)Color.black);
-		Color @base = basev.Vec, dev = devv.Vec;
-		return new GetOnlyCallbackPayload()
-		{
-			getVec = () => @base.RandDev(dev)
 		};
 	}
 	private static IArgPayload? MMake_FMT(string text, int ss, int ch)
