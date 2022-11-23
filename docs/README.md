@@ -1,5 +1,7 @@
 # Atmo
- 
+
+[![build](https://github.com/thalber/Atmo/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/thalber/Atmo/actions/workflows/build.yml)
+
 Atmo is a Rain World mod that acts as a regpack-centric scripting addon for [RegionKit](https://github.com/DryCryCrystal/Region-Kit). It allows a region maker to add world events, easily bundling behaviour with custom trigger conditions.
 
 ## Dependencies
