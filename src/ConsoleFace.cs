@@ -33,6 +33,19 @@ internal static class ConsoleFace
 					b) stores result in a variable with a set name
 			""")
 			.Register();
+		new DCMD.CommandBuilder("atmo_perf")
+			.RunGame((game, args) =>
+			{
+				DCLI.WriteLine("""
+					All times in milliseconds
+					""");
+				foreach (Body.Happen.Perf rec in inst.CurrentSet!.GetPerfRecords())
+				{
+					DCLI.WriteLine($"{rec.name}\t: {rec.avg_realup}\t: {rec.samples_realup}\t: {rec.avg_eval}\t: {rec.samples_eval}");
+				}
+			})
+			.Help("Fetches performance records from currently active happens")
+			.Register();
 	}
 	private static IEnumerable<string> AtmoVar_ac(string[] args)
 	{

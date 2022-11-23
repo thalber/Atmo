@@ -284,7 +284,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		}
 		else
 		{
-			perf.avg_realup = float.NaN;
+			perf.avg_realup = double.NaN;
 		}
 		if (perf.samples_eval is not 0)
 		{
@@ -293,7 +293,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		}
 		else
 		{
-			perf.avg_eval = float.NaN;
+			perf.avg_eval = double.NaN;
 		}
 		return perf;
 	}

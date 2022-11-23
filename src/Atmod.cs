@@ -211,7 +211,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 	}
 	#region lifecycle hooks
 	/// <summary>
-	/// Temporarily forces currentindex during LoadFirstWorld. Needed for <see cref="Helpers.VarRegistry"/> function.
+	/// Temporarily forces currentindex during LoadFirstWorld. Needed for <see cref="VarRegistry"/> function.
 	/// </summary>
 	/// <param name="orig"></param>
 	/// <param name="self"></param>

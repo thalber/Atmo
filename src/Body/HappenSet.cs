@@ -124,6 +124,10 @@ public sealed class HappenSet
 		}
 	}
 
+	/// <summary>
+	/// Fetches dictionary containing all groups with their contents
+	/// </summary>
+	/// <returns></returns>
 	public IDictionary<string, IEnumerable<string>> GetGroups()
 	{
 		Dictionary<string, IEnumerable<string>> res = new();
@@ -133,6 +137,10 @@ public sealed class HappenSet
 		}
 		return res;
 	}
+	/// <summary>
+	/// Returns a dictionary with happen-group binds.
+	/// </summary>
+	/// <returns></returns>
 	public IDictionary<Happen, IEnumerable<string>> GetBinds()
 	{
 		Dictionary<Happen, IEnumerable<string>> res = new();
@@ -158,6 +166,10 @@ public sealed class HappenSet
 		InsertGroups(ins);
 		GroupsToHappens.AddLinksBulk(bind.Select(gr => new KeyValuePair<string, Happen>(gr, happen)));
 	}
+	/// <summary>
+	/// Registers multiple happen-group binds.
+	/// </summary>
+	/// <param name="binds"></param>
 	public void AddBinds(IDictionary<Happen, IEnumerable<string>> binds)
 	{
 		BangBang(binds, nameof(binds));
