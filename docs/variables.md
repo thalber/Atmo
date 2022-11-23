@@ -45,4 +45,4 @@ Metafunctions are specialized variables that can receive additional input. They 
 
 ## Code reference
 
-For accessing variables from other c# code, see [VarRegistry file and its docstrings](src/Helpers/VarRegistry.cs), or [this section for special variables](src/Helpers/VarRegistry.Specials.cs).
+For accessing variables from other c# code, see [VarRegistry file and its docstrings](../src/Helpers/VarRegistry.cs), or [this section for special variables](../src/Helpers/VarRegistry.Specials.cs).
