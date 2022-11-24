@@ -8,7 +8,7 @@ This file contains instructions on how to interface with Atmo API from other cod
 
 ## Classes
 
-### [API](../../src/API.cs)
+### [API](../src/API.cs)
 
 This static class is your primary entrypoint for interacting with Atmo. Relevant members:
 #### Delegate types
