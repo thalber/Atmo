@@ -554,6 +554,28 @@ public static partial class Utils
 		return null;
 	}
 	/// <summary>
+	/// Attempts to find an <see cref="UpdatableAndDeletable"/> of specified type
+	/// </summary>
+	public static T? FindUAD<T>(this Room rm)
+	{
+		BangBang(rm, nameof(rm));
+		for (int i = 0; i < rm.updateList.Count; i++)
+		{
+			if (rm.updateList[i] is T t) return t;
+		}
+		return default;
+	}
+	/// <summary>
+	/// Yields all <see cref="UpdatableAndDeletable"/>s of specified type.
+	/// </summary>
+	public static IEnumerable<T> FindAllUAD<T>(this Room rm)
+	{
+		for (int i = 0; i < rm.updateList.Count; i++)
+		{
+			if (rm.updateList[i] is T t) yield return t;
+		}
+	}
+	/// <summary>
 	/// Gets bytes from ER of an assembly.
 	/// </summary>
 	/// <param name="resname">name of the resource</param>
