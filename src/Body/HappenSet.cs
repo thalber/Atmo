@@ -56,16 +56,19 @@ public sealed class HappenSet
 		if (world is null || file is null) return;
 		HappenParser.Parse(file, this, game);
 		//subregions as groups
-		Dictionary<string, IEnumerable<string>> subContents = new();
+		Dictionary<string, List<string>> subContents = new();
 
 		foreach (string sub in world.region.subRegions)
 		{
 			int index = world.region.subRegions.IndexOf(sub);
-			subContents.Add(sub, world.abstractRooms
-				.Where(x => x.subRegion == index)
-				.Select(x => x.name));
+			subContents
+				.EnsureAndGet(sub, () => new())
+				.AddRange(
+					world.abstractRooms
+					.Where(x => x.subRegion == index)
+					.Select(x => x.name));
 		}
-		InsertGroups(subContents);
+		foreach ((string? sub, List<string>? rooms) in subContents) InsertGroup(sub, rooms);
 	}
 	/// <summary>
 	/// Yields all rooms a given happen should be active in.
