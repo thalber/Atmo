@@ -44,7 +44,7 @@ public sealed class HappenSet
 	public List<Happen> AllHappens { get; private set; } = new();
 	#endregion
 	/// <summary>
-	/// Creates a new instance. Reads from a file if provided.
+	/// Creates a new instance. Reads from a file if provided; otherwise stays blank.
 	/// </summary>
 	/// <param name="world">World to be bound to.</param>
 	/// <param name="file">File to read contents from. New instance stays blank if this is null.</param>
@@ -260,7 +260,7 @@ public sealed class HappenSet
 	/// </summary>
 	/// <param name="world">The world to create a happenSet for. Must not be null.</param>
 	/// <returns>A resulting HappenSet; null if there was no regpack with an .atmo file for given region, or if there was an error on creation.</returns>
-	public static HappenSet? TryCreate(World world)
+	public static HappenSet TryCreate(World world)
 	{
 		BangBang(world, nameof(world));
 		HappenSet? res = null;
@@ -299,13 +299,12 @@ public sealed class HappenSet
 					plog.LogDebug("No XX.atmo file found.");
 				}
 			}
-			return res;
 		}
 		catch (Exception ex)
 		{
 			plog.LogError($"Could not load event setup for {world.name}:\n{ex}");
-			return null;
 		}
+		return res ?? new(world);
 #endif
 	}
 	/// <summary>

@@ -2,7 +2,7 @@
 using Atmo.Body;
 
 namespace Atmo.Gen;
-internal class HappenParser
+public class HappenParser
 {
 	//this is still a mess but manageable
 	#region fields
@@ -295,11 +295,17 @@ internal class HappenParser
 		};
 	}
 	#endregion
-	internal static void Parse(IO.FileInfo file, HappenSet set, RainWorldGame rwg)
+	/// <summary>
+	/// Attempts to read a file and parse it as a script.
+	/// </summary>
+	/// <param name="file">File to check from.</param>
+	/// <param name="set">Happenset instance to add results to.</param>
+	/// <param name="game">Current RainWorldGame instance.</param>
+	public static void Parse(IO.FileInfo file, HappenSet set, RainWorldGame game)
 	{
 		BangBang(file, "file");
 		BangBang(set, "set");
-		BangBang(rwg, "rwg");
+		BangBang(game, "rwg");
 		HappenParser p = new(file);
 		for (int i = 0; i < p.allLines.Length; i++)
 		{
@@ -324,7 +330,7 @@ internal class HappenParser
 		set.InsertGroups(groupsFinal);
 		foreach (HappenConfig cfg in p.retrievedHappens)
 		{
-			var ha = new Happen(cfg, set, rwg);
+			var ha = new Happen(cfg, set, game);
 			set.InsertHappens(new[] { ha });
 			set.AddBind(ha, cfg.groups);
 			set.AddExcludes(ha, cfg.exclude);

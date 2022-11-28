@@ -40,10 +40,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\README.md">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
 		<None Include="C:\Users\thalber\Documents\GitHub\Atmo\src\.editorconfig" />
 	</ItemGroup>
 
