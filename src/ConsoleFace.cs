@@ -65,9 +65,14 @@ internal static class ConsoleFace
 	}
 	private static void AtmoVar_run(string[] args)
 	{
+		void showhelp()
+		{
+			DCLI.WriteLine(Help_AtmoVar);
+		}
 		if (args.Length < 2)
 		{
 			NotifyArgsMissing(AtmoVar_run, "action", "name");
+			showhelp();
 			return;
 		}
 		Arg target = VarRegistry.GetVar(args[1], CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
@@ -80,6 +85,7 @@ internal static class ConsoleFace
 			if (args.Length < 3)
 			{
 				NotifyArgsMissing(AtmoVar_run, "value");
+				showhelp();
 				return;
 			}
 			target.Str = args[1];
@@ -126,6 +132,10 @@ internal static class ConsoleFace
 	}
 	private static void MetafunInv_run(string[] args)
 	{
+		void showhelp()
+		{
+			DCLI.WriteLine(Help_AtmoMetaf);
+		}
 		switch (args.AtOr(0, "list"))
 		{
 		case "list":
@@ -140,6 +150,7 @@ internal static class ConsoleFace
 			if (args.Length < 3)
 			{
 				NotifyArgsMissing(MetafunInv_run, "name", "input");
+				showhelp();
 				break;
 			}
 			Arg? res = VarRegistry.GetMetaFunction($"{args[1]} {args[2]}", ss, ch);
@@ -165,7 +176,6 @@ internal static class ConsoleFace
 			break;
 		}
 		}
-
 	}
 
 	private static void NotifyArgsMissing(Delegate where, params string[] args)
