@@ -11,13 +11,14 @@ public static partial class VarRegistry
 {
 	#region fields
 	internal static readonly NamedVars SpecialVars = new();
-	private static readonly TXT.Regex Metaf_Sub = new("(?<=\\w+\\s).+$");
+	private static readonly TXT.Regex Metaf_Sub = new("^\\w+(\\s.+$|$)");
+	private static readonly TXT.Regex Metaf_Name = new("^\\w+(?=\\s|$)");
 	#endregion;
 	internal static Arg? GetMetaFunction(string text, in int saveslot, in int character)
 	{
 		TXT.Match _is;
 		if (!(_is = Metaf_Sub.Match(text)).Success) return null;
-		string name = text.Substring(0, _is.Index - 1);
+		string name = Metaf_Name.Match(text).Value;//text.Substring(0, Mathf.Max(_is.Index - 1, 0));
 		plog.DbgVerbose($"Attempting to create metafun from {text} (name {name}, match {_is.Value})");
 		IEnumerable<API.Create_RawMetaFunction?>? invl = API.AM_invl;
 		IArgPayload? res = null;

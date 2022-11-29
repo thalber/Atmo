@@ -20,7 +20,7 @@ Set prefix is always required. Prefixes are not considered part of the variable 
 
 ## Special variables
 
-This is the list of all special variables provided by atmo.
+This is the list of all special variables provided by atmo. Their names are reserved and cannot be assigned to.
 
 | names	| function	|
 | --- 	| ---		|
@@ -35,13 +35,9 @@ This is the list of all special variables provided by atmo.
 
 ## Metafunctions
 
-Metafunctions are specialized variables that can receive additional input. They are used in form of `'$$FUNCNAME input'` anywhere a normal argument or variable could. Typically, type coercion is not available for metafunctions. **NOTE:** the first dollar sign is *not* part of a metafunction name. If some metafunction`FUNC` can be assigned to with `setvar` action, you would need to specify it as `setvar '$FUNC input' 'value'`.
+Metafunctions are specialized variables that can receive additional input. They are used in form of `'$$FUNCNAME input'` anywhere a normal argument or variable could. Typically, type coercion is not available for metafunctions. **NOTE:** the first dollar sign is *not* part of a metafunction name. If some metafunction `FUNC` can be assigned to with `setvar` action, you would need to specify it as `setvar '$FUNC input' 'value'`.
 
-| Metafunction names	| Description	| Examples	| Output	| Output type	|
-| ---					| ---			| ---		| ---		| ---			|
-| FMT, FORMAT | Allows you to combine outputs of several other variables into a string. | `$$FMT(This is a format string! Current time is: {now}, running OS: {os}` | `This is a format string! Current time is: 11/19/2022 7:34:51 AM, running OS: Win32NT` | `STRING` |
-| FILEREAD, FILE | Reads contents of a specified file as string. | `$$FILEREAD(uninstall_realm.bat)` | `rmdir "BepInEx" /s /q del doorstop_config.ini...` | `STRING` |
-| WWW, WEBREQUEST | Tries fetching text resource at a specified URI. Note that HTTPS is not possible to use. Takes some time to fetch the resource. | `$$WWW(http://collapseos.org/)` | Full HTML for CollapseOS website. | `STRING` |
+You can see full list of provided metafunctions in [builtins list](builtins.md)
 
 ## Code reference
 

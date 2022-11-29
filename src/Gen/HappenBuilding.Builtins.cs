@@ -414,7 +414,7 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "fling", "force" }, Make_Fling);
 		AddNamedAction(new[] { "light", "tempglow" }, Make_Tempglow);
 		AddNamedAction(new[] { "stun" }, Make_Stun);
-		//todo: document all below
+		//to be documented:
 	}
 	private static void Make_Stun(Happen ha, ArgSet args)
 	{
@@ -858,10 +858,53 @@ public static partial class HappenBuilding
 	internal static void RegisterBuiltinMetafun()
 	{
 		AddNamedMetafun(new[] { "FMT", "FORMAT" }, MMake_FMT);
-		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite); //do not document
 		AddNamedMetafun(new[] { "FILEREAD", "FILE" }, MMAke_FileRead);
 		AddNamedMetafun(new[] { "WWW", "WEBREQUEST" }, MMake_WWW);
-		
+		AddNamedMetafun(new[] { "CURRENTROOM", "VIEWEDROOM" }, MMake_CurrentRoom);
+		AddNamedMetafun(new[] { "SCREENRES", "RESOLUTION" }, MMake_ScreenRes);
+		AddNamedMetafun(new[] { "OWNSAPP", "OWNSGAME" }, MMake_AppFound);
+		//to be documented:
+
+		//do not document:
+		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite); 
+	}
+	private static IArgPayload? MMake_AppFound(string text, int ss, int ch)
+	{
+		//todo: test
+		uint.TryParse(text, out var id);
+		Arg res = Steamworks.SteamApps.BIsSubscribedApp(new(id));
+		return res.Wrap;
+	}
+	private static IArgPayload? MMake_ScreenRes(string text, int ss, int ch)
+	{
+		plog.DbgVerbose("Screen res make");
+		return new GetOnlyCallbackPayload()
+		{
+			getVec = () =>
+			{
+				Resolution res = UnityEngine.Screen.currentResolution;
+				return new Vector4(res.width, res.height, res.refreshRate, 0f);
+			},
+			getStr = () =>
+			{
+				Resolution res = UnityEngine.Screen.currentResolution;
+				return $"{res.width}x{res.height}@{res.refreshRate}";
+			}
+			
+		};
+	}
+	private static IArgPayload? MMake_CurrentRoom(string text, int ss, int ch)
+	{
+		if (!int.TryParse(
+			text,
+			out int camnum)) camnum = 1;
+		return new GetOnlyCallbackPayload()
+		{
+			getStr = () 
+				=> inst.RW?.processManager.FindSubProcess<RainWorldGame>()?
+				.cameras.AtOr(camnum - 1, null)?.room?.abstractRoom.name 
+				?? string.Empty
+	};
 	}
 
 	private static IArgPayload? MMake_WWW(string text, int ss, int ch)

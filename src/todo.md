@@ -3,6 +3,7 @@
 - DevConsole integration
 - Placed triggers
 - Actions for abstract world (creature spawns, object creation, lineages)
+- Publicize and refine gen code
 
 ## Maybe
 - Move specvars into metafunctions

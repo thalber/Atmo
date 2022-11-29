@@ -59,3 +59,16 @@ Arguments (and [variables](variables.md)) can have different data types. Atmo do
 | setvar, setvariable | `1:varname$`, `2:value$`, `3:sync?=false$`, `dt/datatype/format:format(STRING, DECIMAL, INTEGER, BOOLEAN, VECTOR)?=STRING$` | Sets variable `varname` to `value`. If `sync` is true/non-zero, constantly updates `varname` to match `value` (useful if you want to synchronize two variables). Specify `format` if you want the values to be set as a specific format (not recommended if you don't know what you're doing). NOTE: make sure you write your target variable's name without a dollar sign! | `setvar 'myThing' '$utctime'` - sets `myThing` variable to current UTC time, `setvar '$myThing' '$utctime'` - gets variable `myThing`, *takes its string value, uses that value as a string to look up another variable, and sets that variable to current UTC time*. |
 | tempglow, light | `1:color`, `2:radius` | Temporarily forces player's neuron light to be enabled with a specified color and radius (in pixels). `color` should be a vector; it is in form `red;green;blue;alpha`. If alpha is at 0, it will be reset to 1. | `light '0;1;1;0.2' 450` - gives the player weak cyan glow while active. |
 | stun | `who/select/filter:filter?=.*$`, `st/dur/duration:duration?=10$` | Stuns all creatures selected by `filter` for `duration` frames. `filter` is treated as a regular expression, default value matches everyone. | `stun 'who=Slugcat' 'st=10'` - stuns all players for 10 frames. |
+
+## List of default metafunctions
+
+Most metafunctions are readonly and allow no [type coercion](datatypes.md). "Output types" column shows what types are available.
+
+| Metafunction names	| Description	| Example use	| Example output	| Output types	|
+| ---					| ---			| ---			| ---				| ---			|
+| FMT, FORMAT | Allows you to combine outputs of several other variables into a string. | `$$FMT(This is a format string! Current time is: {now}, running OS: {os}` | `This is a format string! Current time is: 11/19/2022 7:34:51 AM, running OS: Win32NT` | `STRING` |
+| FILEREAD, FILE | Reads contents of a specified file as string. | `$$FILEREAD(uninstall_realm.bat)` | `rmdir "BepInEx" /s /q del doorstop_config.ini...` | `STRING` |
+| WWW, WEBREQUEST | Tries fetching text resource at a specified URI. Note that HTTPS is not possible to use. Takes some time to fetch the resource. | `$$WWW(http://collapseos.org/)` | Full HTML for CollapseOS website. | `STRING` |
+| CURRENTROOM, VIEWEDROOM | Gives you the name of currently viewed room, an empty string if there isn't one. By default, checks first camera; you can give a number to specify which camera to check. | `$$CURRENTROOM 2` | If splitscreen mod is enabled: the room camera 2 is looking at. Empty string otherwise. | `STRING` |
+| SCREENRES, RESOLUTION | Returns a vector with screen resolution. | `$$RESOLUTION` | `1366x768@120` | `STRING`, `VECTOR` (width;height;refreshrate) |
+| OWNSAPP, OWNSGAME | If user is on Steam, checks whether the user has an app under specified ID. | `$$OWNSGAME 814540` | Checks whether the user owns Changed. | All |

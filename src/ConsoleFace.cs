@@ -8,6 +8,16 @@ internal static class ConsoleFace
 {
 	#region fields
 	private static ulong mfinv_uid;
+	private const string Help_AtmoVar = """
+		Invalid args!
+		atmo_var get [varname] - fetches value of specified variable
+		atmo_var set [varname] [value] - sets specified variable to value
+		""";
+	private const string Help_AtmoMetaf = """
+		Invalid args!
+		atmo_metafunc list - lists all available metafunctions
+		atmo_metafunc call [name] [input] (print|save) (DECIMAL|INTEGER|VECTOR|BOOL|STRING?)=STRING - calls a specified metafunction with given input, and either prints result to console or stores it in a variable, using specified datatype. NOTE: Only the immediate result is stored, if result is dynamic, it will be discarded.
+		""";
 	#endregion;
 	public static void Apply()
 	{
@@ -15,10 +25,8 @@ internal static class ConsoleFace
 			.AutoComplete(AtmoVar_ac)
 			.Run(AtmoVar_run)
 			.Help("""
-			atmo_var get varname
-				fetches value of specified variable
-			atmo_var set varname value
-				Sets specified variable to value
+			atmo_var get [varname]
+			atmo_var set [varname] [value]
 			""")
 			.Register();
 		new CMD.CommandBuilder("atmo_metafunc")
@@ -26,11 +34,7 @@ internal static class ConsoleFace
 			.Run(MetafunInv_run)
 			.Help("""
 			atmo_metafunc list
-				Lists available Atmo metafunctions
-			atmo_metafunc call name input print|save DECIMAL|INTEGER|VECTOR|BOOL|STRING
-				Invokes one with given user input and
-					a) prints result to console
-					b) stores result in a variable with a set name
+			atmo_metafunc call [name] [input] (print|save) (DECIMAL|INTEGER|VECTOR|BOOL|STRING?)=STRING
 			""")
 			.Register();
 		new CMD.CommandBuilder("atmo_perf")
@@ -44,7 +48,7 @@ internal static class ConsoleFace
 					DCLI.WriteLine($"{rec.name}\t: {rec.avg_realup}\t: {rec.samples_realup}\t: {rec.avg_eval}\t: {rec.samples_eval}");
 				}
 			})
-			.Help("Fetches performance records from currently active happens")
+			//.Help("atmo_perf - Fetches performance records from currently active happens")
 			.Register();
 	}
 	private static IEnumerable<string> AtmoVar_ac(string[] args)
@@ -61,9 +65,14 @@ internal static class ConsoleFace
 	}
 	private static void AtmoVar_run(string[] args)
 	{
+		void showhelp()
+		{
+			DCLI.WriteLine(Help_AtmoVar);
+		}
 		if (args.Length < 2)
 		{
 			NotifyArgsMissing(AtmoVar_run, "action", "name");
+			showhelp();
 			return;
 		}
 		Arg target = VarRegistry.GetVar(args[1], CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
@@ -76,6 +85,7 @@ internal static class ConsoleFace
 			if (args.Length < 3)
 			{
 				NotifyArgsMissing(AtmoVar_run, "value");
+				showhelp();
 				return;
 			}
 			target.Str = args[1];
@@ -122,6 +132,10 @@ internal static class ConsoleFace
 	}
 	private static void MetafunInv_run(string[] args)
 	{
+		void showhelp()
+		{
+			DCLI.WriteLine(Help_AtmoMetaf);
+		}
 		switch (args.AtOr(0, "list"))
 		{
 		case "list":
@@ -136,6 +150,7 @@ internal static class ConsoleFace
 			if (args.Length < 3)
 			{
 				NotifyArgsMissing(MetafunInv_run, "name", "input");
+				showhelp();
 				break;
 			}
 			Arg? res = VarRegistry.GetMetaFunction($"{args[1]} {args[2]}", ss, ch);
@@ -161,7 +176,6 @@ internal static class ConsoleFace
 			break;
 		}
 		}
-
 	}
 
 	private static void NotifyArgsMissing(Delegate where, params string[] args)

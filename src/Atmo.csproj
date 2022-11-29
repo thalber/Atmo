@@ -40,10 +40,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\README.md">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
 		<None Include="C:\Users\thalber\Documents\GitHub\Atmo\src\.editorconfig" />
 	</ItemGroup>
 
@@ -63,6 +59,9 @@
 	  <Reference Include="Assembly-CSharp">
 	    <HintPath>lib\Assembly-CSharp.refstub.dll</HintPath>
 	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="Assembly-CSharp-firstpass">
+	    <HintPath>lib\Assembly-CSharp-firstpass.refstub.dll</HintPath>
 	  </Reference>
 	  <Reference Include="BepInEx.Harmony">
 	    <HintPath>lib\BepInEx.Harmony.refstub.dll</HintPath>
