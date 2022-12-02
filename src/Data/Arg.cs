@@ -39,9 +39,9 @@ namespace Atmo.Data;
 /// </list>
 /// </para>
 /// </summary>
-public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
+public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 {
-	private bool _skipparse = false;
+	//private bool _skipparse = false;
 	private bool _readonly = false;
 	private ArgType _dt = ArgType.STRING;
 	#region backing
@@ -53,45 +53,6 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	private bool _bool;
 	private Vector4 _vec;
 	#endregion backing
-	/// <summary>
-	/// Parses contents of <see cref="_str"/> to fill other fields. Sets <see cref="DataType"/> to <see cref="ArgType.STRING"/>.
-	/// </summary>
-	private void _parseStr()
-	{
-		//check vec parsn
-		_vec = default;
-		if (TryParseVec4(_str, out _vec))
-		{
-			//_vec = vecres;
-			_f32 = _vec.magnitude;
-			_i32 = (int)_f32;
-			_bool = _f32 != 0f;
-		}
-		else
-		{
-			if (trueStrings.Contains(_str.ToLower()))
-			{
-				_bool = true;
-				_f32 = 1f;
-				_i32 = 1;
-			}
-			else if (falseStrings.Contains(_str.ToLower()))
-			{
-				_bool = false;
-				_f32 = 0f;
-				_i32 = 0;
-			}
-			else
-			{
-				float.TryParse(_str, out _f32);
-				if (!int.TryParse(_str, out _i32))
-				{
-					_i32 = (int)_f32;
-				}
-			}
-		}
-		DataType = ArgType.STRING;
-	}
 	#region convert
 	/// <summary>
 	/// Raw string previously used to create the argument. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.STRING"/>.
@@ -120,7 +81,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 				if (ss is null)
 				{
 					plog.LogError($"Impossible to link variable! {value}: could not find RainWorldGame.");
-					parseVal(value);
+					Str = value;
 					return;
 				}
 				_payload = VarRegistry.GetVar(value.Substring(1), ss.Value, ch ?? -1);
@@ -128,13 +89,7 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			}
 			else
 			{
-				parseVal(value);
-			}
-
-			void parseVal(string val)
-			{
-				_skipparse = false;
-				Str = val;
+				Str = value;
 			}
 
 			//_parseStr();
@@ -152,9 +107,8 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			if (_payload is not null) { _payload.Str = value; }
 			else
 			{
+				Coerce_Str(in value, out _i32, out _f32, out _bool, out _vec, out _);
 				_str = value;
-				if (!_skipparse) _parseStr();
-				_skipparse = false;
 			}
 		}
 	}
@@ -169,12 +123,8 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 
 			if (_readonly) return;
 			if (_payload is not null) { _payload.I32 = value; return; }
-			_skipparse = true;
-			_i32 = value;
-			_f32 = value;
-			_bool = value is not 0;
-			_vec = default;
-			Str = value.ToString();
+			Coerce_I32(in value, out _str, out _f32, out _bool, out _vec);
+			_i32= value;
 			DataType = ArgType.INTEGER;
 		}
 	}
@@ -188,12 +138,8 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		{
 			if (_readonly) return;
 			if (_payload is not null) { _payload.F32 = value; return; }
+			Coerce_F32(in value, out _str, out _i32, out _bool, out _vec);
 			_f32 = value;
-			_i32 = value is float.PositiveInfinity or float.NegativeInfinity or float.NaN ? 0 : (int)value;
-			_bool = value is not 0f;
-			_vec = default;
-			_skipparse = true;
-			Str = value.ToString();
 			DataType = ArgType.DECIMAL;
 		}
 	}
@@ -207,12 +153,8 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		{
 			if (_readonly) return;
 			if (_payload is not null) { _payload.Bool = value; return; }
+			Coerce_Bool(in value, out _str, out _i32, out _f32, out _vec);
 			_bool = value;
-			_i32 = value ? 1 : 0;
-			_f32 = value ? 1 : 0;
-			_skipparse = true;
-			_vec = default;
-			Str = value.ToString();
 			DataType = ArgType.BOOLEAN;
 		}
 	}
@@ -225,13 +167,10 @@ public sealed class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			=> _payload?.Vec ?? _vec;
 		set
 		{
+			if (_readonly) return;
 			if (_payload is not null) { _payload.Vec = value; return; }
-			_f32 = value.magnitude;
-			_i32 = (int)_f32;
-			_bool = _f32 != 0f;
+			Coerce_Vec(in value, out _str, out _i32, out _f32, out _bool);
 			_vec = value;
-			_skipparse = true;
-			Str = $"{value.x};{value.y};{value.z};{value.w}";
 			DataType = ArgType.VECTOR;
 		}
 	}

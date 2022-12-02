@@ -502,6 +502,7 @@ public static partial class HappenBuilding
 			filter = args["filter", "select"] ?? ".*",
 			forceVar = args["variance", "var"] ?? 0f,
 			spread = args["spread", "deviation", "dev"] ?? 0f;
+		plog.DbgVerbose($"{force}, {filter.Raw} / {filter.Str}, {spread}");
 		Dictionary<int, VT<float, float>> variance = new();
 		ha.On_RealUpdate += (rm) =>
 		{
@@ -870,7 +871,6 @@ public static partial class HappenBuilding
 	}
 	private static IArgPayload? MMake_AppFound(string text, int ss, int ch)
 	{
-		//todo: test
 		uint.TryParse(text, out var id);
 		Arg res = Steamworks.SteamApps.BIsSubscribedApp(new(id));
 		return res.Wrap;

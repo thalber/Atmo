@@ -641,7 +641,6 @@ public static partial class Utils
 	public static Color ToOpaqueCol(in this Vector4 vec)
 		=> vec.w is not 0f ? vec : new(vec.x, vec.y, vec.z, 1f);
 #if ATMO //atmo-specific things
-	//todo: default value breaks preloader. god.
 	internal static void DbgVerbose(
 		this LOG.ManualLogSource logger,
 		object data)
