@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Text;
+using Microsoft.Cci.Pdb;
 using UnityEngine;
 using static UnityEngine.Mathf;
 
@@ -789,6 +790,49 @@ public static partial class Utils
 		}
 		}
 	}
+	/// <summary>
+	/// Wraps an <see cref="IArgPayload"/> with an <see cref="WrapExcept{T}"/>, rerouting selected properties.
+	/// </summary>
+	/// <returns>
+	/// Object that replaces selected get/set behaviours with custom callbacks.
+	/// </returns>
+	public static WrapExcept<T> Except<T>(
+		this T wrap,
+		FakeProp<int>? p_i32 = null,
+		FakeProp<float>? p_f32 = null,
+		FakeProp<string>? p_str = null,
+		FakeProp<bool>? p_bool = null,
+		FakeProp<Vector4>? p_vec = null)
+		where T : IArgPayload
+	{
+		return new WrapExcept<T>(wrap, p_i32, p_f32, p_str, p_bool, p_vec);
+	}
+	/// <summary>
+	/// Wraps an <see cref="IArgPayload"/> with an <see cref="Data.WrapExcept{T}"/> with set property default values: instead of using <paramref name="wrap"/>'s accessors.
+	/// </summary>
+	/// <returns>An object that will act as if it was accessing its own values for every argument passed as non null.</returns>
+	public static WrapExcept<T> ExceptFld<T>(
+		this T wrap,
+		int? i32 = null,
+		float? f32 = null,
+		string? str = null,
+		bool? @bool = null,
+		Vector4? vec = null
+		)
+		where T : IArgPayload
+	{
+		return new WrapExcept<T>(
+			wrap,
+			i32?.FakeAutoimpl(),
+			f32?.FakeAutoimpl(),
+			str?.FakeAutoimpl(),
+			@bool?.FakeAutoimpl(),
+			vec?.FakeAutoimpl());
+	}
+	/// <summary>
+	/// Creates an "autoimplemented" fakeprop.
+	/// </summary>
+	public static FakeProp<T> FakeAutoimpl<T>(this T item) => new(item);
 #endif
 	#endregion
 }

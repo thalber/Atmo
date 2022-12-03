@@ -6,6 +6,19 @@
 /// <typeparam name="T"></typeparam>
 public sealed record FakeProp<T> : VT<Func<T>?, Action<T>?>
 {
+	private T? _bf;
+	/// <summary>
+	/// Creates a new property that does not link anywhere, except holding the value in itself.
+	/// </summary>
+	/// <param name="val"></param>
+	public FakeProp(T? val) : this(null, null)
+	{
+		BangBang(val, "val");
+		_bf = val;
+		a = () => _bf!;
+		b = (set) => _bf = set;
+	}
+
 	/// <summary>
 	/// Creates a new instance from given getter and setter. Instance, left and right names are preset.
 	/// </summary>

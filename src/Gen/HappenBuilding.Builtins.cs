@@ -869,6 +869,8 @@ public static partial class HappenBuilding
 		//do not document:
 		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite); 
 	}
+
+
 	private static IArgPayload? MMake_AppFound(string text, int ss, int ch)
 	{
 		uint.TryParse(text, out var id);
@@ -877,7 +879,6 @@ public static partial class HappenBuilding
 	}
 	private static IArgPayload? MMake_ScreenRes(string text, int ss, int ch)
 	{
-		plog.DbgVerbose("Screen res make");
 		return new GetOnlyCallbackPayload()
 		{
 			getVec = () =>

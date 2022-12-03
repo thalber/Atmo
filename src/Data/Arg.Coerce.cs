@@ -8,45 +8,67 @@ namespace Atmo.Data;
 public sealed partial class Arg
 {
 	/// <summary>
-	/// Parses contents of <see cref="_str"/> to fill other fields. Sets <see cref="DataType"/> to <see cref="ArgType.STRING"/>.
+	/// Tries to coerce a given value into other things in <see cref="IArgPayload"/> in the same way <see cref="Arg"/> does. If it's not one of the supported types, takes value's <see cref="ToString()"/>.
 	/// </summary>
-	private void _parseStr()
+	/// <typeparam name="T"></typeparam>
+	/// <param name="value"></param>
+	/// <returns></returns>
+	public static IArgPayload Coerce<T>(in T value)
 	{
-		//check vec parsn
-		//_vec = default;
-		//if (TryParseVec4(_str, out _vec))
-		//{
-		//	//_vec = vecres;
-		//	_f32 = _vec.magnitude;
-		//	_i32 = (int)_f32;
-		//	_bool = _f32 != 0f;
-		//}
-		//else
-		//{
-		//	if (trueStrings.Contains(_str.ToLower()))
-		//	{
-		//		_bool = true;
-		//		_f32 = 1f;
-		//		_i32 = 1;
-		//	}
-		//	else if (falseStrings.Contains(_str.ToLower()))
-		//	{
-		//		_bool = false;
-		//		_f32 = 0f;
-		//		_i32 = 0;
-		//	}
-		//	else
-		//	{
-		//		float.TryParse(_str, out _f32);
-		//		if (!int.TryParse(_str, out _i32))
-		//		{
-		//			_i32 = (int)_f32;
-		//		}
-		//	}
-		//}
-		Coerce_Str(_str, out _i32, out _f32, out _bool, out _vec, out bool asv);
-		DataType = asv ? ArgType.VECTOR : ArgType.STRING;
+		if (value == null) throw new ArgumentNullException("value");
+		string str = string.Empty;
+		int i32 = default;
+		float f32 = default;
+		bool @bool = default;
+		Vector4 vec = default;
+		if (value is string s)
+		{
+			str = s;
+			Coerce_Str(in s, out i32, out f32, out @bool, out vec, out _);
+		}
+		else if (value is int i)
+		{
+			i32 = i;
+			Coerce_I32(in i, out str, out f32, out @bool, out vec);
+		}
+		else if (value is float f)
+		{
+			f32 = f;
+			Coerce_F32(f, out str, out i32, out @bool, out vec);
+		}
+		else if (value is bool b)
+		{
+			@bool = b;
+			Coerce_Bool(b, out str, out i32, out f32, out vec);
+		}
+		else if (value is Vector4 v)
+		{
+			vec = v;
+			Coerce_Vec(v, out str, out i32, out f32, out @bool);
+		}
+		else
+		{
+			str = value.ToString();
+			Coerce_Str(str, out i32, out f32, out @bool, out vec, out _);
+		}
+		return new GetOnlyCallbackPayload()
+		{
+			getBool = delegate { return @bool; },
+			getF32 = delegate { return @f32; },
+			getI32 = delegate { return @i32; },
+			getStr = delegate { return @str; },
+			getVec = delegate { return @vec; },
+		};
 	}
+	/// <summary>
+	/// Coerces a string value into all other values stored by a <see cref="IArgPayload"/>.
+	/// </summary>
+	/// <param name="s">input</param>
+	/// <param name="i">output</param>
+	/// <param name="f">output</param>
+	/// <param name="b">output</param>
+	/// <param name="v">output</param>
+	/// <param name="parsedAsVec">Whether a string form of a vector was recognized</param>
 	internal static void Coerce_Str(
 		in string s,
 		out int i,
@@ -59,7 +81,7 @@ public sealed partial class Arg
 		{
 			Coerce_Vec(_v, out _, out i, out f, out b);
 			v = _v;
-			
+
 		}
 		else
 		{
@@ -87,6 +109,14 @@ public sealed partial class Arg
 			v = default;
 		}
 	}
+	/// <summary>
+	/// Coerces an int value into all other values stored by <see cref="IArgPayload"/>
+	/// </summary>
+	/// <param name="i">input</param>
+	/// <param name="s">output</param>
+	/// <param name="f">output</param>
+	/// <param name="b">output</param>
+	/// <param name="v">output</param>
 	internal static void Coerce_I32(
 		in int i,
 		out string s,
@@ -99,6 +129,14 @@ public sealed partial class Arg
 		b = i != 0;
 		v = default;
 	}
+	/// <summary>
+	/// Coerces a float value into all other values stored by a <see cref="IArgPayload"/>
+	/// </summary>
+	/// <param name="f">input</param>
+	/// <param name="s">output</param>
+	/// <param name="i">output</param>
+	/// <param name="b">output</param>
+	/// <param name="v">output</param>
 	internal static void Coerce_F32(
 		in float f,
 		out string s,
@@ -111,6 +149,14 @@ public sealed partial class Arg
 		b = f != 0;
 		v = default;
 	}
+	/// <summary>
+	/// Coerces a bool value into all other values stored by a <see cref="IArgPayload"/>
+	/// </summary>
+	/// <param name="b">input</param>
+	/// <param name="s">output</param>
+	/// <param name="i">output</param>
+	/// <param name="f">output</param>
+	/// <param name="v">output</param>
 	internal static void Coerce_Bool(
 		in bool b,
 		out string s,
@@ -123,6 +169,14 @@ public sealed partial class Arg
 		f = b ? 1 : 0;
 		v = default;
 	}
+	/// <summary>
+	/// Coerces a vector value into all other values 
+	/// </summary>
+	/// <param name="v"></param>
+	/// <param name="s"></param>
+	/// <param name="i"></param>
+	/// <param name="f"></param>
+	/// <param name="b"></param>
 	internal static void Coerce_Vec(
 		in Vector4 v,
 		out string s,

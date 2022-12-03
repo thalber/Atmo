@@ -413,7 +413,8 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		else
 		{
 			_str = orig;
-			_parseStr();
+			Coerce_Str(_str, out _i32, out _f32, out _bool, out _vec, out bool asv);
+			DataType = asv ? ArgType.VECTOR : ArgType.STRING;
 		}
 		_str ??= string.Empty;
 	}
