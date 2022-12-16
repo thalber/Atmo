@@ -1,21 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Mono.Cecil;
-
-namespace Atmo.Data;
+﻿namespace Atmo.Data.Payloads;
 /// <summary>
 /// Wraps another <see cref="IArgPayload"/>, rerouting selected properties to something different. Instantiate via <see cref="Utils.Except{T}"/>
 /// </summary>
-/// <typeparam name="T"></typeparam>
-public struct WrapExcept<T> : IArgPayload
-	where T : IArgPayload
+/// <typeparam name="TW">Type of wrapped item</typeparam>
+public struct WrapExcept<TW> : IArgPayload
+	where TW : IArgPayload
 {
 	/// <summary>
 	/// Wrapped object
 	/// </summary>
-	public readonly T wrapped;
+	public readonly TW wrapped;
 
 	/// <summary>
 	/// <see cref="I32"/> property backing.
@@ -38,16 +32,21 @@ public struct WrapExcept<T> : IArgPayload
 	/// </summary>
 	public FakeProp<Vector4>? prop_Vec;
 	/// <summary>
+	/// Encapsulated by <see cref="GetEnum"/>/<see cref="SetEnum"/>; uses pairs of "Enum type - enum value" 
+	/// </summary>
+	public FakeProp<VT<Type, object>>? prop_enum;
+	/// <summary>
 	/// Creates a new instance with given prop backings. Every argument passed as non null will reroute the property.
 	/// </summary>
-	
+
 	public WrapExcept(
-		T wrap,
+		TW wrap,
 		FakeProp<int>? p_i32 = null,
 		FakeProp<float>? p_f32 = null,
 		FakeProp<string>? p_str = null,
 		FakeProp<bool>? p_bool = null,
-		FakeProp<Vector4>? p_vec = null)
+		FakeProp<Vector4>? p_vec = null,
+		FakeProp<VT<Type, object>>? p_enum = null)
 	{
 		wrapped = wrap;
 		prop_Str = p_str;
@@ -55,6 +54,7 @@ public struct WrapExcept<T> : IArgPayload
 		prop_F32 = p_f32;
 		prop_Bool = p_bool;
 		prop_Vec = p_vec;
+		prop_enum = p_enum;
 	}
 
 	/// <inheritdoc/>

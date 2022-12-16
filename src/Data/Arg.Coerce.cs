@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Atmo.Data.Payloads;
 
 namespace Atmo.Data;
 
@@ -13,7 +10,7 @@ public sealed partial class Arg
 	/// <typeparam name="T"></typeparam>
 	/// <param name="value"></param>
 	/// <returns></returns>
-	public static IArgPayload Coerce<T>(in T value)
+	public static PlainReadonly Coerce<T>(in T value)
 	{
 		if (value == null) throw new ArgumentNullException("value");
 		string str = string.Empty;
@@ -48,17 +45,12 @@ public sealed partial class Arg
 		}
 		else
 		{
+			plog.DbgVerbose($"Value {value} of type {typeof(T).FullName} is not a supported type; "
+			+ "trying to use its ToString instead");
 			str = value.ToString();
 			Coerce_Str(str, out i32, out f32, out @bool, out vec, out _);
 		}
-		return new GetOnlyCallbackPayload()
-		{
-			getBool = delegate { return @bool; },
-			getF32 = delegate { return @f32; },
-			getI32 = delegate { return @i32; },
-			getStr = delegate { return @str; },
-			getVec = delegate { return @vec; },
-		};
+		return new (str, i32, f32, @bool, vec);
 	}
 	/// <summary>
 	/// Coerces a string value into all other values stored by a <see cref="IArgPayload"/>.

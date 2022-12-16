@@ -13,7 +13,7 @@ namespace Atmo;
 /// To interact with the mod, see <seealso cref="API"/>. For internal details, see <seealso cref="Atmo.Gen"/> and <seealso cref="Atmo.Body"/> namespace contents.
 /// </para>
 /// </summary>
-[BepInPlugin(Id, DName, Ver)]
+[BepInPlugin(GUID: Id, Name: DName, Version: Ver)]
 public sealed partial class Atmod : BaseUnityPlugin
 {
 	#region field/const/prop
@@ -86,7 +86,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 	{
 		const string CFG_LOGGING = "logging";
 		inst = this;
-		log_verbose = Config.Bind(CFG_LOGGING, "verbose", true, "Enable more verbose logging. Can create clutter.");
+		log_verbose = Config.Bind(section: CFG_LOGGING, key: "verbose", defaultValue: true, description: "Enable more verbose logging. Can create clutter.");
 		try
 		{
 			if (RW is not null)

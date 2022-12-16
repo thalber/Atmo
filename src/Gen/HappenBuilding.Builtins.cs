@@ -1,4 +1,5 @@
 ﻿using Atmo.Body;
+using Atmo.Data.Payloads;
 
 using static Atmo.Data.VarRegistry;
 using static Atmo.API;
@@ -879,7 +880,7 @@ public static partial class HappenBuilding
 	}
 	private static IArgPayload? MMake_ScreenRes(string text, int ss, int ch)
 	{
-		return new GetOnlyCallbackPayload()
+		return new ByCallbackGetOnly()
 		{
 			getVec = () =>
 			{
@@ -899,7 +900,7 @@ public static partial class HappenBuilding
 		if (!int.TryParse(
 			text,
 			out int camnum)) camnum = 1;
-		return new GetOnlyCallbackPayload()
+		return new ByCallbackGetOnly()
 		{
 			getStr = () 
 				=> inst.RW?.processManager.FindSubProcess<RainWorldGame>()?
@@ -912,7 +913,7 @@ public static partial class HappenBuilding
 	{
 		WWW? www = new WWW(text);
 		string? failed = null;
-		return new GetOnlyCallbackPayload()
+		return new ByCallbackGetOnly()
 		{
 			getStr = () =>
 			{
@@ -934,7 +935,7 @@ public static partial class HappenBuilding
 		IO.FileInfo fi = new(text);
 		DateTime? lw = null;
 		string? contents = null;
-		return new GetOnlyCallbackPayload()
+		return new ByCallbackGetOnly()
 		{
 			getStr = () =>
 			{
@@ -991,7 +992,7 @@ public static partial class HappenBuilding
 			sw.Write(val);
 			sw.Flush();
 		}
-		return new CallbackPayload()
+		return new ByCallback()
 		{
 			prop_Str = new(ReadFromFile, WriteToFile)
 		};
@@ -1011,7 +1012,7 @@ public static partial class HappenBuilding
 		{
 			return variables.Select(x => x.Str).ToArray();
 		}
-		return new GetOnlyCallbackPayload()
+		return new ByCallbackGetOnly()
 		{
 			getStr = () => string.Format(format, getStrs())
 		};

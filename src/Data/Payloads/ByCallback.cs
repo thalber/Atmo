@@ -1,9 +1,9 @@
-﻿namespace Atmo.Data;
+﻿namespace Atmo.Data.Payloads;
 
 /// <summary>
 /// A callback driven payload, with support for both getters and setters. Uses <see cref="FakeProp{T}"/> to group functions together.
 /// </summary>
-public struct CallbackPayload : IArgPayload
+public struct ByCallback : IArgPayload
 {
 	/// <summary>
 	/// <see cref="I32"/> property backing.
@@ -28,7 +28,7 @@ public struct CallbackPayload : IArgPayload
 	/// <summary>
 	/// Creates a new instance with given prop backings.
 	/// </summary>
-	public CallbackPayload(
+	public ByCallback(
 		FakeProp<int>? prop_I32 = null,
 		FakeProp<float>? prop_F32 = null,
 		FakeProp<bool>? prop_Bool = null,
@@ -46,7 +46,7 @@ public struct CallbackPayload : IArgPayload
 	/// </summary>
 	/// <param name="wrap"></param>
 	/// <exception cref="InvalidOperationException"></exception>
-	public CallbackPayload(IArgPayload wrap)
+	public ByCallback(IArgPayload wrap)
 	{
 		prop_I32 = null!;
 		prop_F32 = null!;
