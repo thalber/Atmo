@@ -53,14 +53,19 @@ public sealed class HappenSet
 		BangBang(world, nameof(world));
 		this.world = world;
 		game = world.game;
-		if (world is null || file is null) return;
-		HappenParser.Parse(file, this, game);
+		//if (world is null || file is null) return;
+		if (file is not null)
+		{
+			HappenParser.Parse(file, this, game);
+		}
+
 		//subregions as groups
 		Dictionary<string, List<string>> subContents = new();
 
 		foreach (string sub in world.region.subRegions)
 		{
 			int index = world.region.subRegions.IndexOf(sub);
+			//plog.DbgVerbose($"\"{sub}\" :: {index}");
 			subContents
 				.EnsureAndGet(sub, () => new())
 				.AddRange(
@@ -68,7 +73,13 @@ public sealed class HappenSet
 					.Where(x => x.subRegion == index)
 					.Select(x => x.name));
 		}
-		foreach ((string? sub, List<string>? rooms) in subContents) InsertGroup(sub, rooms);
+		foreach ((string? sub, List<string>? rooms) in subContents) {
+			InsertGroup(sub, rooms);
+			//plog.DbgVerbose($"{sub} :: {rooms.Stitch()}");
+		}
+		// foreach (var g in RoomsToGroups.EnumerateRight()){
+		// 	plog.DbgVerbose($">>{g}: {RoomsToGroups.IndexFromRight(g).Stitch()}");
+		// }
 	}
 	/// <summary>
 	/// Yields all rooms a given happen should be active in.
@@ -222,7 +233,7 @@ public sealed class HappenSet
 		RoomsToGroups.InsertRight(group);
 		GroupsToHappens.InsertLeft(group);
 		RoomsToGroups.InsertRangeLeft(rooms);
-		RoomsToGroups.AddLinksBulk(rooms.Select(x => new KeyValuePair<string, string>(group, x)));
+		RoomsToGroups.AddLinksBulk(rooms.Select(x => new KeyValuePair<string, string>(x, group)));
 		//foreach (var room in rooms) { RoomsToGroups.AddLink() }
 	}
 	/// <summary>
