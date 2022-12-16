@@ -165,7 +165,12 @@ public sealed class HappenSet
 		BangBang(bind, nameof(bind));
 		if (bind?.Count() is null or 0) return;
 		Dictionary<string, IEnumerable<string>> ins = new();
-		foreach (string? g in bind) { ins.Add(g, new List<string>(0)); }
+		foreach (string? g in bind)
+		{
+			//fixme: sometimes throws on dupes.
+			//why the fuck did i make it a blank list?..
+			ins.Set(g, new List<string>(0));
+		}
 		InsertGroups(ins);
 		GroupsToHappens.AddLinksBulk(bind.Select(gr => new KeyValuePair<string, Happen>(gr, happen)));
 	}
