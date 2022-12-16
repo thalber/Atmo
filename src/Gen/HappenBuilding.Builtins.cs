@@ -416,6 +416,54 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "light", "tempglow" }, Make_Tempglow);
 		AddNamedAction(new[] { "stun" }, Make_Stun);
 		//to be documented:
+		AddNamedAction(new[] { "lightning" }, Make_Lightning);
+	}
+
+	private static void Make_Lightning(Happen ha, ArgSet args)
+	{
+		plog.DbgVerbose("Making lightning!");
+		if (args.Count < 1)
+		{
+			NotifyArgsMissing(source: Make_Lightning, "intensity");
+		}
+		Arg
+			intensity = args[0],
+			bkgonly = args.AtOr(1, false);
+		Dictionary<Room, bool> registered = new();
+		ha.On_RealUpdate += (rm) =>
+		{
+			registered.EnsureAndGet(rm, () =>
+			{
+				plog.DbgVerbose($"Lightning for room {rm.abstractRoom.name}");
+				if (rm.lightning is not null) {
+					plog.DbgVerbose($"Woops, not mine");
+					return false;
+				}
+				Lightning l = new(room: rm, intensity.F32, bkgonly.Bool);
+				rm.lightning = l;
+				rm.AddObject(l);
+				return true;
+			});
+			rm.lightning.intensity = intensity.F32;
+		};
+		ha.On_CoreUpdate += (_) =>
+		{
+			if (!ha.Active)
+			{
+				foreach ((Room rm, bool mine) in registered)
+				{
+					if (mine)
+					{
+						//todo: might not work, test
+						rm.RemoveObject(rm.lightning);
+						rm.lightning = null;
+					}
+					plog.DbgVerbose($"Removing lightning for {rm.abstractRoom.name}");
+				}
+				registered.Clear();
+			}
+
+		};
 	}
 	private static void Make_Stun(Happen ha, ArgSet args)
 	{
@@ -868,7 +916,7 @@ public static partial class HappenBuilding
 		//to be documented:
 
 		//do not document:
-		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite); 
+		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite);
 	}
 
 
@@ -892,7 +940,7 @@ public static partial class HappenBuilding
 				Resolution res = UnityEngine.Screen.currentResolution;
 				return $"{res.width}x{res.height}@{res.refreshRate}";
 			}
-			
+
 		};
 	}
 	private static IArgPayload? MMake_CurrentRoom(string text, int ss, int ch)
@@ -902,11 +950,11 @@ public static partial class HappenBuilding
 			out int camnum)) camnum = 1;
 		return new ByCallbackGetOnly()
 		{
-			getStr = () 
+			getStr = ()
 				=> inst.RW?.processManager.FindSubProcess<RainWorldGame>()?
-				.cameras.AtOr(camnum - 1, null)?.room?.abstractRoom.name 
+				.cameras.AtOr(camnum - 1, null)?.room?.abstractRoom.name
 				?? string.Empty
-	};
+		};
 	}
 
 	private static IArgPayload? MMake_WWW(string text, int ss, int ch)

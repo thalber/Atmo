@@ -337,7 +337,6 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	public bool Equals(Arg? other)
 	{
 		if (other is null) return false;
-		//todo: add comparison inference?
 		if (DataType == other.DataType)
 		{
 			return DataType switch
