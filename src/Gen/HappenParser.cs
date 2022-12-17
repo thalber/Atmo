@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Atmo.Body;
+//FIXME: operators are case sensitive
 
 using static PredicateInlay;
 

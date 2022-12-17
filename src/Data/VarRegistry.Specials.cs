@@ -62,7 +62,7 @@ public static partial class VarRegistry
 				=> FindRWG()?.GetStorySession?.saveState.deathPersistentSaveData.karma ?? -1;
 			static int findKarmaCap()
 				=> FindRWG()?.GetStorySession?.saveState.deathPersistentSaveData.karmaCap ?? -1;
-			static int findClock() => FindRWG()?.world.rainCycle?.cycleLength ?? -1;
+			static int findClock() => FindRWG()?.world.rainCycle?.cycleLength ?? _temp_World?.rainCycle.cycleLength ?? -1;
 			SpecialVars.Add(tp, tp switch
 			{
 				SpVar.NONE => 0,
@@ -78,7 +78,8 @@ public static partial class VarRegistry
 				SpVar.cycletime => new(new ByCallbackGetOnly()
 				{
 					getI32 = findClock,
-					getF32 = () => findClock()
+					getF32 = () => findClock() / 40,
+					getStr = () => $"{findClock() / 40} seconds / {findClock()} frames"
 				}),
 				SpVar.root => RootFolderDirectory(),
 				SpVar.realm => FindAssembliesByName("Realm").Count() > 0, //check if right

@@ -48,6 +48,8 @@ public static partial class HappenBuilding
 		AddNamedTrigger(new[] { "varne", "varnot", "varnotequal" }, TMake_VarNe);
 		AddNamedTrigger(new[] { "varmatch", "variableregex", "varregex" }, TMake_VarMatch);
 
+		//todo: document all triggers below:
+
 		//do not document:
 		AddNamedTrigger(new[] { "thisbreaks" }, (args, rwg, ha) =>
 		{
@@ -94,20 +96,24 @@ public static partial class HappenBuilding
 	/// </summary>
 	private static HappenTrigger? TMake_Delay(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
+		//FIXME: doesn't work with cycletime because cycletime is uninit while it's made
 		int? delay = args.Count switch
 		{
 			< 1 => null,
-			1 => (int)(args[0].F32 * 40f),
-			> 1 => RND.Range((int?)(args.AtOr(0, 0f)?.F32 * 40f) ?? 0, (int?)(args.AtOr(1, 2400f)?.F32 * 40f) ?? 2400)
+			1 => args[0].SecAsFrames,
+			> 1 => RND.Range(
+				args[0].SecAsFrames,
+				args[1].SecAsFrames)
 		};
 		if (delay is null)
 		{
 			NotifyArgsMissing(TMake_Delay, "delay/delaymin+delaymax");
 			return null;
 		}
+		plog.DbgVerbose($"Set delay: {delay.Value} ( {args.Select(x => x.SecAsFrames.ToString()).Stitch()} )");
 		return new EventfulTrigger()
 		{
-			On_ShouldRunUpdates = () => rwg.world.rainCycle.timer > delay
+			On_ShouldRunUpdates = () => rwg.world.rainCycle.timer > delay.Value
 		};
 	}
 	/// <summary>
@@ -262,7 +268,10 @@ public static partial class HappenBuilding
 	/// </summary>
 	private static HappenTrigger? TMake_Maybe(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
-		bool yes = RND.value < args.AtOr(0, 0.5f).F32;
+		Arg ch = args.AtOr(0, 0.5f);
+		//float rv = RND.value;
+		bool yes = RND.value < ch.F32;
+		//plog.DbgVerbose($"bet {yes}: {ch} / {rv}");
 		return new EventfulTrigger()
 		{
 			On_ShouldRunUpdates = () => yes,
@@ -429,8 +438,9 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "fling", "force" }, Make_Fling);
 		AddNamedAction(new[] { "light", "tempglow" }, Make_Tempglow);
 		AddNamedAction(new[] { "stun" }, Make_Stun);
-		//to be documented:
+		//todo: document all actions below:
 		AddNamedAction(new[] { "lightning" }, Make_Lightning);
+		//do not document:
 	}
 
 	private static void Make_Lightning(Happen ha, ArgSet args)
@@ -927,7 +937,7 @@ public static partial class HappenBuilding
 		AddNamedMetafun(new[] { "CURRENTROOM", "VIEWEDROOM" }, MMake_CurrentRoom);
 		AddNamedMetafun(new[] { "SCREENRES", "RESOLUTION" }, MMake_ScreenRes);
 		AddNamedMetafun(new[] { "OWNSAPP", "OWNSGAME" }, MMake_AppFound);
-		//to be documented:
+		//todo: document metafuncs below:
 
 		//do not document:
 		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite);

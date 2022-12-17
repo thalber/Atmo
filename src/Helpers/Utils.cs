@@ -642,6 +642,17 @@ public static partial class Utils
 	public static Color ToOpaqueCol(in this Vector4 vec)
 		=> vec.w is not 0f ? vec : new(vec.x, vec.y, vec.z, 1f);
 #if ATMO //atmo-specific things
+	internal static int? _tempSSN;
+	internal static World? _temp_World;
+	//internal static int? _temp_RWClock;
+	internal static int? CurrentSaveslot => inst.RW?.options?.saveSlot;
+	internal static int? CurrentCharacter
+		=> (int?)
+		inst.RW?.
+		processManager.FindSubProcess<RainWorldGame>()?
+		.GetStorySession?
+		.characterStats.name
+		?? _tempSSN;
 	internal static void DbgVerbose(
 		this LOG.ManualLogSource logger,
 		object data)

@@ -59,15 +59,6 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// </summary>
 	internal static LOG.ManualLogSource plog => inst.Logger;
 	internal static CFG.ConfigEntry<bool>? log_verbose;
-	private static int? _tempSSN;
-	internal static int? CurrentSaveslot => inst.RW?.options?.saveSlot;
-	internal static int? CurrentCharacter
-		=> (int?)
-		inst.RW?.
-		processManager.FindSubProcess<RainWorldGame>()?
-		.GetStorySession?
-		.characterStats.name
-		?? _tempSSN;
 	private bool setupRan = false;
 	private bool dying = false;
 	/// <summary>
@@ -217,14 +208,15 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <param name="self"></param>
 	private void SetTempSSN(On.OverWorld.orig_LoadFirstWorld orig, OverWorld self)
 	{
-		_tempSSN = self.PlayerCharacterNumber;
+		Utils._tempSSN = self.PlayerCharacterNumber;
 		orig(self);
-		_tempSSN = null;
+		Utils._tempSSN = null;
 	}
 	private void FetchHappenSet(On.World.orig_LoadWorld orig, World self, int slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates)
 	{
 		orig(self, slugcatNumber, abstractRoomsList, swarmRooms, shelters, gates);
 		if (self.singleRoomWorld) return;
+		_temp_World = self;
 		try
 		{
 			CurrentSet = HappenSet.TryCreate(self);
@@ -233,6 +225,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		{
 			Logger.LogError($"Could not create a happenset: {e}");
 		}
+		_temp_World = null;
 	}
 	/// <summary>
 	/// Sends an Update call to all events for loaded world
