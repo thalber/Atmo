@@ -134,6 +134,7 @@
 	</ItemGroup>
 
 	<!-- Build event -->
+	<!-- FIXME: breaks on GH action (no target dir) -->
 	<Target Name="CopyOutput" AfterTargets="Build">
 		<Message Text="Atmo: Buildcopy @(CopySource), $(RWMods)" Importance="high">
 
