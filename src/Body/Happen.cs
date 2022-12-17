@@ -93,7 +93,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// <summary>
 	/// All triggers associated with the happen.
 	/// </summary>
-	public readonly HappenTrigger[] triggers;
+	public readonly List<HappenTrigger> triggers;
 	/// <summary>
 	/// name of the happen.
 	/// </summary>
@@ -135,7 +135,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			list_triggers.Add(nt);
 			return nt.ShouldRunUpdates;
 		});
-		triggers = list_triggers.ToArray();
+		triggers = list_triggers;
 		HappenBuilding.NewHappen(this);
 
 		if (actions.Count is 0) plog.LogWarning($"Happen {this}: no actions! Possible missing 'WHAT:' clause");
@@ -210,7 +210,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	internal void CoreUpdate()
 	{
 		sw.Start();
-		for (int tin = 0; tin < triggers.Length; tin++)
+		for (int tin = triggers.Count - 1; tin > -1; tin--)
 		{
 			try
 			{
@@ -218,31 +218,50 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 			}
 			catch (Exception ex)
 			{
-				//todo: add a way to void a trigger
+				HappenTrigger tr = triggers[tin];
+				triggers.RemoveAt(tin);
 				plog.LogError(ErrorMessage(
-					Site.triggerupdate,
-					triggers[tin].Update,
-					ex,
-					Response.none));
+					where: Site.triggerupdate,
+					cb: tr.Update,
+					ex: ex,
+					resp: Response.void_trigger));
 			}
 		}
 		try
 		{
 			Active = conditions?.Eval() ?? true;
-			foreach (HappenTrigger t in triggers) t.EvalResults(Active);
 		}
 		catch (Exception ex)
 		{
 #pragma warning disable IDE0031 // Use null propagation
 			plog.LogError(ErrorMessage(
-				Site.eval,
-				conditions is null ? null : conditions.Eval,
-				ex,
-				Response.none));
+				where: Site.eval,
+				cb: conditions is null ? null : conditions.Eval,
+				ex: ex,
+				resp: Response.none));
 #pragma warning restore IDE0031 // Use null propagation
 		}
+		for (int tin = triggers.Count - 1; tin > -1; tin--)
+		{
+			try
+			{
+				triggers[tin]?.EvalResults(Active);
+			}
+			catch (Exception ex)
+			{
+				triggers.RemoveAt(tin);
+				
+				plog.LogError(ErrorMessage(
+				where: Site.eval_res,
+				cb: conditions is null ? null : conditions.Eval,
+				ex: ex,
+				resp: Response.void_trigger));
+			}
+		}
 		if (On_CoreUpdate is null) return;
-		foreach (API.lc_CoreUpdate cb in On_CoreUpdate.GetInvocationList().Cast<API.lc_CoreUpdate>())
+
+		//todo: cast cost?
+		foreach (API.lc_CoreUpdate cb in On_CoreUpdate.GetInvocationList())
 		{
 			try
 			{
@@ -324,7 +343,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	{
 		return $"{name}" +
 			$"[{(actions.Count == 0 ? string.Empty : actions.Select(x => $"{x.Key}").Aggregate(JoinWithComma))}]" +
-			$"({triggers.Length} triggers)";
+			$"({triggers.Count} triggers)";
 	}
 	#endregion
 	#region nested
@@ -361,6 +380,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		coreup,
 		init,
 		eval,
+		eval_res,
 		triggerupdate,
 	}
 	private enum Response

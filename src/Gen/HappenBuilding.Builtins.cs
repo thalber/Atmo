@@ -47,6 +47,20 @@ public static partial class HappenBuilding
 		AddNamedTrigger(new[] { "vareq", "varequal", "variableeq" }, TMake_VarEq);
 		AddNamedTrigger(new[] { "varne", "varnot", "varnotequal" }, TMake_VarNe);
 		AddNamedTrigger(new[] { "varmatch", "variableregex", "varregex" }, TMake_VarMatch);
+
+		//do not document:
+		AddNamedTrigger(new[] { "thisbreaks" }, (args, rwg, ha) =>
+		{
+			Arg when = args.AtOr(0, "eval");
+			EventfulTrigger evt = new();
+			switch (((string)when))
+			{
+			case "eval": evt.On_EvalResults += delegate { throw new Exception(); }; break;
+			case "upd": evt.On_Update += delegate { throw new Exception(); }; break;
+			case "sru": evt.On_ShouldRunUpdates += delegate { throw new Exception(); }; break;
+			}
+			return evt;
+		});
 	}
 	/// <summary>
 	/// Creates a trigger that is active based on difficulty. 
@@ -435,7 +449,8 @@ public static partial class HappenBuilding
 			registered.EnsureAndGet(rm, () =>
 			{
 				plog.DbgVerbose($"Lightning for room {rm.abstractRoom.name}");
-				if (rm.lightning is not null) {
+				if (rm.lightning is not null)
+				{
 					plog.DbgVerbose($"Woops, not mine");
 					return false;
 				}
@@ -454,7 +469,6 @@ public static partial class HappenBuilding
 				{
 					if (mine)
 					{
-						//todo: might not work, test
 						rm.RemoveObject(rm.lightning);
 						rm.lightning = null;
 					}

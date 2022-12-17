@@ -178,7 +178,6 @@ public sealed class HappenSet
 		Dictionary<string, IEnumerable<string>> ins = new();
 		foreach (string? g in bind)
 		{
-			//fixme: sometimes throws on dupes.
 			//why the fuck did i make it a blank list?..
 			ins.Set(g, new List<string>(0));
 		}

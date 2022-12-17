@@ -140,7 +140,6 @@ public class HappenParser
 					var items = Tokenize(payload);
 					foreach (Token t in items)
 					{
-						//TODO: test with vanilla subregions
 						//tokenize to allow multiword subregion names
 						if (t.type is TokenType.Separator) continue;
 						string item = t.val;
@@ -195,7 +194,14 @@ public class HappenParser
 							break;
 						}
 						plog.DbgVerbose("HappenParse: Recognized WHEN clause");
-						cHapp.conditions = new PredicateInlay(payload, null);
+						cHapp.conditions = new PredicateInlay(
+							expression: payload,
+							exchanger: null,
+							logger: (data) =>
+							{
+								plog.LogWarning($"{cHapp.name}: {data}");
+							},
+							mendOnThrow: true);
 					}
 					catch (Exception ex)
 					{
