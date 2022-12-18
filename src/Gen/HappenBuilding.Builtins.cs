@@ -96,7 +96,6 @@ public static partial class HappenBuilding
 	/// </summary>
 	private static HappenTrigger? TMake_Delay(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
-		//FIXME: doesn't work with cycletime because cycletime is uninit while it's made
 		int? delay = args.Count switch
 		{
 			< 1 => null,
