@@ -1,9 +1,6 @@
-﻿using System.Text;
-using Atmo.Data;
+﻿using Atmo.Data.Payloads;
 
 using NamedVars = System.Collections.Generic.Dictionary<Atmo.Data.VarRegistry.SpVar, Atmo.Data.Arg>;
-using Save = Atmo.Helpers.VT<int, int>;
-using SerDict = System.Collections.Generic.Dictionary<string, object>;
 
 namespace Atmo.Data;
 
@@ -65,43 +62,44 @@ public static partial class VarRegistry
 				=> FindRWG()?.GetStorySession?.saveState.deathPersistentSaveData.karma ?? -1;
 			static int findKarmaCap()
 				=> FindRWG()?.GetStorySession?.saveState.deathPersistentSaveData.karmaCap ?? -1;
-			static int findClock() => FindRWG()?.world.rainCycle?.cycleLength ?? -1;
+			static int findClock() => FindRWG()?.world.rainCycle?.cycleLength ?? _temp_World?.rainCycle.cycleLength ?? -1;
 			SpecialVars.Add(tp, tp switch
 			{
 				SpVar.NONE => 0,
 				SpVar.version => Ver,
-				SpVar.time => new(new GetOnlyCallbackPayload()
+				SpVar.time => new(new ByCallbackGetOnly()
 				{
 					getStr = () => DateTime.Now.ToString()
 				}),
-				SpVar.utctime => new(new GetOnlyCallbackPayload()
+				SpVar.utctime => new(new ByCallbackGetOnly()
 				{
 					getStr = () => DateTime.UtcNow.ToString()
 				}),
-				SpVar.cycletime => new(new GetOnlyCallbackPayload()
+				SpVar.cycletime => new(new ByCallbackGetOnly()
 				{
 					getI32 = findClock,
-					getF32 = () => findClock()
+					getF32 = () => findClock() / 40,
+					getStr = () => $"{findClock() / 40} seconds / {findClock()} frames"
 				}),
 				SpVar.root => RootFolderDirectory(),
 				SpVar.realm => FindAssembliesByName("Realm").Count() > 0, //check if right
 				SpVar.os => Environment.OSVersion.Platform.ToString(),
-				SpVar.memused => new(new GetOnlyCallbackPayload()
+				SpVar.memused => new(new ByCallbackGetOnly()
 				{
 					getStr = () => GC.GetTotalMemory(false).ToString()
 				}),
-				SpVar.memtotal => new(new GetOnlyCallbackPayload()
+				SpVar.memtotal => new(new ByCallbackGetOnly()
 				{
 					getStr = () => "???"
 				}),
 				SpVar.username => Environment.UserName,
 				SpVar.machinename => Environment.MachineName,
-				SpVar.karma => new(new GetOnlyCallbackPayload()
+				SpVar.karma => new(new ByCallbackGetOnly()
 				{
 					getI32 = findKarma,
 					getF32 = static () => findKarma(),
 				}),
-				SpVar.karmacap => new(new GetOnlyCallbackPayload()
+				SpVar.karmacap => new(new ByCallbackGetOnly()
 				{
 					getI32 = findKarmaCap,
 					getF32 = static () => findKarmaCap(),

@@ -13,7 +13,7 @@ namespace Atmo;
 /// To interact with the mod, see <seealso cref="API"/>. For internal details, see <seealso cref="Atmo.Gen"/> and <seealso cref="Atmo.Body"/> namespace contents.
 /// </para>
 /// </summary>
-[BepInPlugin(Id, DName, Ver)]
+[BepInPlugin(GUID: Id, Name: DName, Version: Ver)]
 public sealed partial class Atmod : BaseUnityPlugin
 {
 	#region field/const/prop
@@ -59,15 +59,6 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// </summary>
 	internal static LOG.ManualLogSource plog => inst.Logger;
 	internal static CFG.ConfigEntry<bool>? log_verbose;
-	private static int? _tempSSN;
-	internal static int? CurrentSaveslot => inst.RW?.options?.saveSlot;
-	internal static int? CurrentCharacter
-		=> (int?)
-		inst.RW?.
-		processManager.FindSubProcess<RainWorldGame>()?
-		.GetStorySession?
-		.characterStats.name
-		?? _tempSSN;
 	private bool setupRan = false;
 	private bool dying = false;
 	/// <summary>
@@ -86,7 +77,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 	{
 		const string CFG_LOGGING = "logging";
 		inst = this;
-		log_verbose = Config.Bind(CFG_LOGGING, "verbose", true, "Enable more verbose logging. Can create clutter.");
+		log_verbose = Config.Bind(section: CFG_LOGGING, key: "verbose", defaultValue: true, description: "Enable more verbose logging. Can create clutter.");
 		try
 		{
 			if (RW is not null)
@@ -217,14 +208,15 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <param name="self"></param>
 	private void SetTempSSN(On.OverWorld.orig_LoadFirstWorld orig, OverWorld self)
 	{
-		_tempSSN = self.PlayerCharacterNumber;
+		Utils._tempSSN = self.PlayerCharacterNumber;
 		orig(self);
-		_tempSSN = null;
+		Utils._tempSSN = null;
 	}
 	private void FetchHappenSet(On.World.orig_LoadWorld orig, World self, int slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates)
 	{
 		orig(self, slugcatNumber, abstractRoomsList, swarmRooms, shelters, gates);
 		if (self.singleRoomWorld) return;
+		_temp_World = self;
 		try
 		{
 			CurrentSet = HappenSet.TryCreate(self);
@@ -233,6 +225,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		{
 			Logger.LogError($"Could not create a happenset: {e}");
 		}
+		_temp_World = null;
 	}
 	/// <summary>
 	/// Sends an Update call to all events for loaded world

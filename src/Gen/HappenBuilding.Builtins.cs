@@ -1,4 +1,5 @@
 ﻿using Atmo.Body;
+using Atmo.Data.Payloads;
 
 using static Atmo.Data.VarRegistry;
 using static Atmo.API;
@@ -46,6 +47,22 @@ public static partial class HappenBuilding
 		AddNamedTrigger(new[] { "vareq", "varequal", "variableeq" }, TMake_VarEq);
 		AddNamedTrigger(new[] { "varne", "varnot", "varnotequal" }, TMake_VarNe);
 		AddNamedTrigger(new[] { "varmatch", "variableregex", "varregex" }, TMake_VarMatch);
+
+		//todo: document all triggers below:
+
+		//do not document:
+		AddNamedTrigger(new[] { "thisbreaks" }, (args, rwg, ha) =>
+		{
+			Arg when = args.AtOr(0, "eval");
+			EventfulTrigger evt = new();
+			switch (((string)when))
+			{
+			case "eval": evt.On_EvalResults += delegate { throw new Exception(); }; break;
+			case "upd": evt.On_Update += delegate { throw new Exception(); }; break;
+			case "sru": evt.On_ShouldRunUpdates += delegate { throw new Exception(); }; break;
+			}
+			return evt;
+		});
 	}
 	/// <summary>
 	/// Creates a trigger that is active based on difficulty. 
@@ -79,20 +96,24 @@ public static partial class HappenBuilding
 	/// </summary>
 	private static HappenTrigger? TMake_Delay(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
+		//FIXME: doesn't work with cycletime because cycletime is uninit while it's made
 		int? delay = args.Count switch
 		{
 			< 1 => null,
-			1 => (int)(args[0].F32 * 40f),
-			> 1 => RND.Range((int?)(args.AtOr(0, 0f)?.F32 * 40f) ?? 0, (int?)(args.AtOr(1, 2400f)?.F32 * 40f) ?? 2400)
+			1 => args[0].SecAsFrames,
+			> 1 => RND.Range(
+				args[0].SecAsFrames,
+				args[1].SecAsFrames)
 		};
 		if (delay is null)
 		{
 			NotifyArgsMissing(TMake_Delay, "delay/delaymin+delaymax");
 			return null;
 		}
+		plog.DbgVerbose($"Set delay: {delay.Value} ( {args.Select(x => x.SecAsFrames.ToString()).Stitch()} )");
 		return new EventfulTrigger()
 		{
-			On_ShouldRunUpdates = () => rwg.world.rainCycle.timer > delay
+			On_ShouldRunUpdates = () => rwg.world.rainCycle.timer > delay.Value
 		};
 	}
 	/// <summary>
@@ -247,7 +268,10 @@ public static partial class HappenBuilding
 	/// </summary>
 	private static HappenTrigger? TMake_Maybe(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
-		bool yes = RND.value < args.AtOr(0, 0.5f).F32;
+		Arg ch = args.AtOr(0, 0.5f);
+		//float rv = RND.value;
+		bool yes = RND.value < ch.F32;
+		//plog.DbgVerbose($"bet {yes}: {ch} / {rv}");
 		return new EventfulTrigger()
 		{
 			On_ShouldRunUpdates = () => yes,
@@ -414,7 +438,56 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "fling", "force" }, Make_Fling);
 		AddNamedAction(new[] { "light", "tempglow" }, Make_Tempglow);
 		AddNamedAction(new[] { "stun" }, Make_Stun);
-		//to be documented:
+		//todo: document all actions below:
+		AddNamedAction(new[] { "lightning" }, Make_Lightning);
+		//do not document:
+	}
+
+	private static void Make_Lightning(Happen ha, ArgSet args)
+	{
+		plog.DbgVerbose("Making lightning!");
+		if (args.Count < 1)
+		{
+			NotifyArgsMissing(source: Make_Lightning, "intensity");
+		}
+		Arg
+			intensity = args[0],
+			bkgonly = args.AtOr(1, false);
+		Dictionary<Room, bool> registered = new();
+		ha.On_RealUpdate += (rm) =>
+		{
+			registered.EnsureAndGet(rm, () =>
+			{
+				plog.DbgVerbose($"Lightning for room {rm.abstractRoom.name}");
+				if (rm.lightning is not null)
+				{
+					plog.DbgVerbose($"Woops, not mine");
+					return false;
+				}
+				Lightning l = new(room: rm, intensity.F32, bkgonly.Bool);
+				rm.lightning = l;
+				rm.AddObject(l);
+				return true;
+			});
+			rm.lightning.intensity = intensity.F32;
+		};
+		ha.On_CoreUpdate += (_) =>
+		{
+			if (!ha.Active)
+			{
+				foreach ((Room rm, bool mine) in registered)
+				{
+					if (mine)
+					{
+						rm.RemoveObject(rm.lightning);
+						rm.lightning = null;
+					}
+					plog.DbgVerbose($"Removing lightning for {rm.abstractRoom.name}");
+				}
+				registered.Clear();
+			}
+
+		};
 	}
 	private static void Make_Stun(Happen ha, ArgSet args)
 	{
@@ -502,6 +575,7 @@ public static partial class HappenBuilding
 			filter = args["filter", "select"] ?? ".*",
 			forceVar = args["variance", "var"] ?? 0f,
 			spread = args["spread", "deviation", "dev"] ?? 0f;
+		plog.DbgVerbose($"{force}, {filter.Raw} / {filter.Str}, {spread}");
 		Dictionary<int, VT<float, float>> variance = new();
 		ha.On_RealUpdate += (rm) =>
 		{
@@ -863,22 +937,22 @@ public static partial class HappenBuilding
 		AddNamedMetafun(new[] { "CURRENTROOM", "VIEWEDROOM" }, MMake_CurrentRoom);
 		AddNamedMetafun(new[] { "SCREENRES", "RESOLUTION" }, MMake_ScreenRes);
 		AddNamedMetafun(new[] { "OWNSAPP", "OWNSGAME" }, MMake_AppFound);
-		//to be documented:
+		//todo: document metafuncs below:
 
 		//do not document:
-		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite); 
+		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite);
 	}
+
+
 	private static IArgPayload? MMake_AppFound(string text, int ss, int ch)
 	{
-		//todo: test
 		uint.TryParse(text, out var id);
 		Arg res = Steamworks.SteamApps.BIsSubscribedApp(new(id));
 		return res.Wrap;
 	}
 	private static IArgPayload? MMake_ScreenRes(string text, int ss, int ch)
 	{
-		plog.DbgVerbose("Screen res make");
-		return new GetOnlyCallbackPayload()
+		return new ByCallbackGetOnly()
 		{
 			getVec = () =>
 			{
@@ -890,7 +964,7 @@ public static partial class HappenBuilding
 				Resolution res = UnityEngine.Screen.currentResolution;
 				return $"{res.width}x{res.height}@{res.refreshRate}";
 			}
-			
+
 		};
 	}
 	private static IArgPayload? MMake_CurrentRoom(string text, int ss, int ch)
@@ -898,20 +972,20 @@ public static partial class HappenBuilding
 		if (!int.TryParse(
 			text,
 			out int camnum)) camnum = 1;
-		return new GetOnlyCallbackPayload()
+		return new ByCallbackGetOnly()
 		{
-			getStr = () 
+			getStr = ()
 				=> inst.RW?.processManager.FindSubProcess<RainWorldGame>()?
-				.cameras.AtOr(camnum - 1, null)?.room?.abstractRoom.name 
+				.cameras.AtOr(camnum - 1, null)?.room?.abstractRoom.name
 				?? string.Empty
-	};
+		};
 	}
 
 	private static IArgPayload? MMake_WWW(string text, int ss, int ch)
 	{
 		WWW? www = new WWW(text);
 		string? failed = null;
-		return new GetOnlyCallbackPayload()
+		return new ByCallbackGetOnly()
 		{
 			getStr = () =>
 			{
@@ -933,7 +1007,7 @@ public static partial class HappenBuilding
 		IO.FileInfo fi = new(text);
 		DateTime? lw = null;
 		string? contents = null;
-		return new GetOnlyCallbackPayload()
+		return new ByCallbackGetOnly()
 		{
 			getStr = () =>
 			{
@@ -990,7 +1064,7 @@ public static partial class HappenBuilding
 			sw.Write(val);
 			sw.Flush();
 		}
-		return new CallbackPayload()
+		return new ByCallback()
 		{
 			prop_Str = new(ReadFromFile, WriteToFile)
 		};
@@ -1010,7 +1084,7 @@ public static partial class HappenBuilding
 		{
 			return variables.Select(x => x.Str).ToArray();
 		}
-		return new GetOnlyCallbackPayload()
+		return new ByCallbackGetOnly()
 		{
 			getStr = () => string.Format(format, getStrs())
 		};

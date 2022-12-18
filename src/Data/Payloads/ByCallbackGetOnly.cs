@@ -1,9 +1,9 @@
-﻿namespace Atmo.Data;
+﻿namespace Atmo.Data.Payloads;
 
 /// <summary>
 /// Simple read-only callback-driven <see cref="IArgPayload"/>
 /// </summary>
-public struct GetOnlyCallbackPayload : IArgPayload
+public struct ByCallbackGetOnly : IArgPayload
 {
 	/// <summary>
 	/// Callback to get int value.
@@ -30,8 +30,8 @@ public struct GetOnlyCallbackPayload : IArgPayload
 	/// </summary>
 	public string Raw
 	{
-		get => throw new NotSupportedException("Operation not supported");
-		set => throw new NotSupportedException("Operation not supported");
+		get => string.Empty;
+		set { }
 	}
 	/// <summary>
 	/// Float value of the instance. Read-only.
@@ -79,14 +79,19 @@ public struct GetOnlyCallbackPayload : IArgPayload
 	public ArgType DataType
 		=> ArgType.OTHER;
 
-	void IArgPayload.GetEnum<T>(out T? value) where T : default
+	/// <inheritdoc/>
+	public void GetEnum<T>(out T? value) where T : Enum
 	{
-		throw new NotSupportedException("Operation not supported");
+		if (!TryParseEnum(Str, out value))
+		{
+			value = (T)Convert.ChangeType(I32, typeof(T));
+		};
 	}
-
-	void IArgPayload.SetEnum<T>(in T value)
+	/// <inheritdoc/>
+	public void SetEnum<T>(in T value) where T : Enum
 	{
-		throw new NotSupportedException("Operation not supported");
+		#warning notsupported revise
+		return;
 	}
 
 	/// <inheritdoc/>

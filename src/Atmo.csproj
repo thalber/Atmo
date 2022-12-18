@@ -134,8 +134,9 @@
 	</ItemGroup>
 
 	<!-- Build event -->
-	<Target Name="CopyOutput" AfterTargets="Build">
-		<Message Text="Atmo: Buildcopy @(CopySource), $(RWMods)" Importance="high">
+	<!-- FIXME: breaks on GH action (no target dir) -->
+	<Target Name="CopyOutput" AfterTargets="Build" Condition="'$(RWMods)'!=''">
+		<Message Text="Atmo: Buildcopy from [ $(TargetPath) ] to [ $(RWMods) ]" Importance="high">
 
 		</Message>
 		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(RWMods)">

@@ -1,4 +1,6 @@
-﻿global using System;
+﻿//This file contains all project-wide usings and aliases.
+
+global using System;
 global using System.Collections;
 global using System.Collections.Generic;
 global using System.Linq;

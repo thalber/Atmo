@@ -66,7 +66,7 @@ public static partial class VarRegistry
 		}
 		catch (Exception ex)
 		{
-			plog.LogFatal(ErrorMessage(Site.Clear, "Unhandled exception", ex));
+			plog.LogFatal(ErrorMessage(site: Site.Clear, message: "Unhandled exception", ex: ex));
 		}
 	}
 	internal static void Init()

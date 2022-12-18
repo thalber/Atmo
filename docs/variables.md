@@ -41,4 +41,4 @@ You can see full list of provided metafunctions in [builtins list](builtins.md)
 
 ## Code reference
 
-For accessing variables from other c# code, see [VarRegistry file and its docstrings](../src/Helpers/VarRegistry.cs), or [this section for special variables](../src/Helpers/VarRegistry.Specials.cs).
+For accessing variables from other c# code, see [VarRegistry file and its docstrings](../src/Data/VarRegistry.cs), or [this section for special variables](../src/Data/VarRegistry.Specials.cs).

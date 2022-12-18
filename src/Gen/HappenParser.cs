@@ -1,5 +1,8 @@
 ﻿using System.Text;
 using Atmo.Body;
+//FIXME: operators are case sensitive
+
+using static PredicateInlay;
 
 namespace Atmo.Gen;
 public class HappenParser
@@ -134,11 +137,15 @@ public class HappenParser
 				{
 					plog.DbgVerbose("HappenParse: Recognized WHERE clause");
 					WhereOps c = WhereOps.Group;
-					string[]? items = TXT.Regex.Split(payload, "\\s+");
-					foreach (string? i in items)
+
+					var items = Tokenize(payload);
+					foreach (Token t in items)
 					{
-						if (i.Length == 0) continue;
-						switch (i)
+						//tokenize to allow multiword subregion names
+						if (t.type is TokenType.Separator) continue;
+						string item = t.val;
+						if (item.Length == 0) continue;
+						switch (item)
 						{
 						case "+":
 							c = WhereOps.Include; break;
@@ -150,13 +157,13 @@ public class HappenParser
 							switch (c)
 							{
 							case WhereOps.Group:
-								cHapp.groups.Add(i);
+								cHapp.groups.Add(item);
 								break;
 							case WhereOps.Include:
-								cHapp.include.Add(i);
+								cHapp.include.Add(item);
 								break;
 							case WhereOps.Exclude:
-								cHapp.exclude.Add(i);
+								cHapp.exclude.Add(item);
 								break;
 							}
 							break;
@@ -188,7 +195,14 @@ public class HappenParser
 							break;
 						}
 						plog.DbgVerbose("HappenParse: Recognized WHEN clause");
-						cHapp.conditions = new PredicateInlay(payload, null);
+						cHapp.conditions = new PredicateInlay(
+							expression: payload,
+							exchanger: null,
+							logger: (data) =>
+							{
+								plog.LogWarning($"{cHapp.name}: {data}");
+							},
+							mendOnThrow: true);
 					}
 					catch (Exception ex)
 					{
