@@ -437,8 +437,8 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "fling", "force" }, Make_Fling);
 		AddNamedAction(new[] { "light", "tempglow" }, Make_Tempglow);
 		AddNamedAction(new[] { "stun" }, Make_Stun);
-		//todo: document all actions below:
 		AddNamedAction(new[] { "lightning" }, Make_Lightning);
+		//todo: document all actions below:
 		//do not document:
 	}
 
