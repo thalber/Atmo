@@ -1,20 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<!-- Project info -->
 	<PropertyGroup>
+		<LangVersion>11</LangVersion>
 		<TargetFramework>net35</TargetFramework>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<LangVersion>11</LangVersion>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
-		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<Authors>thalber</Authors>
 		<Description>Rain World mod that acts as a regpack-centric scripting addon for RegionKit.</Description>
 		<Copyright>The Unlicense</Copyright>
-		<FileVersion>0.9</FileVersion>
-		<AssemblyVersion>0.9</AssemblyVersion>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<FileVersion>0.10</FileVersion>
+		<AssemblyVersion>0.10</AssemblyVersion>
+		<PackageReadmeFile>../README.md</PackageReadmeFile>
 		<PackageLicenseFile>../LICENSE</PackageLicenseFile>
 	</PropertyGroup>
 	<!-- Debug configuration. Build for release. -->
@@ -136,10 +135,8 @@
 	<!-- Build event -->
 	<Target Name="CopyOutput" AfterTargets="Build" Condition="'$(RWMods)'!=''">
 		<Message Text="Atmo: Buildcopy from [ $(TargetPath) ] to [ $(RWMods) ]" Importance="high">
-
 		</Message>
 		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(RWMods)">
-			
 		</Copy>
 	</Target>
 

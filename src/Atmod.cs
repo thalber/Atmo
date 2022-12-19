@@ -100,14 +100,18 @@ public sealed partial class Atmod : BaseUnityPlugin
 		{
 			ConsoleFace.Apply();
 		}
-		catch (TypeLoadException)
-		{
-			Logger.LogMessage("DevConsole not present");
-		}
 		catch (Exception ex)
 		{
-			Logger.LogError($"Unexpected error on devconsole apply:" +
-				$"\n{ex}");
+			switch (ex)
+			{
+			case TypeLoadException or IO.FileNotFoundException:
+				Logger.LogWarning("DevConsole not present");
+				break;
+			default:
+				Logger.LogError($"Unexpected error on devconsole apply:" +
+					$"\n{ex}");
+				break;
+			}
 		}
 	}
 	/// <summary>
