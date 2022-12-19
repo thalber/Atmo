@@ -37,7 +37,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <summary>
 	/// AUDB Version
 	/// </summary>
-	public int version = 2;
+	public int version = 3;
 	/// <summary>
 	/// Public key segment
 	/// </summary>
