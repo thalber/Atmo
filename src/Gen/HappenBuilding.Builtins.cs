@@ -96,7 +96,6 @@ public static partial class HappenBuilding
 	/// </summary>
 	private static HappenTrigger? TMake_Delay(ArgSet args, RainWorldGame rwg, Happen ha)
 	{
-		//FIXME: doesn't work with cycletime because cycletime is uninit while it's made
 		int? delay = args.Count switch
 		{
 			< 1 => null,
@@ -438,8 +437,8 @@ public static partial class HappenBuilding
 		AddNamedAction(new[] { "fling", "force" }, Make_Fling);
 		AddNamedAction(new[] { "light", "tempglow" }, Make_Tempglow);
 		AddNamedAction(new[] { "stun" }, Make_Stun);
-		//todo: document all actions below:
 		AddNamedAction(new[] { "lightning" }, Make_Lightning);
+		//todo: document all actions below:
 		//do not document:
 	}
 
