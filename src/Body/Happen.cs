@@ -41,7 +41,7 @@ namespace Atmo.Body;
 ///		</description>
 ///	</item>
 /// <item>
-///		<term><see cref="_conditions"/></term> 
+///		<term><see cref="conditions"/></term> 
 ///		<description>
 ///			A <seealso cref="HappenTrigger"/> created from the WHEN expression,
 ///			which determines when the Happen should be active or not. 
@@ -76,20 +76,20 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// HappenSet this Happen is associated with.
 	/// Ownership may change when merging atmo files from different regpacks.
 	/// </summary>
-	public HappenSet set { get; internal set; }
+	public HappenSet Set { get; internal set; }
 	/// <summary>
 	/// Used internally for sorting.
 	/// </summary>
 	internal readonly Guid _guid = Guid.NewGuid();
 	/// <summary>
-	/// Activation expression. Populated by <see cref="HappenTrigger.ShouldRunUpdates"/> callbacks of items in <see cref="triggers"/>.
-	/// </summary>
-	internal PredicateInlay? _conditions;
-	/// <summary>
 	/// Used for frame time profiling.
 	/// </summary>
-	private readonly DBG.Stopwatch sw = new();
+	internal readonly DBG.Stopwatch _sw = new();
 	#region fromcfg
+	/// <summary>
+	/// Activation expression. Populated by <see cref="HappenTrigger.ShouldRunUpdates"/> callbacks of items in <see cref="triggers"/>.
+	/// </summary>
+	public readonly PredicateInlay? conditions;
 	/// <summary>
 	/// All triggers associated with the happen.
 	/// </summary>
@@ -106,7 +106,6 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// Current game instance.
 	/// </summary>
 	public readonly RainWorldGame game;
-
 	#endregion fromcfg
 	#endregion fields/props
 	/// <summary>
@@ -123,13 +122,13 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	{
 		BangBang(owner, nameof(owner));
 		BangBang(game, nameof(game));
-		set = owner;
+		Set = owner;
 		name = cfg.name;
 		this.game = game;
 		actions = cfg.actions;
-		_conditions = cfg.conditions;
+		conditions = cfg.conditions;
 		List<HappenTrigger> list_triggers = new();
-		_conditions?.Populate((id, args) =>
+		conditions?.Populate((id, args) =>
 		{
 			HappenTrigger? nt = HappenBuilding.__CreateTrigger(id, args, game, this);
 			list_triggers.Add(nt);
@@ -139,7 +138,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		HappenBuilding.__NewHappen(this);
 
 		if (actions.Count is 0) plog.LogWarning($"Happen {this}: no actions! Possible missing 'WHAT:' clause");
-		if (_conditions is null) plog.LogWarning($"Happen {this}: did not receive conditions! Possible missing 'WHEN:' clause");
+		if (conditions is null) plog.LogWarning($"Happen {this}: did not receive conditions! Possible missing 'WHEN:' clause");
 	}
 	#region lifecycle cbs
 	internal void AbstUpdate(
@@ -166,7 +165,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	public event V0_lc_AbstractUpdate? On_AbstUpdate;
 	internal void RealUpdate(Room room)
 	{
-		sw.Start();
+		_sw.Start();
 		if (On_RealUpdate is null) return;
 		foreach (V0_lc_RealizedUpdate cb in On_RealUpdate.GetInvocationList().Cast<V0_lc_RealizedUpdate>())
 		{
@@ -180,8 +179,8 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 				On_RealUpdate -= cb;
 			}
 		}
-		LogFrameTime(realup_times, sw.Elapsed, realup_readings, STORE_CYCLES);
-		sw.Reset();
+		LogFrameTime(realup_times, _sw.Elapsed, realup_readings, STORE_CYCLES);
+		_sw.Reset();
 	}
 	/// <summary>
 	/// Attach to this to receive a call once per realized update, for every affected room.
@@ -214,7 +213,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	public event V0_lc_Init? On_Init;
 	internal void CoreUpdate()
 	{
-		sw.Start();
+		_sw.Start();
 		for (int tin = triggers.Count - 1; tin > -1; tin--)
 		{
 			try
@@ -234,14 +233,14 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		}
 		try
 		{
-			Active = _conditions?.Eval() ?? true;
+			Active = conditions?.Eval() ?? true;
 		}
 		catch (Exception ex)
 		{
 #pragma warning disable IDE0031 // Use null propagation
 			plog.LogError(ErrorMessage(
 				where: Site.eval,
-				cb: _conditions is null ? null : _conditions.Eval,
+				cb: conditions is null ? null : conditions.Eval,
 				ex: ex,
 				resp: Response.none));
 #pragma warning restore IDE0031 // Use null propagation
@@ -258,7 +257,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 				
 				plog.LogError(ErrorMessage(
 				where: Site.eval_res,
-				cb: _conditions is null ? null : _conditions.Eval,
+				cb: conditions is null ? null : conditions.Eval,
 				ex: ex,
 				resp: Response.void_trigger));
 			}
@@ -278,8 +277,8 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 				On_CoreUpdate -= cb;
 			}
 		}
-		LogFrameTime(haeval_times, sw.Elapsed, haeval_readings, STORE_CYCLES);
-		sw.Reset();
+		LogFrameTime(haeval_times, _sw.Elapsed, haeval_readings, STORE_CYCLES);
+		_sw.Reset();
 	}
 	/// <summary>
 	/// Subscribe to this to receive an update once per frame.

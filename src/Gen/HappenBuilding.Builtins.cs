@@ -138,7 +138,7 @@ public static partial class HappenBuilding
 		{
 			On_Update = () =>
 			{
-				tar ??= ha?.set.AllHappens.FirstOrDefault(x => x.name == tarname);
+				tar ??= ha?.Set.AllHappens.FirstOrDefault(x => x.name == tarname);
 				if (tar is null) return;
 				if (tar.Active != tarWasOn)
 				{
@@ -944,8 +944,8 @@ public static partial class HappenBuilding
 	private static IArgPayload? MMake_AppFound(string text, int ss, int ch)
 	{
 		uint.TryParse(text, out var id);
-		Arg res = Steamworks.SteamApps.BIsSubscribedApp(new(id));
-		return res.Wrap;
+		var resr = Steamworks.SteamApps.BIsSubscribedApp(new(id));
+		return Arg.Coerce(resr);
 	}
 	private static IArgPayload? MMake_ScreenRes(string text, int ss, int ch)
 	{
@@ -969,12 +969,20 @@ public static partial class HappenBuilding
 		if (!int.TryParse(
 			text,
 			out int camnum)) camnum = 1;
+		static AbstractRoom? findAbsRoom(int cam) => inst.RW?
+				.processManager.FindSubProcess<RainWorldGame>()?
+				.cameras.AtOr(cam - 1, null)?
+				.room?.abstractRoom;
+
+		Vector2 nosize = new(-1, -1);
 		return new ByCallbackGetOnly()
 		{
 			getStr = ()
-				=> inst.RW?.processManager.FindSubProcess<RainWorldGame>()?
-				.cameras.AtOr(camnum - 1, null)?.room?.abstractRoom.name
-				?? string.Empty
+				=> findAbsRoom(camnum)?.name
+				?? string.Empty,
+			getI32 = () => findAbsRoom(camnum)?.index ?? -1,
+			getVec = () => findAbsRoom(camnum)?.size.ToVector2() * 20f ?? nosize,
+			getBool = () => false,
 		};
 	}
 

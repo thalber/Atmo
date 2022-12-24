@@ -16,8 +16,8 @@
 
 - Try to make class and member names as short as possible without making them counterintuitive (`GetVar` > `GetVariable`, `EnsureAndGet` > `SetIfMissingAndGet`)
 - Using type and namespace aliases for long external names is encouraged. Type aliases should preferably be all-caps acronyms (`TXT` <- `System.Text.RegularExpressions`).
-- Project-wide usings, including type aliases, are in [the Prelude file](../src/Helpers/Prelude.cs)
-- In publicly visible classes, nonpublic instance member names should be prefixed with a single underscore, nonpublic static member names should be prefixed with double underscore.
+- Project-wide usings, including type aliases, are in [the Prelude file](../src/Prelude.cs).
+- In publicly visible classes, nonpublic instance member names should be prefixed with a single underscore, nonpublic static member names should be prefixed with double underscore. Extension methods are an exception.
 
 ## Functionality distribution
 

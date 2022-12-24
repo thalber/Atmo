@@ -4,6 +4,9 @@ using Atmo.Body;
 using static PredicateInlay;
 
 namespace Atmo.Gen;
+/// <summary>
+/// Responsible for filling <see cref="HappenSet"/>s from atmo script files.
+/// </summary>
 public class HappenParser
 {
 	//this is still a mess but manageable
@@ -35,14 +38,16 @@ public class HappenParser
 	/// <param name="file">Input file.</param>
 	public HappenParser(IO.FileInfo file)
 	{
+		BangBang(file, nameof(file));
+		_cline = string.Empty;
 		plog.DbgVerbose($"HappenParse: booting for file: {file.FullName}");
 		if (!file.Exists){
 			_aborted = true;
 			plog.LogWarning($"HappenParse: file does not exist. aborted");
+			_allLines = new string[0];
 			return;
 		}
 		_allLines = IO.File.ReadAllLines(file.FullName, Encoding.UTF8);
-		_cline = string.Empty;
 	}
 	internal void _Advance()
 	{

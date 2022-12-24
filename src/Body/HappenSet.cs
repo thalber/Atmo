@@ -353,7 +353,7 @@ public sealed class HappenSet
 		foreach (Happen? ha in res.AllHappens)
 		{
 			plog.LogDebug($"{ha.name}: switching ownership");
-			ha.set = res;
+			ha.Set = res;
 			plog.DbgVerbose(res.GetRoomsForHappen(ha).Stitch());
 		}
 		plog.DbgVerbose(res.GetHappensForRoom("SU_S04").Select(x => x.name).Stitch());

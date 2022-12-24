@@ -625,7 +625,7 @@ public static partial class Utils
 	/// <summary>
 	/// ArgNullEx throw helper.
 	/// </summary>
-	public static void BangBang(object? item, string name)
+	public static void BangBang(object? item, string name = "???")
 	{
 		if (item is null) throw new ArgumentNullException(name);
 	}
