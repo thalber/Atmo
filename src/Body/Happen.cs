@@ -25,9 +25,9 @@ namespace Atmo.Body;
 /// <item>
 ///		<term>Behaviour</term> 
 ///		<description>
-///			The instance's lifetime events are populated with callbacks taken from <see cref="API.EV_MakeNewHappen"/>.
-///			For registering your behaviours, see <seealso cref="API"/>.
-///			To see examples of how some of the builtin behaviours work, see <seealso cref="HappenBuilding.InitBuiltins"/>.
+///			The instance's lifetime events are populated with callbacks taken from <see cref="__EV_MakeNewHappen"/>.
+///			For registering your behaviours, see <seealso cref="Atmo.API"/>.
+///			To see examples of how some of the builtin behaviours work, see <seealso cref="HappenBuilding.__InitBuiltins"/>.
 ///			This happen will change main palette of affected rooms to 15.
 ///		</description>
 ///	</item>
@@ -76,20 +76,20 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// HappenSet this Happen is associated with.
 	/// Ownership may change when merging atmo files from different regpacks.
 	/// </summary>
-	public HappenSet set { get; internal set; }
+	public HappenSet Set { get; internal set; }
 	/// <summary>
 	/// Used internally for sorting.
 	/// </summary>
-	private readonly Guid guid = Guid.NewGuid();
-	/// <summary>
-	/// Activation expression. Populated by <see cref="HappenTrigger.ShouldRunUpdates"/> callbacks of items in <see cref="triggers"/>.
-	/// </summary>
-	internal PredicateInlay? conditions;
+	internal readonly Guid _guid = Guid.NewGuid();
 	/// <summary>
 	/// Used for frame time profiling.
 	/// </summary>
-	private readonly DBG.Stopwatch sw = new();
+	internal readonly DBG.Stopwatch _sw = new();
 	#region fromcfg
+	/// <summary>
+	/// Activation expression. Populated by <see cref="HappenTrigger.ShouldRunUpdates"/> callbacks of items in <see cref="triggers"/>.
+	/// </summary>
+	public readonly PredicateInlay? conditions;
 	/// <summary>
 	/// All triggers associated with the happen.
 	/// </summary>
@@ -106,7 +106,6 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// Current game instance.
 	/// </summary>
 	public readonly RainWorldGame game;
-
 	#endregion fromcfg
 	#endregion fields/props
 	/// <summary>
@@ -123,7 +122,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	{
 		BangBang(owner, nameof(owner));
 		BangBang(game, nameof(game));
-		set = owner;
+		Set = owner;
 		name = cfg.name;
 		this.game = game;
 		actions = cfg.actions;
@@ -131,12 +130,12 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		List<HappenTrigger> list_triggers = new();
 		conditions?.Populate((id, args) =>
 		{
-			HappenTrigger? nt = HappenBuilding.CreateTrigger(id, args, game, this);
+			HappenTrigger? nt = HappenBuilding.__CreateTrigger(id, args, game, this);
 			list_triggers.Add(nt);
 			return nt.ShouldRunUpdates;
 		});
 		triggers = list_triggers;
-		HappenBuilding.NewHappen(this);
+		HappenBuilding.__NewHappen(this);
 
 		if (actions.Count is 0) plog.LogWarning($"Happen {this}: no actions! Possible missing 'WHAT:' clause");
 		if (conditions is null) plog.LogWarning($"Happen {this}: did not receive conditions! Possible missing 'WHEN:' clause");
@@ -147,7 +146,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		int time)
 	{
 		if (On_AbstUpdate is null) return;
-		foreach (API.lc_AbstractUpdate cb in On_AbstUpdate.GetInvocationList().Cast<API.lc_AbstractUpdate>())
+		foreach (V0_lc_AbstractUpdate cb in On_AbstUpdate.GetInvocationList().Cast<V0_lc_AbstractUpdate>())
 		{
 			try
 			{
@@ -163,12 +162,12 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// <summary>
 	/// Attach to this to receive a call once per abstract update, for every affected room.
 	/// </summary>
-	public event API.lc_AbstractUpdate? On_AbstUpdate;
+	public event V0_lc_AbstractUpdate? On_AbstUpdate;
 	internal void RealUpdate(Room room)
 	{
-		sw.Start();
+		_sw.Start();
 		if (On_RealUpdate is null) return;
-		foreach (API.lc_RealizedUpdate cb in On_RealUpdate.GetInvocationList().Cast<API.lc_RealizedUpdate>())
+		foreach (V0_lc_RealizedUpdate cb in On_RealUpdate.GetInvocationList().Cast<V0_lc_RealizedUpdate>())
 		{
 			try
 			{
@@ -180,18 +179,18 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 				On_RealUpdate -= cb;
 			}
 		}
-		LogFrameTime(realup_times, sw.Elapsed, realup_readings, STORE_CYCLES);
-		sw.Reset();
+		LogFrameTime(realup_times, _sw.Elapsed, realup_readings, STORE_CYCLES);
+		_sw.Reset();
 	}
 	/// <summary>
 	/// Attach to this to receive a call once per realized update, for every affected room.
 	/// </summary>
-	public event API.lc_RealizedUpdate? On_RealUpdate;
+	public event V0_lc_RealizedUpdate? On_RealUpdate;
 	internal void Init(World world)
 	{
 		InitRan = true;
 		if (On_Init is null) return;
-		foreach (API.lc_Init cb in On_Init.GetInvocationList().Cast<API.lc_Init>())
+		foreach (V0_lc_Init cb in On_Init.GetInvocationList().Cast<V0_lc_Init>())
 		{
 			try
 			{
@@ -211,10 +210,10 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// <summary>
 	/// Subscribe to this to receive one call before abstract or realized update is first ran.
 	/// </summary>
-	public event API.lc_Init? On_Init;
+	public event V0_lc_Init? On_Init;
 	internal void CoreUpdate()
 	{
-		sw.Start();
+		_sw.Start();
 		for (int tin = triggers.Count - 1; tin > -1; tin--)
 		{
 			try
@@ -266,7 +265,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 		if (On_CoreUpdate is null) return;
 
 		//todo: cast cost?
-		foreach (API.lc_CoreUpdate cb in On_CoreUpdate.GetInvocationList())
+		foreach (V0_lc_CoreUpdate cb in On_CoreUpdate.GetInvocationList())
 		{
 			try
 			{
@@ -278,13 +277,13 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 				On_CoreUpdate -= cb;
 			}
 		}
-		LogFrameTime(haeval_times, sw.Elapsed, haeval_readings, STORE_CYCLES);
-		sw.Reset();
+		LogFrameTime(haeval_times, _sw.Elapsed, haeval_readings, STORE_CYCLES);
+		_sw.Reset();
 	}
 	/// <summary>
 	/// Subscribe to this to receive an update once per frame.
 	/// </summary>
-	public event API.lc_CoreUpdate? On_CoreUpdate;
+	public event V0_lc_CoreUpdate? On_CoreUpdate;
 	#endregion
 	/// <summary>
 	/// Returns a performance report struct.
@@ -329,7 +328,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// <returns></returns>
 	public int CompareTo(Happen other)
 	{
-		return guid.CompareTo(other.guid);
+		return _guid.CompareTo(other._guid);
 	}
 	/// <summary>
 	/// Compares to another happen using GUIDs.
@@ -338,7 +337,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen>
 	/// <returns></returns>
 	public bool Equals(Happen other)
 	{
-		return guid.Equals(other.guid);
+		return _guid.Equals(other._guid);
 	}
 	/// <summary>
 	/// Returns a string representation of the happen.

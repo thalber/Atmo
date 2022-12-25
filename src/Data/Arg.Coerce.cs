@@ -21,34 +21,34 @@ public sealed partial class Arg
 		if (value is string s)
 		{
 			str = s;
-			Coerce_Str(in s, out i32, out f32, out @bool, out vec, out _);
+			__Coerce_Str(in s, out i32, out f32, out @bool, out vec, out _);
 		}
 		else if (value is int i)
 		{
 			i32 = i;
-			Coerce_I32(in i, out str, out f32, out @bool, out vec);
+			__Coerce_I32(in i, out str, out f32, out @bool, out vec);
 		}
 		else if (value is float f)
 		{
 			f32 = f;
-			Coerce_F32(f, out str, out i32, out @bool, out vec);
+			__Coerce_F32(f, out str, out i32, out @bool, out vec);
 		}
 		else if (value is bool b)
 		{
 			@bool = b;
-			Coerce_Bool(b, out str, out i32, out f32, out vec);
+			__Coerce_Bool(b, out str, out i32, out f32, out vec);
 		}
 		else if (value is Vector4 v)
 		{
 			vec = v;
-			Coerce_Vec(v, out str, out i32, out f32, out @bool);
+			__Coerce_Vec(v, out str, out i32, out f32, out @bool);
 		}
 		else
 		{
 			plog.DbgVerbose($"Value {value} of type {typeof(T).FullName} is not a supported type; "
 			+ "trying to use its ToString instead");
 			str = value.ToString();
-			Coerce_Str(str, out i32, out f32, out @bool, out vec, out _);
+			__Coerce_Str(str, out i32, out f32, out @bool, out vec, out _);
 		}
 		return new (str, i32, f32, @bool, vec);
 	}
@@ -61,7 +61,7 @@ public sealed partial class Arg
 	/// <param name="b">output</param>
 	/// <param name="v">output</param>
 	/// <param name="parsedAsVec">Whether a string form of a vector was recognized</param>
-	internal static void Coerce_Str(
+	internal static void __Coerce_Str(
 		in string s,
 		out int i,
 		out float f,
@@ -71,7 +71,7 @@ public sealed partial class Arg
 	{
 		if (parsedAsVec = TryParseVec4(s, out var _v))
 		{
-			Coerce_Vec(_v, out _, out i, out f, out b);
+			__Coerce_Vec(_v, out _, out i, out f, out b);
 			v = _v;
 
 		}
@@ -109,7 +109,7 @@ public sealed partial class Arg
 	/// <param name="f">output</param>
 	/// <param name="b">output</param>
 	/// <param name="v">output</param>
-	internal static void Coerce_I32(
+	internal static void __Coerce_I32(
 		in int i,
 		out string s,
 		out float f,
@@ -129,7 +129,7 @@ public sealed partial class Arg
 	/// <param name="i">output</param>
 	/// <param name="b">output</param>
 	/// <param name="v">output</param>
-	internal static void Coerce_F32(
+	internal static void __Coerce_F32(
 		in float f,
 		out string s,
 		out int i,
@@ -149,7 +149,7 @@ public sealed partial class Arg
 	/// <param name="i">output</param>
 	/// <param name="f">output</param>
 	/// <param name="v">output</param>
-	internal static void Coerce_Bool(
+	internal static void __Coerce_Bool(
 		in bool b,
 		out string s,
 		out int i,
@@ -169,7 +169,7 @@ public sealed partial class Arg
 	/// <param name="i"></param>
 	/// <param name="f"></param>
 	/// <param name="b"></param>
-	internal static void Coerce_Vec(
+	internal static void __Coerce_Vec(
 		in Vector4 v,
 		out string s,
 		out int i,

@@ -1,7 +1,7 @@
 ﻿using Atmo.Body;
 using Atmo.Data;
 
-namespace Atmo;
+namespace Atmo.API;
 #pragma warning disable CS0419 // Ambiguous reference in cref attribute
 /// <summary>
 /// Static class for user API. You will likely be interacting with the mod from here.
@@ -13,81 +13,8 @@ namespace Atmo;
 /// </list>
 /// See also: <seealso cref="Happen"/> for core lifecycle logic, <seealso cref="HappenTrigger"/> for how conditions work, <seealso cref="HappenSet"/> for additional info on how happens are composed.
 /// </summary>
-public static class API
+public static class V0
 {
-	#region fields
-	internal static readonly Dictionary<string, Create_RawHappenBuilder> namedActions = new();
-	internal static readonly Dictionary<string, Create_RawTriggerFactory> namedTriggers = new();
-	internal static readonly Dictionary<string, Create_RawMetaFunction> namedMetafuncs = new();
-	#endregion
-	#region dels
-	/// <summary>
-	/// Delegates for happens' abstract updates.
-	/// </summary>
-	/// <param name="absroom">Abstract room the update is happening in.</param>
-	/// <param name="time">Abstract update step, in frames.</param>
-	public delegate void lc_AbstractUpdate(AbstractRoom absroom, int time);
-	/// <summary>
-	/// Delegate for happens' realized updates.
-	/// </summary>
-	/// <param name="room">The room update is happening in.</param>
-	public delegate void lc_RealizedUpdate(Room room);
-	/// <summary>
-	/// Delegate for being called on first abstract update
-	/// </summary>
-	/// <param name="world"></param>
-	public delegate void lc_Init(World world);
-	/// <summary>
-	/// Delegate for happens' init call.
-	/// </summary>
-	/// <param name="rwg">Current instance of <see cref="RainWorldGame"/>. Always a Story session.</param>
-	public delegate void lc_CoreUpdate(RainWorldGame rwg);
-	/// <summary>
-	/// Callback for attaching custom behaviour to happens. Can be directly attached to <see cref="EV_MakeNewHappen"/>
-	/// </summary>
-	/// <param name="happen">Happen that needs lifetime callbacks attached. Check its instance members to see if your code should affect it, and use its instance events to attach behaviour.</param>
-	public delegate void Create_RawHappenBuilder(Happen happen);
-	/// <summary>
-	/// Delegate for registering named actions.
-	/// Used by <see cref="AddNamedAction(string, Create_NamedHappenBuilder, bool)"/>.
-	/// </summary>
-	/// <param name="happen">Happen that needs lifetime callbacks attached. One of the its <see cref="Happen.actions"/> has a name you selected. Use its instance events to attach behaviour.</param>
-	/// <param name="args">The event's arguments, taking from a WHAT: clause.</param>
-	public delegate void Create_NamedHappenBuilder(Happen happen, ArgSet args);
-	/// <summary>
-	/// Delegate for including custom triggers. Can be directly attached to <see cref="EV_MakeNewTrigger"/>. Make sure to check the first parameter (name) and see if it is fitting.
-	/// </summary>
-	/// <param name="name">Trigger name (id).</param>
-	/// <param name="args">A set of (usually optional) arguments.</param>
-	/// <param name="game">Current game instance.</param>
-	/// <param name="happen">Happen to attach things to.</param>
-	/// <returns>Child of <see cref="HappenTrigger"/> if subscriber wishes to claim the trigger; null if not.</returns>
-	public delegate HappenTrigger? Create_RawTriggerFactory(string name, ArgSet args, RainWorldGame game, Happen happen);
-	/// <summary>
-	/// Delegate for registering named triggers. Used by <see cref="AddNamedTrigger"/> overloads.
-	/// </summary>
-	/// <param name="args">Trigger arguments.</param>
-	/// <param name="game">Current RainWorldGame instance.</param>
-	/// <param name="happen">Happen the trigger is to be attached to.</param>
-	public delegate HappenTrigger? Create_NamedTriggerFactory(ArgSet args, RainWorldGame game, Happen happen);
-	/// <summary>
-	/// Delegate for registering metafunctions, for use in <see cref="VarRegistry.GetVar"/>. Can be directly attached to <see cref="EV_ApplyMetafunctions"/>. Make sure to check the first parameter (name) and see if it is fitting.
-	/// </summary>
-	/// <param name="name">Supposed name of the metafun.</param>
-	/// <param name="value">Body text passed to the metafun.</param>
-	/// <param name="saveslot">Current saveslot number.</param>
-	/// <param name="character">Current character number.</param>
-	/// <returns><see cref="IArgPayload"/> object linking to metafun's output; null if name does not fit or there was an error.</returns>
-	public delegate IArgPayload? Create_RawMetaFunction(string name, string value, int saveslot, int character);
-	/// <summary>
-	/// Delegate for registering named metafunctions. Used by <see cref="AddNamedMetafun"/> overloads.
-	/// </summary>
-	/// <param name="value">Body text passed to the metafun.</param>
-	/// <param name="saveslot">Current saveslot number.</param>
-	/// <param name="character">Current character number.</param>
-	/// <returns><see cref="IArgPayload"/> object linking to metafun's output; null if there was an error.</returns>
-	public delegate IArgPayload? Create_NamedMetaFunction(string value, int saveslot, int character);
-	#endregion
 	#region API proper
 	/// <summary>
 	/// Registers a named action. Multiple names. Up to one callback for every lifecycle event. No args support.
@@ -101,10 +28,10 @@ public static class API
 	/// <returns>The number of name collisions encountered.</returns>
 	public static int AddNamedAction(
 		string[] names,
-		lc_AbstractUpdate? au = null,
-		lc_RealizedUpdate? ru = null,
-		lc_Init? oi = null,
-		lc_CoreUpdate? cu = null,
+		V0_lc_AbstractUpdate? au = null,
+		V0_lc_RealizedUpdate? ru = null,
+		V0_lc_Init? oi = null,
+		V0_lc_CoreUpdate? cu = null,
 		bool ignoreCase = true)
 	{
 		return names
@@ -124,14 +51,14 @@ public static class API
 	/// <returns>True if successfully registered; false if name already taken.</returns>
 	public static bool AddNamedAction(
 		string name,
-		lc_AbstractUpdate? au = null,
-		lc_RealizedUpdate? ru = null,
-		lc_Init? oi = null,
-		lc_CoreUpdate? cu = null,
+		V0_lc_AbstractUpdate? au = null,
+		V0_lc_RealizedUpdate? ru = null,
+		V0_lc_Init? oi = null,
+		V0_lc_CoreUpdate? cu = null,
 		bool ignoreCase = true)
 	{
 		StringComparer? comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
-		if (namedActions.ContainsKey(name)) { return false; }
+		if (__namedActions.ContainsKey(name)) { return false; }
 		void newCb(Happen ha)
 		{
 			foreach (string? ac in ha.actions.Keys)
@@ -146,7 +73,7 @@ public static class API
 				}
 			}
 		}
-		namedActions.Add(name, newCb);
+		__namedActions.Add(name, newCb);
 		EV_MakeNewHappen += newCb;
 		return true;
 	}
@@ -159,7 +86,7 @@ public static class API
 	/// <returns>Number of name collisions encountered.</returns>
 	public static int AddNamedAction(
 		string[] names,
-		Create_NamedHappenBuilder builder,
+		V0_Create_NamedHappenBuilder builder,
 		bool ignoreCase = true)
 	{
 		return names
@@ -176,7 +103,7 @@ public static class API
 	/// <returns>True if successfully added; false if already taken.</returns>
 	public static bool AddNamedAction(
 		string name,
-		Create_NamedHappenBuilder builder,
+		V0_Create_NamedHappenBuilder builder,
 		bool ignoreCase = true)
 	{
 		if (TXT.Regex.Match(name, "\\w+").Length != name.Length)
@@ -184,7 +111,7 @@ public static class API
 			plog.LogWarning($"Invalid action name: {name}");
 			return false;
 		}
-		if (namedTriggers.ContainsKey(name)) { return false; }
+		if (__namedTriggers.ContainsKey(name)) { return false; }
 		StringComparer? comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
 		void newCb(Happen ha)
 		{
@@ -196,7 +123,7 @@ public static class API
 				}
 			}
 		}
-		namedActions.Add(name, newCb);
+		__namedActions.Add(name, newCb);
 		EV_MakeNewHappen += newCb;
 		return true;
 	}
@@ -206,9 +133,9 @@ public static class API
 	/// <param name="action"></param>
 	public static void RemoveNamedAction(string action)
 	{
-		if (!namedActions.TryGetValue(action, out Create_RawHappenBuilder? builder)) return;
+		if (!__namedActions.TryGetValue(action, out V0_Create_RawHappenBuilder? builder)) return;
 		EV_MakeNewHappen -= builder;
-		namedActions.Remove(action);
+		__namedActions.Remove(action);
 	}
 	/// <summary>
 	/// Registers a named trigger. Multiple names.
@@ -219,7 +146,7 @@ public static class API
 	/// <returns>Number of name collisions encountered.</returns>
 	public static int AddNamedTrigger(
 		string[] names,
-		Create_NamedTriggerFactory fac,
+		V0_Create_NamedTriggerFactory fac,
 		bool ignoreCase = true)
 	{
 		return names
@@ -235,7 +162,7 @@ public static class API
 	/// <returns></returns>
 	public static bool AddNamedTrigger(
 		string name,
-		Create_NamedTriggerFactory fac,
+		V0_Create_NamedTriggerFactory fac,
 		bool ignoreCase = true)
 	{
 		if (TXT.Regex.Match(name, "\\w+").Length != name.Length)
@@ -243,7 +170,7 @@ public static class API
 			plog.LogWarning($"Invalid trigger name: {name}");
 			return false;
 		}
-		if (namedTriggers.ContainsKey(name)) { return false; }
+		if (__namedTriggers.ContainsKey(name)) { return false; }
 		StringComparer? comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
 
 		HappenTrigger? newCb(string n, ArgSet args, RainWorldGame rwg, Happen ha)
@@ -251,7 +178,7 @@ public static class API
 			if (comp.Compare(n, name) == 0) return fac(args, rwg, ha);
 			return null;
 		}
-		namedTriggers.Add(name, newCb);
+		__namedTriggers.Add(name, newCb);
 		EV_MakeNewTrigger += newCb;
 		return true;
 	}
@@ -261,9 +188,9 @@ public static class API
 	/// <param name="name"></param>
 	public static void RemoveNamedTrigger(string name)
 	{
-		if (!namedTriggers.TryGetValue(name, out Create_RawTriggerFactory? fac)) return;
+		if (!__namedTriggers.TryGetValue(name, out V0_Create_RawTriggerFactory? fac)) return;
 		EV_MakeNewTrigger -= fac;
-		namedTriggers.Remove(name);
+		__namedTriggers.Remove(name);
 	}
 	/// <summary>
 	/// Registers a metafunction with a given set of names.
@@ -274,7 +201,7 @@ public static class API
 	/// <returns>Number of errors and name collisions encountered.</returns>
 	public static int AddNamedMetafun(
 		string[] names,
-		Create_NamedMetaFunction handler,
+		V0_Create_NamedMetaFunction handler,
 		bool ignoreCase = true)
 		=> names.Select((name) => AddNamedMetafun(name, handler, ignoreCase) ? 0 : 1).Aggregate((x, y) => x + y);
 	/// <summary>
@@ -286,7 +213,7 @@ public static class API
 	/// <returns>True if successfully attached; false otherwise.</returns>
 	public static bool AddNamedMetafun(
 		string name,
-		Create_NamedMetaFunction handler,
+		V0_Create_NamedMetaFunction handler,
 		bool ignoreCase = true)
 	{
 		if (TXT.Regex.Match(name, "\\w+").Length != name.Length)
@@ -294,7 +221,7 @@ public static class API
 			plog.LogWarning($"Invalid metafun name: {name}");
 			return false;
 		}
-		if (namedMetafuncs.ContainsKey(name)) return false;
+		if (__namedMetafuncs.ContainsKey(name)) return false;
 		StringComparer comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
 		IArgPayload? newCb(string n, string val, int ss, int ch)
 		{
@@ -302,7 +229,7 @@ public static class API
 			return null;
 		}
 		EV_ApplyMetafunctions += newCb;
-		namedMetafuncs.Add(name, newCb);
+		__namedMetafuncs.Add(name, newCb);
 		return true;
 	}
 	/// <summary>
@@ -311,30 +238,58 @@ public static class API
 	/// <param name="name"></param>
 	public static void RemoveNamedMetafun(string name)
 	{
-		if (!namedMetafuncs.TryGetValue(name, out Create_RawMetaFunction? handler)) return;
+		if (!__namedMetafuncs.TryGetValue(name, out V0_Create_RawMetaFunction? handler)) return;
 		EV_ApplyMetafunctions -= handler;
-		namedMetafuncs.Remove(name);
+		__namedMetafuncs.Remove(name);
 	}
 	/// <summary>
 	/// Subscribe to this to attach your custom callbacks to newly created happen objects.
 	/// You can also use <see cref="AddNamedAction"/> overloads as name-safe wrappers.
 	/// </summary>
-	public static event Create_RawHappenBuilder? EV_MakeNewHappen;
-	internal static IEnumerable<Create_RawHappenBuilder?>? MNH_invl
-		=> EV_MakeNewHappen?.GetInvocationList().Cast<Create_RawHappenBuilder?>();
+	public static event V0_Create_RawHappenBuilder? EV_MakeNewHappen
+	{
+		add
+		{
+			Backing.__EV_MakeNewHappen += value;
+		}
+		remove
+		{
+			Backing.__EV_MakeNewHappen -= value;
+		}
+	}
+
 	/// <summary>
 	/// Subscribe to this to dispense your custom triggers.
 	/// You can also use <see cref="AddNamedTrigger"/> overloads as a name-safe wrappers.
 	/// </summary>
-	public static event Create_RawTriggerFactory? EV_MakeNewTrigger;
-	internal static IEnumerable<Create_RawTriggerFactory?>? MNT_invl
-		=> EV_MakeNewTrigger?.GetInvocationList()?.Cast<Create_RawTriggerFactory?>();
+	public static event V0_Create_RawTriggerFactory? EV_MakeNewTrigger
+	{
+		add
+		{
+			Backing.__EV_MakeNewTrigger += value;
+		}
+		remove
+		{
+			Backing.__EV_MakeNewTrigger -= value;
+		}
+
+	}
+
 	/// <summary>
 	/// Subscribe to this to register custom variables-macros. You can also use <see cref="AddNamedMetafun"/> overloads as name-safe wrappers.
 	/// </summary>
-	public static event Create_RawMetaFunction? EV_ApplyMetafunctions;
-	internal static IEnumerable<Create_RawMetaFunction?>? AM_invl
-		=> EV_ApplyMetafunctions?.GetInvocationList()?.Cast<Create_RawMetaFunction?>();
+	public static event V0_Create_RawMetaFunction? EV_ApplyMetafunctions
+	{
+		add
+		{
+			Backing.__EV_ApplyMetafunctions += value;
+		}
+		remove
+		{
+			Backing.__EV_ApplyMetafunctions -= value;
+		}
+	}
+
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
 	#endregion
 }

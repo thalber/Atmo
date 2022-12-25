@@ -625,7 +625,7 @@ public static partial class Utils
 	/// <summary>
 	/// ArgNullEx throw helper.
 	/// </summary>
-	public static void BangBang(object? item, string name)
+	public static void BangBang(object? item, string name = "???")
 	{
 		if (item is null) throw new ArgumentNullException(name);
 	}
@@ -642,17 +642,17 @@ public static partial class Utils
 	public static Color ToOpaqueCol(in this Vector4 vec)
 		=> vec.w is not 0f ? vec : new(vec.x, vec.y, vec.z, 1f);
 #if ATMO //atmo-specific things
-	internal static int? _tempSSN;
-	internal static World? _temp_World;
+	internal static int? __tempSSN;
+	internal static World? __temp_World;
 	//internal static int? _temp_RWClock;
-	internal static int? CurrentSaveslot => inst.RW?.options?.saveSlot;
-	internal static int? CurrentCharacter
+	internal static int? __CurrentSaveslot => inst.RW?.options?.saveSlot;
+	internal static int? __CurrentCharacter
 		=> (int?)
 		inst.RW?.
 		processManager.FindSubProcess<RainWorldGame>()?
 		.GetStorySession?
 		.characterStats.name
-		?? _tempSSN;
+		?? __tempSSN;
 	internal static void DbgVerbose(
 		this LOG.ManualLogSource logger,
 		object data)
@@ -682,24 +682,24 @@ public static partial class Utils
 	/// <summary>
 	/// Save name for when character is not found
 	/// </summary>
-	public const string SlugNotFound = "ATMO_SER_NOCHAR";
+	public const string SLUG_NOT_FOUND = "ATMO_SER_NOCHAR";
 	/// <summary>
-	/// Cache to speed up <see cref="SlugName(int)"/>.
+	/// Cache to speed up <see cref="__SlugName(int)"/>.
 	/// </summary>
-	internal static readonly Dictionary<int, string> SlugNameCache = new();
+	internal static readonly Dictionary<int, string> __SlugNameCache = new();
 
 	/// <summary>
 	/// Returns slugcat name for a given index.
 	/// </summary>
 	/// <param name="slugNumber"></param>
-	/// <returns>Resulting name for the slugcat; <see cref="SlugNotFound"/> if the index is below zero, </returns>
-	internal static string SlugName(int slugNumber)
+	/// <returns>Resulting name for the slugcat; <see cref="SLUG_NOT_FOUND"/> if the index is below zero, </returns>
+	internal static string __SlugName(int slugNumber)
 	{
-		return SlugNameCache.EnsureAndGet(slugNumber, () =>
+		return __SlugNameCache.EnsureAndGet(slugNumber, () =>
 		{
 			string? res = slugNumber switch
 			{
-				< 0 => SlugNotFound,
+				< 0 => SLUG_NOT_FOUND,
 				0 => "survivor",
 				1 => "monk",
 				2 => "hunter",
@@ -707,22 +707,22 @@ public static partial class Utils
 			};
 			try
 			{
-				res ??= SlugName_WrapSB(slugNumber);
+				res ??= __SlugName_WrapSB(slugNumber);
 			}
 			catch (TypeLoadException)
 			{
 				plog.LogMessage($"SlugBase not present: character #{slugNumber} has no valid name.");
 			}
 			res ??= ((SlugcatStats.Name)slugNumber).ToString();
-			return res ?? SlugNotFound;
+			return res ?? SLUG_NOT_FOUND;
 		});
 	}
-	private static string SlugName_WrapSB(int slugNumber)
+	private static string __SlugName_WrapSB(int slugNumber)
 	{
-		return SlugBase.PlayerManager.GetCustomPlayer(slugNumber)?.Name ?? SlugNotFound;
+		return SlugBase.PlayerManager.GetCustomPlayer(slugNumber)?.Name ?? SLUG_NOT_FOUND;
 	}
 
-	internal static readonly Dictionary<char, char> escapes = new()
+	internal static readonly Dictionary<char, char> __literalEscapes = new()
 	{
 		{ 'q', '\'' },
 		{ 't', '\t' },
@@ -741,7 +741,7 @@ public static partial class Utils
 			}
 			else if (slashrow > 0)
 			{
-				if (!escapes.TryGetValue(c, out char escaped))
+				if (!__literalEscapes.TryGetValue(c, out char escaped))
 				{
 					res.Append('\\', slashrow);
 					slashrow = 0;
@@ -767,7 +767,15 @@ public static partial class Utils
 		}
 		return res.ToString();
 	}
-	internal static void Assign(Arg argv, Arg target, ArgType datatype = ArgType.STRING)
+	/// <summary>
+	/// Attempts setting one argpayload to value of another, preferring specified datatype.
+	/// </summary>
+	/// <param name="argv">Payload to take value from</param>
+	/// <param name="target">Payload that will receive value</param>
+	/// <param name="datatype">Preferred data type.</param>
+	public static void Assign<TV, TT>(TV argv, TT target, ArgType datatype = ArgType.STRING)
+	where TV : IArgPayload
+	where TT : IArgPayload
 	{
 		switch (datatype)
 		{

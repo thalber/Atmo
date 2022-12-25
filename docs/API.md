@@ -6,13 +6,19 @@ This file contains instructions on how to interface with Atmo API from other cod
 
 "Happens" are like *world events*. This name was picked to avoid confusion with vanilla's Events/Triggers.
 
-## Classes
 
-### [API](../src/API.cs)
+## [Versioned API classes](../src/API)
 
-This static class is your primary entrypoint for interacting with Atmo. Relevant members:
-#### Delegate types
-Various delegates used by the API. See [their docstrings](../src/API.cs#L17) for purpose and parameter descriptions.
+`Atmo.API` namespace is your primary way of interacting with the mod.
+
+The API may be segregated by versions: Each version has its own class (Atmo.API.V0.cs, Atmo.API.V1.cs and so on). API versions may be modified incrementally post release (adding new members), but any breaking changes will instead be forwarded to a new version. Any API classes will link to the same backend and, ideally, work together in arbitrary combinations.
+
+### Delegate types
+Various general purpose delegates used by the API are in [this file](../src/API/Delegates.cs). See their docstrings for purpose and parameter descriptions. Their names are prefixed with API version they were made for.
+
+### [V0](../src/API/V0.cs)
+
+This is the initial release (1.0) version.
 
 #### Events
 
@@ -28,13 +34,13 @@ Alternatively, use the following methods to register actions and trigger by pres
 
 | Header	| Function	| 
 | ---		| ---		|
-|  `AddNamedAction(string, lc_AbstractUpdate?, lc_RealizedUpdate?, lc_Init?, lc_CoreUpdate?, bool)` | One action name. Up to one action for every lifecycle event. Does not support action parameters. |
-| `AddNamedAction(string[], lc_AbstractUpdate?, lc_RealizedUpdate?, lc_Init?, lc_CoreUpdate?, bool)` | Multiple action names. Up to one action for every lifecycle event. Does not support action parameters. |
+|  `AddNamedAction(string, V0_lc_AbstractUpdate?, V0_lc_RealizedUpdate?, V0_lc_Init?, V0_lc_CoreUpdate?, bool)` | One action name. Up to one action for every lifecycle event. Does not support action parameters. |
+| `AddNamedAction(string[], V0_lc_AbstractUpdate?, V0_lc_RealizedUpdate?, V0_lc_Init?, V0_lc_CoreUpdate?, bool)` | Multiple action names. Up to one action for every lifecycle event. Does not support action parameters. |
 | `AddNamedAction(string, Create_NamedHappenBuilder, bool)` | One action name. This shorthand supports action arguments (passed as the second parameter to `builder`). |
 | `AddNamedAction(string[], Create_NamedHappenBuilder, bool)` | Multiple action names. Supports action arguments (passed as the second parameter to `builder`) |
 
 You can remove wrapped named-builders added by this method *by name you provided* using `RemoveNamedAction(string)`.
-Arguments are passed as ArgSet objects. For more information on this class, see [its docstrings](../src/Helpers/ArgSet.cs).
+Arguments are passed as ArgSet objects. For more information on this class, see [its docstrings](../src/Data/ArgSet.cs).
 
 #### `AddNamedTrigger` overloads
 | Header	| Function	|
@@ -44,6 +50,10 @@ Arguments are passed as ArgSet objects. For more information on this class, see 
 
 You can remove trigger-factories *by name you provided* using `RemoveNamedTrigger(string)`.
 
+## Persistent classes
+
+These are classes that are accessible but not a part of the versioned API. Their contents have a slightly weaker guarantee of persistence (we will try our best to not break them).
+
 ### [Happen](../src/Body/Happen.cs)
 This is the core class which the behaviours revolve around. Happens contain:
 - Behaviour, in form of delegates/callbacks attached to the following events:
@@ -51,7 +61,7 @@ This is the core class which the behaviours revolve around. Happens contain:
 	- `On_RealUpdate`: as long as the Happen is *activated*, invoked for every affected room on each Realized update, that is: every frame.
 	- `On_Init`: invoked *once* per cycle, right before the first time `On_AbstUpdate` or `On_RealUpdate` would be invoked. Receives `World` as parameter.
 	- `On_CoreUpdate`: invoked *once* per frame *every frame*, no matter if the Happen is active or not. Useful if your happen needs to have a persistent frame counter of something.
-- Activation conditions (in form of one or more [HappenTrigger](../src/Body/HappenTrigger.cs) objects) in `triggers` field: an array of HappenTrigger objects for the current happen. They are evaluated through a [PredicateInlay structure](modules/PredicateInlay/../src/PredicateInlay.cs).
+- Activation conditions (in form of one or more [HappenTrigger](../src/Body/HappenTrigger.cs) objects) in `triggers` field: an array of HappenTrigger objects for the current happen. They are evaluated through a [PredicateInlay structure](../modules/PredicateInlay/src/PredicateInlay.cs).
 - `name`: name of your Happen, as defined in `.atmo` file.
 - `actions`: a dictionary of added actions with parameters.
 

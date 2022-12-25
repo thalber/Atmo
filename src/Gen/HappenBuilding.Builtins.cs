@@ -2,16 +2,16 @@
 using Atmo.Data.Payloads;
 
 using static Atmo.Data.VarRegistry;
-using static Atmo.API;
+using static Atmo.API.V0;
 using static Atmo.Body.HappenTrigger;
 using static UnityEngine.Mathf;
 
 namespace Atmo.Gen;
 public static partial class HappenBuilding
 {
-	internal static void InitBuiltins()
+	internal static void __InitBuiltins()
 	{
-		foreach (Action initfun in new[] { RegisterBuiltinActions, RegisterBuiltinTriggers, RegisterBuiltinMetafun })
+		foreach (Action initfun in new[] { __RegisterBuiltinActions, __RegisterBuiltinTriggers, __RegisterBuiltinMetafun })
 		{
 			try
 			{
@@ -29,7 +29,7 @@ public static partial class HappenBuilding
 #warning contributor notice: triggers
 	//Place your trigger registration code here.
 	//Do not remove this warning directive.
-	private static void RegisterBuiltinTriggers()
+	internal static void __RegisterBuiltinTriggers()
 	{
 		AddNamedTrigger(new[] { "always" }, TMake_Always);
 		AddNamedTrigger(new[] { "untilrain", "beforerain" }, TMake_UntilRain);
@@ -106,7 +106,7 @@ public static partial class HappenBuilding
 		};
 		if (delay is null)
 		{
-			NotifyArgsMissing(TMake_Delay, "delay/delaymin+delaymax");
+			__NotifyArgsMissing(TMake_Delay, "delay/delaymin+delaymax");
 			return null;
 		}
 		plog.DbgVerbose($"Set delay: {delay.Value} ( {args.Select(x => x.SecAsFrames.ToString()).Stitch()} )");
@@ -123,7 +123,7 @@ public static partial class HappenBuilding
 	{
 		if (args.Count < 1)
 		{
-			NotifyArgsMissing(TMake_AfterOther, "name");
+			__NotifyArgsMissing(TMake_AfterOther, "name");
 			return null;
 		}
 		Happen? tar = null;
@@ -138,7 +138,7 @@ public static partial class HappenBuilding
 		{
 			On_Update = () =>
 			{
-				tar ??= ha?.set.AllHappens.FirstOrDefault(x => x.name == tarname);
+				tar ??= ha?.Set.AllHappens.FirstOrDefault(x => x.name == tarname);
 				if (tar is null) return;
 				if (tar.Active != tarWasOn)
 				{
@@ -330,7 +330,7 @@ public static partial class HappenBuilding
 	{
 		if (args.Count < 1)
 		{
-			NotifyArgsMissing(TMake_EveryX, "period");
+			__NotifyArgsMissing(TMake_EveryX, "period");
 			return null;
 		}
 		int period = (int)(args[0].F32 * 40f),
@@ -349,10 +349,10 @@ public static partial class HappenBuilding
 	{
 		if (args.Count < 2)
 		{
-			NotifyArgsMissing(TMake_VarEq, "varname/value");
+			__NotifyArgsMissing(TMake_VarEq, "varname/value");
 			return null;
 		}
-		Arg tar = VarRegistry.GetVar(args[0].Str, CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
+		Arg tar = VarRegistry.GetVar(args[0].Str, __CurrentSaveslot ?? -1, __CurrentCharacter ?? -1);
 		Arg val = args[1];
 		return new EventfulTrigger()
 		{
@@ -366,10 +366,10 @@ public static partial class HappenBuilding
 	{
 		if (args.Count < 2)
 		{
-			NotifyArgsMissing(TMake_VarNe, "varname/value");
+			__NotifyArgsMissing(TMake_VarNe, "varname/value");
 			return null;
 		}
-		Arg tar = VarRegistry.GetVar(args[0].Str, CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
+		Arg tar = VarRegistry.GetVar(args[0].Str, __CurrentSaveslot ?? -1, __CurrentCharacter ?? -1);
 		Arg val = args[1];
 		return new EventfulTrigger()
 		{
@@ -383,10 +383,10 @@ public static partial class HappenBuilding
 	{
 		if (args.Count < 2)
 		{
-			NotifyArgsMissing(TMake_VarMatch, "varname/pattern");
+			__NotifyArgsMissing(TMake_VarMatch, "varname/pattern");
 			return null;
 		}
-		Arg tar = VarRegistry.GetVar(args[0].Str, CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
+		Arg tar = VarRegistry.GetVar(args[0].Str, __CurrentSaveslot ?? -1, __CurrentCharacter ?? -1);
 		Arg val = args[1];
 		TXT.Regex? matcher = null;
 		string? prev_val = null;
@@ -420,7 +420,7 @@ public static partial class HappenBuilding
 #warning contributor notice: actions
 	//Add your action registration code here.
 	//Do not remove this warning directive.
-	private static void RegisterBuiltinActions()
+	private static void __RegisterBuiltinActions()
 	{
 		AddNamedAction(new[] { "playergrav", "playergravity" }, Make_Playergrav);
 		AddNamedAction(new[] { "sound", "playsound" }, Make_Sound);
@@ -447,7 +447,7 @@ public static partial class HappenBuilding
 		plog.DbgVerbose("Making lightning!");
 		if (args.Count < 1)
 		{
-			NotifyArgsMissing(source: Make_Lightning, "intensity");
+			__NotifyArgsMissing(source: Make_Lightning, "intensity");
 		}
 		Arg
 			intensity = args[0],
@@ -514,7 +514,7 @@ public static partial class HappenBuilding
 	{
 		if (args.Count < 1)
 		{
-			NotifyArgsMissing(Make_Tempglow, "color");
+			__NotifyArgsMissing(Make_Tempglow, "color");
 		}
 		Arg argcol = args[0],
 			radius = args.AtOr(1, 300f);
@@ -568,7 +568,7 @@ public static partial class HappenBuilding
 	{
 		if (args.Count < 1)
 		{
-			NotifyArgsMissing(Make_Fling, "force");
+			__NotifyArgsMissing(Make_Fling, "force");
 		}
 		Arg force = args[0],
 			filter = args["filter", "select"] ?? ".*",
@@ -619,12 +619,12 @@ public static partial class HappenBuilding
 		//Breaks with warp.
 		if (args.Count == 0)
 		{
-			NotifyArgsMissing(Make_SoundLoop, "soundid");
+			__NotifyArgsMissing(Make_SoundLoop, "soundid");
 			return;
 		}
 		if (!TryParseEnum(args[0].Str, out SoundID soundid))
 		{
-			NotifyArgsMissing(Make_SoundLoop, "soundid");
+			__NotifyArgsMissing(Make_SoundLoop, "soundid");
 			return;
 		}
 		Arg
@@ -684,7 +684,7 @@ public static partial class HappenBuilding
 	{
 		if (args.Count == 0)
 		{
-			NotifyArgsMissing(Make_Sound, "soundid");
+			__NotifyArgsMissing(Make_Sound, "soundid");
 			return;
 		}
 
@@ -778,7 +778,7 @@ public static partial class HappenBuilding
 	{
 		if (args.Count < 1)
 		{
-			NotifyArgsMissing(Make_SetRainTimer, "value");
+			__NotifyArgsMissing(Make_SetRainTimer, "value");
 			return;
 		}
 		Arg target = args[0];
@@ -792,7 +792,7 @@ public static partial class HappenBuilding
 	{
 		if (args.Count < 1)
 		{
-			NotifyArgsMissing(Make_SetKarma, "level");
+			__NotifyArgsMissing(Make_SetKarma, "level");
 			return;
 		}
 
@@ -858,7 +858,7 @@ public static partial class HappenBuilding
 	{
 		if (args.Count < 1)
 		{
-			NotifyArgsMissing(Make_ChangePalette, "pal");
+			__NotifyArgsMissing(Make_ChangePalette, "pal");
 			return;
 		}
 		//todo: support for fade palettes? make sure they dont fuck with rain
@@ -894,14 +894,14 @@ public static partial class HappenBuilding
 	{
 		if (args.Count < 2)
 		{
-			NotifyArgsMissing(Make_SetVar, "varname", "value");
+			__NotifyArgsMissing(Make_SetVar, "varname", "value");
 			return;
 		}
 		Arg argn = args[0],
 			argv = args[1],
 			continuous = args.AtOr(2, false),
 			forceType = args["dt", "datatype", "format"] ?? nameof(ArgType.STRING),
-			target = VarRegistry.GetVar(argn.Str, CurrentSaveslot ?? 0, CurrentCharacter ?? 0)
+			target = VarRegistry.GetVar(argn.Str, __CurrentSaveslot ?? 0, __CurrentCharacter ?? 0)
 			;
 		forceType.GetEnum(out ArgType datatype);
 		string? dt_last_str = forceType.Str;
@@ -925,10 +925,10 @@ public static partial class HappenBuilding
 	}
 	#endregion
 	#region metafunctions
-	private static readonly TXT.Regex FMT_Is = new("\\$FMT\\((.*?)\\)");
-	private static readonly TXT.Regex FMT_Split = new("{.+?}");
-	private static readonly TXT.Regex FMT_Match = new("(?<={).+?(?=})");
-	internal static void RegisterBuiltinMetafun()
+	internal static readonly TXT.Regex __FMT_Is = new("\\$FMT\\((.*?)\\)");
+	internal static readonly TXT.Regex __FMT_Split = new("{.+?}");
+	internal static readonly TXT.Regex __FMT_Match = new("(?<={).+?(?=})");
+	internal static void __RegisterBuiltinMetafun()
 	{
 		AddNamedMetafun(new[] { "FMT", "FORMAT" }, MMake_FMT);
 		AddNamedMetafun(new[] { "FILEREAD", "FILE" }, MMAke_FileRead);
@@ -941,13 +941,11 @@ public static partial class HappenBuilding
 		//do not document:
 		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite);
 	}
-
-
 	private static IArgPayload? MMake_AppFound(string text, int ss, int ch)
 	{
 		uint.TryParse(text, out var id);
-		Arg res = Steamworks.SteamApps.BIsSubscribedApp(new(id));
-		return res.Wrap;
+		var resr = Steamworks.SteamApps.BIsSubscribedApp(new(id));
+		return Arg.Coerce(resr);
 	}
 	private static IArgPayload? MMake_ScreenRes(string text, int ss, int ch)
 	{
@@ -971,12 +969,20 @@ public static partial class HappenBuilding
 		if (!int.TryParse(
 			text,
 			out int camnum)) camnum = 1;
+		static AbstractRoom? findAbsRoom(int cam) => inst.RW?
+				.processManager.FindSubProcess<RainWorldGame>()?
+				.cameras.AtOr(cam - 1, null)?
+				.room?.abstractRoom;
+
+		Vector2 nosize = new(-1, -1);
 		return new ByCallbackGetOnly()
 		{
 			getStr = ()
-				=> inst.RW?.processManager.FindSubProcess<RainWorldGame>()?
-				.cameras.AtOr(camnum - 1, null)?.room?.abstractRoom.name
-				?? string.Empty
+				=> findAbsRoom(camnum)?.name
+				?? string.Empty,
+			getI32 = () => findAbsRoom(camnum)?.index ?? -1,
+			getVec = () => findAbsRoom(camnum)?.size.ToVector2() * 20f ?? nosize,
+			getBool = () => false,
 		};
 	}
 
@@ -1070,8 +1076,8 @@ public static partial class HappenBuilding
 	}
 	private static IArgPayload? MMake_FMT(string text, int ss, int ch)
 	{
-		string[] bits = FMT_Split.Split(text);
-		TXT.MatchCollection names = FMT_Match.Matches(text);
+		string[] bits = __FMT_Split.Split(text);
+		TXT.MatchCollection names = __FMT_Match.Matches(text);
 		Arg[] variables = new Arg[names.Count];
 		for (int i = 0; i < names.Count; i++)
 		{
@@ -1090,7 +1096,7 @@ public static partial class HappenBuilding
 
 	}
 	#endregion
-	private static void NotifyArgsMissing(Delegate source, params string[] args)
+	private static void __NotifyArgsMissing(Delegate source, params string[] args)
 	{
 		plog.LogWarning($"{nameof(HappenBuilding)}.{source.Method.Name}: Missing argument(s): {args.Stitch()}");
 	}
