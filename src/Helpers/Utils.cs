@@ -12,18 +12,10 @@ public static partial class Utils
 {
 	#region fields
 	/// <summary>
-	/// Strings that evaluate to bool.true
-	/// </summary>
-	public static readonly string[] trueStrings = new[] { "true", "1", "yes", };
-	/// <summary>
-	/// Strings that evaluate to bool.false
-	/// </summary>
-	public static readonly string[] falseStrings = new[] { "false", "0", "no", };
-	/// <summary>
 	/// Unsafe string allocator
 	/// </summary>
 	public static readonly Func<int, string> stralloc =
-		GetFn_t<Func<int, string>>(null, methodof_t<string>("InternalAllocateStr", AllContextsStatic));
+		GetFn<Func<int, string>>(null, methodof<string>("InternalAllocateStr", BF_ALL_CONTEXTS_STATIC)!)!;
 	#endregion
 	#region collections
 	/// <summary>
@@ -43,9 +35,6 @@ public static partial class Utils
 	/// <summary>
 	/// Attempts to get a char at a specified position.
 	/// </summary>
-	/// <param name="str"></param>
-	/// <param name="index"></param>
-	/// <returns></returns>
 	public static char? Get(this string str, int index)
 	{
 		BangBang(str, nameof(str));
@@ -55,9 +44,6 @@ public static partial class Utils
 	/// <summary>
 	/// Attempts to get a char at a specified position.
 	/// </summary>
-	/// <param name="sb"></param>
-	/// <param name="index"></param>
-	/// <returns></returns>
 	public static char? Get(this StringBuilder sb, int index)
 	{
 		BangBang(sb, nameof(sb));
@@ -87,7 +73,6 @@ public static partial class Utils
 			dict.Add(key, def);
 			return def;
 		}
-
 	}
 	/// <summary>
 	/// Shifts contents of a BitArray one position to the right.
@@ -119,30 +104,30 @@ public static partial class Utils
 	/// <summary>
 	/// Binding flags for all normal contexts.
 	/// </summary>
-	public const BindingFlags AllContexts =
-		BindingFlags.Public
+	public const BindingFlags BF_ALL_CONTEXTS 
+		= BindingFlags.Public
 		| BindingFlags.NonPublic
 		| BindingFlags.Instance
 		| BindingFlags.Static;
 	/// <summary>
 	/// Binding flags for all instance members regardless of visibility.
 	/// </summary>
-	public const BindingFlags AllContextsInstance =
-		BindingFlags.Public
+	public const BindingFlags BF_ALL_CONTEXTS_INSTANCE 
+		= BindingFlags.Public
 		| BindingFlags.NonPublic
 		| BindingFlags.Instance;
 	/// <summary>
 	/// Binding flags for all static members regardless of visibility.
 	/// </summary>
-	public const BindingFlags AllContextsStatic =
-		BindingFlags.Public
+	public const BindingFlags BF_ALL_CONTEXTS_STATIC 
+		= BindingFlags.Public
 		| BindingFlags.NonPublic
 		| BindingFlags.Static;
 	/// <summary>
 	/// Binding flags for all constructors.
 	/// </summary>
-	public const BindingFlags AllContextsCtor =
-		BindingFlags.Public
+	public const BindingFlags BF_ALL_CONTEXTS_CTOR 
+		= BindingFlags.Public
 		| BindingFlags.NonPublic
 		| BindingFlags.CreateInstance;
 	#endregion
@@ -157,7 +142,7 @@ public static partial class Utils
 		this Type self,
 		string name)
 	{
-		return self.GetMethod(name, AllContexts);
+		return self.GetMethod(name, BF_ALL_CONTEXTS);
 	}
 
 	/// <summary>
@@ -170,70 +155,54 @@ public static partial class Utils
 		this Type self,
 		string name)
 	{
-		return self.GetProperty(name, AllContexts);
+		return self.GetProperty(name, BF_ALL_CONTEXTS);
 	}
 
 	/// <summary>
-	/// Returns prop backing field name
+	/// Returns autoimplemented property backing field name
 	/// </summary>
-	public static string Pbfiname(string propname)
+	public static string BackingFieldName(string propname)
 	{
 		return $"<{propname}>k__BackingField";
 	}
 
 	/// <summary>
-	/// Looks up methodinfo from T, defaults to <see cref="AllContextsInstance"/>
+	/// Looks up methodinfo from T, defaults to <see cref="BF_ALL_CONTEXTS_INSTANCE"/>
 	/// </summary>
-	/// <typeparam name="T">target type</typeparam>
-	/// <param name="mname">methodname</param>
-	/// <param name="context">binding flags, default private+public+instance</param>
+	/// <typeparam name="T">Target type</typeparam>
+	/// <param name="mname">Method name</param>
+	/// <param name="context">Binding flags, default private+public+instance</param>
 	/// <returns></returns>
 	public static MethodInfo? methodof<T>(
 		string mname,
-		BindingFlags context = AllContextsInstance)
+		BindingFlags context = BF_ALL_CONTEXTS_INSTANCE)
 	{
 		return typeof(T).GetMethod(mname, context);
 	}
-
 	/// <summary>
-	/// Looks up methodinfo from T. Throws if not found
+	/// Looks up methodinfo from t, defaults to <see cref="BF_ALL_CONTEXTS_STATIC"/>
 	/// </summary>
-	/// <typeparam name="T">Target type</typeparam>
-	/// <param name="name">Method name</param>
-	/// <param name="context">Defaults to <see cref="AllContextsInstance"/></param>
-	/// <returns>Resulting method info</returns>
-	/// <exception cref="ArgumentException"></exception>
-	public static MethodInfo methodof_t<T>(
-		string name,
-		BindingFlags context = AllContextsInstance)
-	{
-		MethodInfo? res = methodof<T>(name, context);
-		if (res is null) throw new ArgumentException("Method not found");
-		return res;
-	}
-	/// <summary>
-	/// Looks up methodinfo from t, defaults to <see cref="AllContextsStatic"/>
-	/// </summary>
-	/// <param name="t">target type</param>
-	/// <param name="mname">method name</param>
-	/// <param name="context">binding flags, default private+public+static</param>
+	/// <param name="t">Target type</param>
+	/// <param name="mname">Method name</param>
+	/// <param name="context">Binding flags, default private+public+static</param>
 	/// <returns></returns>
 	public static MethodInfo? methodof(
 		Type t,
 		string mname,
-		BindingFlags context = AllContextsStatic)
+		BindingFlags context = BF_ALL_CONTEXTS_STATIC)
 	{
 		return t.GetMethod(mname, context);
 	}
+	
 	/// <summary>
-	/// gets constructorinfo from T. no cctors by default.
+	/// Gets constructorinfo from T. no cctors by default.
 	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	/// <param name="context"></param>
-	/// <param name="pms"></param>
+	/// <typeparam name="T">Type to look at</typeparam>
+	/// <param name="context">Binding flags. Does not include static constructors by default.</param>
+	/// <param name="pms">Constructor parameter types.</param>
 	/// <returns></returns>
 	public static ConstructorInfo? ctorof<T>(
-		BindingFlags context = AllContextsCtor,
+		BindingFlags context = BF_ALL_CONTEXTS_CTOR,
 		params Type[] pms)
 	{
 		return typeof(T).GetConstructor(context, null, pms, null);
@@ -242,8 +211,8 @@ public static partial class Utils
 	/// <summary>
 	/// Gets constructorinfo from T.
 	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	/// <param name="pms"></param>
+	/// <typeparam name="T">Type to look at.</typeparam>
+	/// <param name="pms">Constructor parameter types.</param>
 	/// <returns></returns>
 	public static ConstructorInfo? ctorof<T>(params Type[] pms)
 	{
@@ -251,38 +220,38 @@ public static partial class Utils
 	}
 
 	/// <summary>
-	/// takes fieldinfo from T, defaults to <see cref="AllContextsInstance"/>
+	/// Takes fieldinfo from T, defaults to <see cref="BF_ALL_CONTEXTS_INSTANCE"/>
 	/// </summary>
-	/// <typeparam name="T">target type</typeparam>
-	/// <param name="name">field name</param>
-	/// <param name="context">context, default private+public+instance</param>
+	/// <typeparam name="T">Target type</typeparam>
+	/// <param name="name">Field name</param>
+	/// <param name="context">Context, default private+public+instance</param>
 	/// <returns></returns>
-	public static FieldInfo? fieldof<T>(string name, BindingFlags context = AllContextsInstance)
+	public static FieldInfo? fieldof<T>(string name, BindingFlags context = BF_ALL_CONTEXTS_INSTANCE)
 	{
 		return typeof(T).GetField(name, context);
 	}
 	/// <summary>
-	/// Yields all loaded assemblies that match the name
+	/// Yields all loaded assemblies with names matching a given regex.
 	/// </summary>
-	/// <param name="n">String that the assemblies' name has to contain</param>
+	/// <param name="pattern">Regular expression to filter assemblies</param>
 	/// <returns>A yield ienumerable with results</returns>
-	public static IEnumerable<Assembly> FindAssembliesByName(string n)
+	public static IEnumerable<Assembly> FindAssemblies(string pattern)
 	{
 		Assembly[] lasms = AppDomain.CurrentDomain.GetAssemblies();
 		for (int i = lasms.Length - 1; i > -1; i--)
-			if (lasms[i].FullName.Contains(n)) yield return lasms[i];
+			if (TXT.Regex.Match(lasms[i].FullName, pattern).Success) yield return lasms[i];
 	}
 	/// <summary>
 	/// Force clones an object instance through reflection
 	/// </summary>
-	/// <typeparam name="T">tar type</typeparam>
-	/// <param name="from">source object</param>
-	/// <param name="to">target object</param>
-	/// <param name="context">specifies context of fields to be cloned</param>
+	/// <typeparam name="T">Object type</typeparam>
+	/// <param name="from">Source object</param>
+	/// <param name="to">Destination object</param>
+	/// <param name="context">Specifies context of fields to be cloned</param>
 	public static void CloneInstance<T>(
 		T from,
 		T to,
-		BindingFlags context = AllContextsInstance)
+		BindingFlags context = BF_ALL_CONTEXTS_INSTANCE)
 	{
 		Type tt = typeof(T);
 		foreach (FieldInfo field in tt.GetFields(context))
@@ -294,19 +263,19 @@ public static partial class Utils
 	/// <summary>
 	/// Cleans up static reference members in a type.
 	/// </summary>
-	/// <param name="t">Target type.</param>
+	/// <param name="t">Target type</param>
 	public static VT<List<string>, List<string>> CleanupStatic(this Type t)
 	{
 		List<string> success = new();
 		List<string> failure = new();
 
-		foreach (FieldInfo field in t.GetFields(AllContextsStatic))
+		foreach (FieldInfo field in t.GetFields(BF_ALL_CONTEXTS_STATIC))
 			if (!field.FieldType.IsValueType)
 			{
 				string fullname = $"{t.FullName}.{field.Name}";
 				try
 				{
-					field.SetValue(null, null, AllContextsStatic, null, System.Globalization.CultureInfo.CurrentCulture);
+					field.SetValue(null, null, BF_ALL_CONTEXTS_STATIC, null, System.Globalization.CultureInfo.CurrentCulture);
 					success.Add(fullname);
 				}
 				catch (Exception ex)
@@ -314,7 +283,7 @@ public static partial class Utils
 					failure.Add(fullname + $" (exception: {ex.Message})");
 				}
 			}
-		foreach (Type nested in t.GetNestedTypes(AllContextsStatic))
+		foreach (Type nested in t.GetNestedTypes(BF_ALL_CONTEXTS_STATIC))
 		{
 			VT<List<string>, List<string>> res = nested.CleanupStatic();
 			success.AddRange(res.a);
@@ -337,29 +306,14 @@ public static partial class Utils
 		return (T)Delegate.CreateDelegate(typeof(T), inst, method);
 	}
 	/// <summary>
-	/// Generic wrapper for <see cref="Delegate.CreateDelegate(Type, object, MethodInfo)"/>. Throws on failure.
-	/// </summary>
-	/// <typeparam name="T">Delegate type.</typeparam>
-	/// <param name="inst">Object instance.</param>
-	/// <param name="method">Method info.</param>
-	/// <returns>Resulting delegate.</returns>
-	/// <exception cref="ArgumentException"></exception>
-	public static T GetFn_t<T>(object? inst, MethodInfo method)
-		where T : MulticastDelegate
-	{
-		T? res = GetFn<T>(inst, method);
-		if (res is null) throw new ArgumentException("Could not create delegate");
-		return res;
-	}
-	/// <summary>
 	/// Gets an internal char setter for given string.
 	/// </summary>
 	/// <param name="s"></param>
 	/// <returns></returns>
 	public static Action<int, char> Fn_SetChar(this string s)
 	{
-		MethodInfo method = methodof_t<string>("InternalSetChar", AllContextsInstance);
-		return GetFn_t<Action<int, char>>(s, method);
+		MethodInfo method = methodof<string>("InternalSetChar", BF_ALL_CONTEXTS_INSTANCE)!;
+		return GetFn<Action<int, char>>(s, method)!;
 	}
 	#endregion
 	#region randomization extensions
@@ -623,14 +577,14 @@ public static partial class Utils
 		v = kvp.Value;
 	}
 	/// <summary>
-	/// ArgNullEx throw helper.
+	/// Throws <see cref="System.ArgumentNullException"/> if item is null.
 	/// </summary>
 	public static void BangBang(object? item, string name = "???")
 	{
 		if (item is null) throw new ArgumentNullException(name);
 	}
 	/// <summary>
-	/// Throws if item is not null.
+	/// Throws <see cref="System.InvalidOperationException"/> if item is not null.
 	/// </summary>
 	public static void AntiBang(object? item, string name)
 	{
@@ -642,9 +596,17 @@ public static partial class Utils
 	public static Color ToOpaqueCol(in this Vector4 vec)
 		=> vec.w is not 0f ? vec : new(vec.x, vec.y, vec.z, 1f);
 #if ATMO //atmo-specific things
+
+	/// <summary>
+	/// Strings that evaluate to bool.true
+	/// </summary>
+	public static readonly string[] trueStrings = new[] { "true", "1", "yes", };
+	/// <summary>
+	/// Strings that evaluate to bool.false
+	/// </summary>
+	public static readonly string[] falseStrings = new[] { "false", "0", "no", };
 	internal static int? __tempSSN;
 	internal static World? __temp_World;
-	//internal static int? _temp_RWClock;
 	internal static int? __CurrentSaveslot => inst.RW?.options?.saveSlot;
 	internal static int? __CurrentCharacter
 		=> (int?)

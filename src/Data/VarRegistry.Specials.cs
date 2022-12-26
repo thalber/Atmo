@@ -95,7 +95,7 @@ public static partial class VarRegistry
 					getStr = () => $"{findClock() / 40} seconds / {findClock()} frames"
 				}),
 				SpVar.root => RootFolderDirectory(),
-				SpVar.realm => FindAssembliesByName("Realm").Count() > 0, //check if right
+				SpVar.realm => FindAssemblies("Realm").Count() > 0, //check if right
 				SpVar.os => Environment.OSVersion.Platform.ToString(),
 				SpVar.memused => new(new ByCallbackGetOnly()
 				{
