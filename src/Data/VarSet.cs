@@ -42,20 +42,20 @@ public class VarSet
 		return GetVar(name, sec);
 	}
 	/// <summary>
-	/// Gets variable by name in a specified section
+	/// Gets variable by name in a specified section (no prefixes)
 	/// </summary>
 	/// <returns></returns>
 	public Arg GetVar(string name, DataSection section)
 	{
-		NamedVars vars = DictForSection(section);
-		Arg _def = Defarg;
+		NamedVars vars = _DictForSection(section);
+		Arg _def = __Defarg;
 		return vars.EnsureAndGet(name, () => _def);
 	}
-	internal SerDict GetSer(DataSection section)
+	internal SerDict _GetSer(DataSection section)
 	{
 		SerDict res = new();
-		Arg _def = Defarg;
-		NamedVars tdict = DictForSection(section);
+		Arg _def = __Defarg;
+		NamedVars tdict = _DictForSection(section);
 		foreach ((string name, Arg var) in tdict)
 		{
 			if (var.Equals(_def)) continue;
@@ -63,9 +63,9 @@ public class VarSet
 		}
 		return res;
 	}
-	internal void FillFrom(SerDict? dict, DataSection section)
+	internal void _FillFrom(SerDict? dict, DataSection section)
 	{
-		NamedVars tdict = DictForSection(section);
+		NamedVars tdict = _DictForSection(section);
 		tdict.Clear();
 		if (dict is null) return;
 		foreach ((string name, object val) in dict)
@@ -73,7 +73,7 @@ public class VarSet
 			tdict.Add(name, val.ToString());
 		}
 	}
-	private NamedVars DictForSection(DataSection sec)
+	internal NamedVars _DictForSection(DataSection sec)
 	{
 		return sec switch
 		{

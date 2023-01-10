@@ -10,7 +10,7 @@ namespace Atmo;
 /// <summary>
 /// Atmo is a scripting layer mod targeted at region makers. This is the main plugin class.
 /// <para>
-/// To interact with the mod, see <seealso cref="API"/>. For internal details, see <seealso cref="Atmo.Gen"/> and <seealso cref="Atmo.Body"/> namespace contents.
+/// To interact with the mod, see <seealso cref="Atmo.API"/> namespace. For internal details, see <seealso cref="Atmo.Gen"/> and <seealso cref="Atmo.Body"/> namespace contents.
 /// </para>
 /// </summary>
 [BepInPlugin(GUID: Id, Name: DName, Version: Ver)]
@@ -80,17 +80,13 @@ public sealed partial class Atmod : BaseUnityPlugin
 		log_verbose = Config.Bind(section: CFG_LOGGING, key: "verbose", defaultValue: true, description: "Enable more verbose logging. Can create clutter.");
 		try
 		{
-			if (RW is not null)
-			{
-				int something = RW.options.resolution;
-			}
 			On.AbstractRoom.Update += RunHappensAbstUpd;
 			On.RainWorldGame.Update += DoBodyUpdates;
 			On.Room.Update += RunHappensRealUpd;
 			On.World.LoadWorld += FetchHappenSet;
 			On.OverWorld.LoadFirstWorld += SetTempSSN;
-			VarRegistry.Init();
-			HappenBuilding.InitBuiltins();
+			VarRegistry.__Init();
+			HappenBuilding.__InitBuiltins();
 		}
 		catch (Exception ex)
 		{
@@ -128,7 +124,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 			On.AbstractRoom.Update -= RunHappensAbstUpd;
 			On.World.LoadWorld -= FetchHappenSet;
 			On.OverWorld.LoadFirstWorld -= SetTempSSN;
-			VarRegistry.Clear();
+			VarRegistry.__Clear();
 
 			LOG.ManualLogSource? cleanup_logger =
 				LOG.Logger.CreateLogSource("Atmo_Purge");
@@ -212,15 +208,15 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <param name="self"></param>
 	private void SetTempSSN(On.OverWorld.orig_LoadFirstWorld orig, OverWorld self)
 	{
-		Utils._tempSSN = self.PlayerCharacterNumber;
+		Utils.__tempSSN = self.PlayerCharacterNumber;
 		orig(self);
-		Utils._tempSSN = null;
+		Utils.__tempSSN = null;
 	}
 	private void FetchHappenSet(On.World.orig_LoadWorld orig, World self, int slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates)
 	{
 		orig(self, slugcatNumber, abstractRoomsList, swarmRooms, shelters, gates);
 		if (self.singleRoomWorld) return;
-		_temp_World = self;
+		__temp_World = self;
 		try
 		{
 			CurrentSet = HappenSet.TryCreate(self);
@@ -229,7 +225,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		{
 			Logger.LogError($"Could not create a happenset: {e}");
 		}
-		_temp_World = null;
+		__temp_World = null;
 	}
 	/// <summary>
 	/// Sends an Update call to all events for loaded world

@@ -1,5 +1,5 @@
 ﻿using Atmo.Body;
-using static Atmo.API;
+using static Atmo.API.V0;
 using static Atmo.Body.HappenTrigger;
 
 namespace Atmo.Gen;
@@ -12,10 +12,10 @@ public static partial class HappenBuilding
 	/// Populates a happen with callbacks. Called automatically by the constructor.
 	/// </summary>
 	/// <param name="happen"></param>
-	internal static void NewHappen(Happen happen)
+	internal static void __NewHappen(Happen happen)
 	{
-		if (MNH_invl is null) return;
-		foreach (Create_RawHappenBuilder? cb in MNH_invl)
+		if (__MNH_invl is null) return;
+		foreach (V0_Create_RawHappenBuilder? cb in __MNH_invl)
 		{
 			try
 			{
@@ -39,7 +39,7 @@ public static partial class HappenBuilding
 	/// <param name="rwg">game instance</param>
 	/// <param name="owner">Happen that requests the trigger.</param>
 	/// <returns>Resulting trigger; an always-active trigger if something went wrong.</returns>
-	internal static HappenTrigger CreateTrigger(
+	internal static HappenTrigger __CreateTrigger(
 		string id,
 		string[] args,
 		RainWorldGame rwg,
@@ -48,8 +48,8 @@ public static partial class HappenBuilding
 		HappenTrigger? res = null;
 		//res = DefaultTrigger(id, args, rwg, owner);
 
-		if (MNT_invl is null) goto finish;
-		foreach (Create_RawTriggerFactory? cb in MNT_invl)
+		if (__MNT_invl is null) goto finish;
+		foreach (V0_Create_RawTriggerFactory? cb in __MNT_invl)
 		{
 			if (res is not null) break;
 			try

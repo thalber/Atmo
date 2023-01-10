@@ -48,7 +48,7 @@ For a list of triggers you can use out of the box, see [this reference](builtins
 
 ## Custom behaviours
 
-You can register your own triggers and behaviour from your code mod via Atmo's [API](../src/API.cs). API documentation can be found [here](API.md).
+You can register your own triggers and behaviour from your code mod via Atmo's [API](../src/API/V0.cs). API documentation can be found [here](API.md).
 
 ## Additional notes
 

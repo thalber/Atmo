@@ -75,8 +75,8 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			}
 			if (value.StartsWith("$"))
 			{
-				int? ss = CurrentSaveslot;
-				int? ch = CurrentCharacter;
+				int? ss = __CurrentSaveslot;
+				int? ch = __CurrentCharacter;
 				plog.DbgVerbose($"Linking variable {value}: {ss}, {ch}");
 				if (ss is null)
 				{
@@ -107,7 +107,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			if (_payload is not null) { _payload.Str = value; }
 			else
 			{
-				Coerce_Str(in value, out _i32, out _f32, out _bool, out _vec, out _);
+				__Coerce_Str(in value, out _i32, out _f32, out _bool, out _vec, out _);
 				_str = value;
 			}
 		}
@@ -123,7 +123,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 
 			if (_readonly) return;
 			if (_payload is not null) { _payload.I32 = value; return; }
-			Coerce_I32(in value, out _str, out _f32, out _bool, out _vec);
+			__Coerce_I32(in value, out _str, out _f32, out _bool, out _vec);
 			_i32= value;
 			DataType = ArgType.INTEGER;
 		}
@@ -138,7 +138,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		{
 			if (_readonly) return;
 			if (_payload is not null) { _payload.F32 = value; return; }
-			Coerce_F32(in value, out _str, out _i32, out _bool, out _vec);
+			__Coerce_F32(in value, out _str, out _i32, out _bool, out _vec);
 			_f32 = value;
 			DataType = ArgType.DECIMAL;
 		}
@@ -153,7 +153,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		{
 			if (_readonly) return;
 			if (_payload is not null) { _payload.Bool = value; return; }
-			Coerce_Bool(in value, out _str, out _i32, out _f32, out _vec);
+			__Coerce_Bool(in value, out _str, out _i32, out _f32, out _vec);
 			_bool = value;
 			DataType = ArgType.BOOLEAN;
 		}
@@ -169,7 +169,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		{
 			if (_readonly) return;
 			if (_payload is not null) { _payload.Vec = value; return; }
-			Coerce_Vec(in value, out _str, out _i32, out _f32, out _bool);
+			__Coerce_Vec(in value, out _str, out _i32, out _f32, out _bool);
 			_vec = value;
 			DataType = ArgType.VECTOR;
 		}
@@ -412,7 +412,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		else
 		{
 			_str = orig;
-			Coerce_Str(_str, out _i32, out _f32, out _bool, out _vec, out bool asv);
+			__Coerce_Str(_str, out _i32, out _f32, out _bool, out _vec, out bool asv);
 			DataType = asv ? ArgType.VECTOR : ArgType.STRING;
 		}
 		_str ??= string.Empty;

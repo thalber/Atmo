@@ -1,6 +1,7 @@
 ﻿using DC = DevConsole;
 using CMD = DevConsole.Commands;
 using DCLI = DevConsole.GameConsole;
+using Atmo.API;
 
 namespace Atmo;
 
@@ -75,7 +76,7 @@ internal static class ConsoleFace
 			showhelp();
 			return;
 		}
-		Arg target = VarRegistry.GetVar(args[1], CurrentSaveslot ?? -1, CurrentCharacter ?? -1);
+		Arg target = VarRegistry.GetVar(args[1], __CurrentSaveslot ?? -1, __CurrentCharacter ?? -1);
 		if (args.AtOr(0, "get") is "get")
 		{
 			DCLI.WriteLine(target.ToString());
@@ -107,7 +108,7 @@ internal static class ConsoleFace
 		{
 			if (args[0] is "call")
 			{
-				foreach (string name in API.namedMetafuncs.Keys) yield return name;
+				foreach (string name in __namedMetafuncs.Keys) yield return name;
 			}
 			yield break;
 		}
@@ -140,13 +141,13 @@ internal static class ConsoleFace
 		{
 		case "list":
 		{
-			DCLI.WriteLine($"Registered metafunctions: [ {API.namedMetafuncs.Keys.Stitch()} ]");
+			DCLI.WriteLine($"Registered metafunctions: [ {__namedMetafuncs.Keys.Stitch()} ]");
 			break;
 		}
 		case "call":
 		{
-			int ss = CurrentSaveslot ?? -1,
-				ch = CurrentCharacter ?? -1;
+			int ss = __CurrentSaveslot ?? -1,
+				ch = __CurrentCharacter ?? -1;
 			if (args.Length < 3)
 			{
 				NotifyArgsMissing(MetafunInv_run, "name", "input");

@@ -230,7 +230,7 @@ public partial class HappenTrigger
 		}
 		public override void Update()
 		{
-			tar ??= owner?.set.AllHappens.FirstOrDefault(x => x.name == tarname);
+			tar ??= owner?.Set.AllHappens.FirstOrDefault(x => x.name == tarname);
 			if (tar is null) return;
 			if (tar.Active != tarWasOn)
 			{

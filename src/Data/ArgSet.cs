@@ -11,7 +11,7 @@ namespace Atmo.Data;
 ///		a dictionary-based index of named args. All args are created with linkage. 
 /// </para>
 /// <para>
-///		This class is typically used by delegates in <see cref="API"/>,
+///		This class is typically used by delegates in <see cref="Atmo.API"/>,
 ///		although nothing stops a user from applying it in an unrelated context.
 ///		Use of ArgSet over simple string arrays was enforced to ensure 
 ///		consistent argument syntax in various <see cref="Happen"/> actions.

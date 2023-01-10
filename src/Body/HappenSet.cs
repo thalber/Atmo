@@ -48,7 +48,7 @@ public sealed class HappenSet
 	/// </summary>
 	/// <param name="world">World to be bound to.</param>
 	/// <param name="file">File to read contents from. New instance stays blank if this is null.</param>
-	internal HappenSet(World world, IO.FileInfo? file = null)
+	public HappenSet(World world, IO.FileInfo? file = null)
 	{
 		BangBang(world, nameof(world));
 		this.world = world;
@@ -353,7 +353,7 @@ public sealed class HappenSet
 		foreach (Happen? ha in res.AllHappens)
 		{
 			plog.LogDebug($"{ha.name}: switching ownership");
-			ha.set = res;
+			ha.Set = res;
 			plog.DbgVerbose(res.GetRoomsForHappen(ha).Stitch());
 		}
 		plog.DbgVerbose(res.GetHappensForRoom("SU_S04").Select(x => x.name).Stitch());
