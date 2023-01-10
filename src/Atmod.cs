@@ -80,10 +80,6 @@ public sealed partial class Atmod : BaseUnityPlugin
 		log_verbose = Config.Bind(section: CFG_LOGGING, key: "verbose", defaultValue: true, description: "Enable more verbose logging. Can create clutter.");
 		try
 		{
-			if (RW is not null)
-			{
-				int something = RW.options.resolution;
-			}
 			On.AbstractRoom.Update += RunHappensAbstUpd;
 			On.RainWorldGame.Update += DoBodyUpdates;
 			On.Room.Update += RunHappensRealUpd;
