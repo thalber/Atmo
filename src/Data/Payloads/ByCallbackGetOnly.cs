@@ -87,11 +87,30 @@ public struct ByCallbackGetOnly : IArgPayload
 			value = (T)Convert.ChangeType(I32, typeof(T));
 		};
 	}
+
+	public void GetExtEnum<T>(out T? value) where T : ExtEnumBase
+	{
+		if (ExtEnumBase.TryParse(typeof(T), Str, out object res))
+		{
+			value = (T)res;
+		}
+		else
+		{
+			var ent = ExtEnumBase.GetExtEnumType(typeof(T)).GetEntry(I32);
+			value = ent is null ? null : (T)ExtEnumBase.Parse(typeof(T), ent, true);
+		}
+	}
+
 	/// <inheritdoc/>
 	public void SetEnum<T>(in T value) where T : Enum
 	{
-		#warning notsupported revise
+#warning notsupported revise
 		return;
+	}
+
+	public void SetExtEnum<T>(in T value) where T : ExtEnumBase
+	{
+
 	}
 
 	/// <inheritdoc/>

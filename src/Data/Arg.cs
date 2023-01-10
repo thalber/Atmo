@@ -76,7 +76,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			if (value.StartsWith("$"))
 			{
 				int? ss = __CurrentSaveslot;
-				int? ch = __CurrentCharacter;
+				SlugcatStats.Name? ch = __CurrentCharacter;
 				plog.DbgVerbose($"Linking variable {value}: {ss}, {ch}");
 				if (ss is null)
 				{
@@ -84,7 +84,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 					Str = value;
 					return;
 				}
-				_payload = VarRegistry.GetVar(value.Substring(1), ss.Value, ch ?? -1);
+				_payload = VarRegistry.GetVar(value.Substring(1), ss.Value, ch ?? __slugnameNotFound);
 				//DataType = ArgType.VAR;
 			}
 			else
@@ -124,7 +124,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			if (_readonly) return;
 			if (_payload is not null) { _payload.I32 = value; return; }
 			__Coerce_I32(in value, out _str, out _f32, out _bool, out _vec);
-			_i32= value;
+			_i32 = value;
 			DataType = ArgType.INTEGER;
 		}
 	}
@@ -200,9 +200,36 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		where T : Enum
 	{
 		if (_readonly) return;
+		//BangBang(value);
 		if (_payload is not null) { _payload.SetEnum(value); return; }
-		_str = value.ToString();
 		I32 = (int)Convert.ChangeType(value, typeof(int));
+		_str = value.ToString();
+	}
+	/// <inheritdoc/>
+	public void GetExtEnum<T>(out T? value) where T : ExtEnumBase
+	{
+		if (_payload is not null)
+		{
+			_payload.GetExtEnum(out value);
+			return;
+		}
+		if (ExtEnumBase.TryParse(typeof(T), Str, out object res))
+		{
+			value = (T)res;
+		}
+		else
+		{
+			var ent = ExtEnumBase.GetExtEnumType(typeof(T)).GetEntry(I32);
+			value = ent is null ? null : (T)ExtEnumBase.Parse(typeof(T), ent, true);
+		}
+	}
+	/// <inheritdoc/>
+	public void SetExtEnum<T>(in T value) where T : ExtEnumBase
+	{
+		if (_readonly) return;
+		//BangBang(value);
+		I32 = value?.Index ?? -1;
+		_str = value?.ToString() ?? "";
 	}
 	/// <summary>
 	/// converts current float value into frames assuming it was seconds: (int)(F32*40f).

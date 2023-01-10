@@ -94,7 +94,9 @@ public sealed partial class Atmod : BaseUnityPlugin
 		}
 		try
 		{
+#if false
 			ConsoleFace.Apply();
+#endif
 		}
 		catch (Exception ex)
 		{
@@ -118,6 +120,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		dying = true;
 		try
 		{
+			Utils.__slugnameNotFound = new(SLUG_NOT_FOUND, true);
 			//On.World.ctor -= FetchHappenSet;
 			On.Room.Update -= RunHappensRealUpd;
 			On.RainWorldGame.Update -= DoBodyUpdates;
@@ -208,11 +211,11 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <param name="self"></param>
 	private void SetTempSSN(On.OverWorld.orig_LoadFirstWorld orig, OverWorld self)
 	{
-		Utils.__tempSSN = self.PlayerCharacterNumber;
+		Utils.__tempSlugName = self.PlayerCharacterNumber;
 		orig(self);
-		Utils.__tempSSN = null;
+		Utils.__tempSlugName = null;
 	}
-	private void FetchHappenSet(On.World.orig_LoadWorld orig, World self, int slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates)
+	private void FetchHappenSet(On.World.orig_LoadWorld orig, World self, SlugcatStats.Name slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates)
 	{
 		orig(self, slugcatNumber, abstractRoomsList, swarmRooms, shelters, gates);
 		if (self.singleRoomWorld) return;

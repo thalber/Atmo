@@ -1,6 +1,6 @@
 ﻿using Atmo.Helpers;
 using NamedVars = System.Collections.Generic.Dictionary<string, Atmo.Data.Arg>;
-using Save = Atmo.Helpers.VT<int, int>;
+using Save = Atmo.Helpers.VT<int, SlugcatStats.Name>;
 using SerDict = System.Collections.Generic.Dictionary<string, object>;
 
 namespace Atmo.Data;
@@ -25,7 +25,7 @@ public static partial class VarRegistry
 	/// <summary>
 	/// <see cref="DeathPersistentSaveData"/> hash to slugcat number.
 	/// </summary>
-	private static readonly Dictionary<int, int> __DPSD_Slug = new();
+	private static readonly Dictionary<int, SlugcatStats.Name> __DPSD_Slug = new();
 	internal const string PREFIX_VOLATILE = "v_";
 	internal const string PREFIX_GLOBAL = "g_";
 	internal const string PREFIX_PERSISTENT = "p_";
@@ -107,9 +107,9 @@ public static partial class VarRegistry
 	private static void __WipeSavestate(
 		On.PlayerProgression.orig_WipeSaveState orig,
 		PlayerProgression self,
-		int saveStateNumber)
+		SlugcatStats.Name @char)
 	{
-		Save save = MakeSD(__CurrentSaveslot ?? -1, saveStateNumber);
+		Save save = MakeSD(__CurrentSaveslot ?? -1, @char);
 		try
 		{
 			plog.LogDebug($"Wiping data for save {save}");
@@ -119,7 +119,7 @@ public static partial class VarRegistry
 		{
 			plog.LogError(__ErrorMessage(Site.HookWipe, $"Failed to wipe saveslot {save}", ex));
 		}
-		orig(self, saveStateNumber);
+		orig(self, @char);
 	}
 	private static void __WipeAll(
 		On.PlayerProgression.orig_WipeAll orig,
@@ -149,7 +149,7 @@ public static partial class VarRegistry
 	private static void __RegDPSD(
 		On.DeathPersistentSaveData.orig_ctor orig,
 		DeathPersistentSaveData self,
-		int slugcat)
+		SlugcatStats.Name slugcat)
 	{
 		orig(self, slugcat);
 		__DPSD_Slug.Set(self.GetHashCode(), slugcat);
@@ -274,13 +274,14 @@ public static partial class VarRegistry
 	/// <param name="saveslot">Save slot to look up data from (<see cref="RainWorld"/>.options.saveSlot for current)</param>
 	/// <param name="character">Current character. 0 for survivor, 1 for monk, 2 for hunter.</param>
 	/// <returns>Variable requested; if there was no variable with given name before, GetVar creates a blank one from an empty string.</returns>
-	public static Arg GetVar(string name, int saveslot, int character = -1)
+	public static Arg GetVar(string name, int saveslot, SlugcatStats.Name character = null!)
 	{
+		character ??= __slugnameNotFound;
 		BangBang(name, nameof(name));
 		Arg? res;
 		if (
-			name.StartsWith("$") 
-			&& 
+			name.StartsWith("$")
+			&&
 			(res = GetMetaFunction(name.Substring(1), saveslot, character)) is not null)
 			return res;
 		if ((res = GetSpecial(name)) is not null)
@@ -333,7 +334,7 @@ public static partial class VarRegistry
 	}
 	internal static void __WriteGlobal(int slot)
 	{
-		IO.DirectoryInfo dir = new(SaveFolder(new(slot, -1)));
+		IO.DirectoryInfo dir = new(SaveFolder(new(slot, __slugnameNotFound)));
 		IO.FileInfo fi = new(GlobalFile(slot));
 		try
 		{
@@ -420,7 +421,7 @@ public static partial class VarRegistry
 	/// </summary>
 	public static string SaveFile(in Save save, DataSection section)
 	{
-		return CombinePath(SaveFolder(save), $"{__SlugName(save.b)}_{section}.json");
+		return CombinePath(SaveFolder(save), $"{save.b.ToString()}_{section}.json");
 	}
 
 	/// <summary>
@@ -428,7 +429,7 @@ public static partial class VarRegistry
 	/// </summary>
 	public static string GlobalFile(int slot)
 	{
-		return CombinePath(SaveFolder(new(slot, -1)), "global.json");
+		return CombinePath(SaveFolder(new(slot, __slugnameNotFound)), "global.json");
 	}
 	#endregion pathbuild
 	/// <summary>
@@ -437,7 +438,7 @@ public static partial class VarRegistry
 	/// <param name="slot"></param>
 	/// <param name="char"></param>
 	/// <returns></returns>
-	public static Save MakeSD(int slot, int @char)
+	public static Save MakeSD(int slot, SlugcatStats.Name @char)
 	{
 		return new(slot, @char, "SaveData", "slot", "char");
 	}

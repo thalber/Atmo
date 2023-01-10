@@ -72,7 +72,7 @@ public static partial class HappenBuilding
 		bool enabled = false;
 		foreach (Arg arg in args)
 		{
-			arg.GetEnum(out SlugcatStats.Name name);
+			arg.GetExtEnum(out SlugcatStats.Name name);
 			if (name == rwg.GetStorySession.characterStats.name) enabled = true;
 		}
 		return new EventfulTrigger()
@@ -352,7 +352,7 @@ public static partial class HappenBuilding
 			__NotifyArgsMissing(TMake_VarEq, "varname/value");
 			return null;
 		}
-		Arg tar = VarRegistry.GetVar(args[0].Str, __CurrentSaveslot ?? -1, __CurrentCharacter ?? -1);
+		Arg tar = VarRegistry.GetVar(args[0].Str, __CurrentSaveslot ?? -1, __CurrentCharacter ?? __slugnameNotFound);
 		Arg val = args[1];
 		return new EventfulTrigger()
 		{
@@ -369,7 +369,7 @@ public static partial class HappenBuilding
 			__NotifyArgsMissing(TMake_VarNe, "varname/value");
 			return null;
 		}
-		Arg tar = VarRegistry.GetVar(args[0].Str, __CurrentSaveslot ?? -1, __CurrentCharacter ?? -1);
+		Arg tar = VarRegistry.GetVar(args[0].Str, __CurrentSaveslot ?? -1, __CurrentCharacter ?? __slugnameNotFound);
 		Arg val = args[1];
 		return new EventfulTrigger()
 		{
@@ -386,7 +386,7 @@ public static partial class HappenBuilding
 			__NotifyArgsMissing(TMake_VarMatch, "varname/pattern");
 			return null;
 		}
-		Arg tar = VarRegistry.GetVar(args[0].Str, __CurrentSaveslot ?? -1, __CurrentCharacter ?? -1);
+		Arg tar = VarRegistry.GetVar(args[0].Str, __CurrentSaveslot ?? -1, __CurrentCharacter ?? __slugnameNotFound);
 		Arg val = args[1];
 		TXT.Regex? matcher = null;
 		string? prev_val = null;
@@ -622,11 +622,12 @@ public static partial class HappenBuilding
 			__NotifyArgsMissing(Make_SoundLoop, "soundid");
 			return;
 		}
-		if (!TryParseEnum(args[0].Str, out SoundID soundid))
+		if (!SoundID.TryParse(typeof(SoundID), args[0].Str, out object r_soundid))
 		{
 			__NotifyArgsMissing(Make_SoundLoop, "soundid");
 			return;
 		}
+		SoundID soundid = (SoundID)r_soundid;
 		Arg
 			sid = args[0],
 			vol = args["vol", "volume"] ?? 1f,
@@ -674,7 +675,7 @@ public static partial class HappenBuilding
 			//lazy enum parsing
 			if (sid.Str != lastSid)
 			{
-				sid.GetEnum(out soundid);
+				sid.GetExtEnum(out soundid);
 			}
 			lastSid = sid.Str;
 			if (!ha.Active) soundloops.Clear();
@@ -688,12 +689,13 @@ public static partial class HappenBuilding
 			return;
 		}
 
-		if (!TryParseEnum(args[0].Str, out SoundID soundid))
+		if (!ExtEnumBase.TryParse(typeof(SoundID), args[0].Str, out object objsid))
 		{
 			plog.LogError($"Happen {ha.name}: sound action: " +
 				$"Invalid SoundID ({args[0]})");
 			return;
 		}
+		SoundID soundid = (SoundID)objsid;
 		Arg sid = args[0];
 		string lastSid = sid.Str;
 		int cooldown = args["cd", "cooldown"]?.SecAsFrames ?? 2,
@@ -724,7 +726,7 @@ public static partial class HappenBuilding
 			if (counter > 0) counter--;
 			if (sid.Str != lastSid)
 			{
-				sid.GetEnum(out soundid);
+				sid.GetExtEnum(out soundid);
 			}
 			lastSid = sid.Str;
 		};
@@ -901,7 +903,7 @@ public static partial class HappenBuilding
 			argv = args[1],
 			continuous = args.AtOr(2, false),
 			forceType = args["dt", "datatype", "format"] ?? nameof(ArgType.STRING),
-			target = VarRegistry.GetVar(argn.Str, __CurrentSaveslot ?? 0, __CurrentCharacter ?? 0)
+			target = VarRegistry.GetVar(argn.Str, __CurrentSaveslot ?? 0, __CurrentCharacter ?? __slugnameNotFound)
 			;
 		forceType.GetEnum(out ArgType datatype);
 		string? dt_last_str = forceType.Str;
@@ -941,13 +943,13 @@ public static partial class HappenBuilding
 		//do not document:
 		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite);
 	}
-	private static IArgPayload? MMake_AppFound(string text, int ss, int ch)
+	private static IArgPayload? MMake_AppFound(string text, int ss, SlugcatStats.Name ch)
 	{
 		uint.TryParse(text, out var id);
 		var resr = Steamworks.SteamApps.BIsSubscribedApp(new(id));
 		return Arg.Coerce(resr);
 	}
-	private static IArgPayload? MMake_ScreenRes(string text, int ss, int ch)
+	private static IArgPayload? MMake_ScreenRes(string text, int ss, SlugcatStats.Name ch)
 	{
 		return new ByCallbackGetOnly()
 		{
@@ -964,7 +966,7 @@ public static partial class HappenBuilding
 
 		};
 	}
-	private static IArgPayload? MMake_CurrentRoom(string text, int ss, int ch)
+	private static IArgPayload? MMake_CurrentRoom(string text, int ss, SlugcatStats.Name ch)
 	{
 		if (!int.TryParse(
 			text,
@@ -986,7 +988,7 @@ public static partial class HappenBuilding
 		};
 	}
 
-	private static IArgPayload? MMake_WWW(string text, int ss, int ch)
+	private static IArgPayload? MMake_WWW(string text, int ss, SlugcatStats.Name ch)
 	{
 		WWW? www = new WWW(text);
 		string? failed = null;
@@ -1007,7 +1009,7 @@ public static partial class HappenBuilding
 			}
 		};
 	}
-	private static IArgPayload? MMAke_FileRead(string text, int ss, int ch)
+	private static IArgPayload? MMAke_FileRead(string text, int ss, SlugcatStats.Name ch)
 	{
 		IO.FileInfo fi = new(text);
 		DateTime? lw = null;
@@ -1030,7 +1032,7 @@ public static partial class HappenBuilding
 			}
 		};
 	}
-	private static IArgPayload? MMake_FileReadWrite(string text, int ss, int ch)
+	private static IArgPayload? MMake_FileReadWrite(string text, int ss, SlugcatStats.Name ch)
 	{
 		plog.LogWarning($"CAUTION: {nameof(MMake_FileReadWrite)} DOES NO SAFETY CHECKS! Atmo developers are not responsible for any accidental damage by write");
 		IO.FileInfo file = new(text);
@@ -1074,7 +1076,7 @@ public static partial class HappenBuilding
 			prop_Str = new(ReadFromFile, WriteToFile)
 		};
 	}
-	private static IArgPayload? MMake_FMT(string text, int ss, int ch)
+	private static IArgPayload? MMake_FMT(string text, int ss, SlugcatStats.Name ch)
 	{
 		string[] bits = __FMT_Split.Split(text);
 		TXT.MatchCollection names = __FMT_Match.Matches(text);

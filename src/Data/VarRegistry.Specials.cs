@@ -19,7 +19,7 @@ public static partial class VarRegistry
 	/// <param name="saveslot">Save slot to look at</param>
 	/// <param name="character">Character to look at</param>
 	/// <returns></returns>
-	public static Arg? GetMetaFunction(string text, in int saveslot, in int character)
+	public static Arg? GetMetaFunction(string text, in int saveslot, in SlugcatStats.Name character)
 	{
 		TXT.Match _is;
 		if (!(_is = __Metaf_Sub.Match(text)).Success) return null;
@@ -51,7 +51,7 @@ public static partial class VarRegistry
 		return null;
 		//if (!(_is = FMT_Is.Match(text)).Success) return null;
 		//text = _is.Groups[1].Value;
-		
+
 	}
 	/// <summary>
 	/// Attempts fetching a special variable by name.

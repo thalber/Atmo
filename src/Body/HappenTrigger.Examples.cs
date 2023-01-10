@@ -330,7 +330,7 @@ public partial class HappenTrigger
 			BangBang(game, nameof(game));
 			foreach (Arg arg in args)
 			{
-				arg.GetEnum(out SlugcatStats.Name name);
+				arg.GetExtEnum(out SlugcatStats.Name? name);
 				if (name == game.GetStorySession.characterStats.name) enabled = true;
 			}
 		}

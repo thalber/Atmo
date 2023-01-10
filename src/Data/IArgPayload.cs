@@ -38,6 +38,10 @@ public interface IArgPayload
 	/// <typeparam name="T"></typeparam>
 	/// <param name="value"></param>
 	public void SetEnum<T>(in T value) where T : Enum;
+
+	public void GetExtEnum<T>(out T? value) where T : ExtEnumBase;
+
+	public void SetExtEnum<T>(in T value) where T : ExtEnumBase;
 	/// <summary>
 	/// Returns instance's initial data type.
 	/// </summary>

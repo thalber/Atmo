@@ -1,4 +1,8 @@
-﻿using DC = DevConsole;
+﻿//off until slime ports devconsole
+
+#if false
+
+using DC = DevConsole;
 using CMD = DevConsole.Commands;
 using DCLI = DevConsole.GameConsole;
 using Atmo.API;
@@ -7,7 +11,7 @@ namespace Atmo;
 
 internal static class ConsoleFace
 {
-	#region fields
+#region fields
 	private static ulong mfinv_uid;
 	private const string Help_AtmoVar = """
 		Invalid args!
@@ -19,7 +23,7 @@ internal static class ConsoleFace
 		atmo_metafunc list - lists all available metafunctions
 		atmo_metafunc call [name] [input] (print|save) (DECIMAL|INTEGER|VECTOR|BOOL|STRING?)=STRING - calls a specified metafunction with given input, and either prints result to console or stores it in a variable, using specified datatype. NOTE: Only the immediate result is stored, if result is dynamic, it will be discarded.
 		""";
-	#endregion;
+#endregion;
 	public static void Apply()
 	{
 		new CMD.CommandBuilder("atmo_var")
@@ -76,7 +80,7 @@ internal static class ConsoleFace
 			showhelp();
 			return;
 		}
-		Arg target = VarRegistry.GetVar(args[1], __CurrentSaveslot ?? -1, __CurrentCharacter ?? -1);
+		Arg target = VarRegistry.GetVar(args[1], __CurrentSaveslot ?? -1, __CurrentCharacter ?? __slugnameNotFound);
 		if (args.AtOr(0, "get") is "get")
 		{
 			DCLI.WriteLine(target.ToString());
@@ -146,8 +150,8 @@ internal static class ConsoleFace
 		}
 		case "call":
 		{
-			int ss = __CurrentSaveslot ?? -1,
-				ch = __CurrentCharacter ?? -1;
+			int ss = __CurrentSaveslot ?? -1;
+			SlugcatStats.Name ch = __CurrentCharacter ?? SlugcatStats.Name.Red;
 			if (args.Length < 3)
 			{
 				NotifyArgsMissing(MetafunInv_run, "name", "input");
@@ -186,3 +190,4 @@ internal static class ConsoleFace
 	}
 
 }
+#endif
