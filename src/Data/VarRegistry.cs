@@ -473,6 +473,7 @@ public static partial class VarRegistry
 		HookNormal,
 		HookPersistent,
 		Init,
+		InitSpecials,
 		Clear
 	}
 	#endregion

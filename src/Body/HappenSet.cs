@@ -58,10 +58,13 @@ public sealed class HappenSet
 		{
 			HappenParser.Parse(file, this, game);
 		}
+		else {
+			plog.LogWarning($"No atmo file found for {file?.FullName ?? "NULL"}, leaving blank");
+		}
 
 		//subregions as groups
 		Dictionary<string, List<string>> subContents = new();
-
+		
 		foreach (string sub in world.region.subRegions)
 		{
 			//int index = world.region.subRegions.IndexOf(sub);
@@ -76,11 +79,11 @@ public sealed class HappenSet
 		foreach ((string? sub, List<string>? rooms) in subContents)
 		{
 			InsertGroup(sub, rooms);
-			//plog.DbgVerbose($"{sub} :: {rooms.Stitch()}");
+			plog.DbgVerbose($"{sub} :: {rooms.Stitch()}");
 		}
-		// foreach (var g in RoomsToGroups.EnumerateRight()){
-		// 	plog.DbgVerbose($">>{g}: {RoomsToGroups.IndexFromRight(g).Stitch()}");
-		// }
+		foreach (var g in RoomsToGroups.EnumerateRight()){
+			plog.DbgVerbose($">>{g}: {RoomsToGroups.IndexFromRight(g).Stitch()}");
+		}
 	}
 	/// <summary>
 	/// Yields all rooms a given happen should be active in.

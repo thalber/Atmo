@@ -76,6 +76,9 @@ public static partial class VarRegistry
 			static int findKarmaCap()
 				=> FindRWG()?.GetStorySession?.saveState.deathPersistentSaveData.karmaCap ?? -1;
 			static int findClock() => FindRWG()?.world.rainCycle?.cycleLength ?? __temp_World?.rainCycle.cycleLength ?? -1;
+			try{
+
+
 			__SpecialVars.Add(tp, tp switch
 			{
 				SpVar.NONE => 0,
@@ -119,6 +122,10 @@ public static partial class VarRegistry
 				}),
 				_ => 0,
 			}); ;
+			}
+			catch (Exception ex){
+				plog.LogError(__ErrorMessage(Site.InitSpecials, $"Error registering a special: {tp}", ex));
+			}
 		}
 	}
 	internal static SpVar __SpecialForName(string name)

@@ -72,7 +72,7 @@ public static partial class HappenBuilding
 		bool enabled = false;
 		foreach (Arg arg in args)
 		{
-			arg.GetExtEnum(out SlugcatStats.Name name);
+			arg.GetExtEnum(out SlugcatStats.Name? name);
 			if (name == rwg.GetStorySession.characterStats.name) enabled = true;
 		}
 		return new EventfulTrigger()
@@ -627,7 +627,7 @@ public static partial class HappenBuilding
 			__NotifyArgsMissing(Make_SoundLoop, "soundid");
 			return;
 		}
-		SoundID soundid = (SoundID)r_soundid;
+		SoundID? soundid = (SoundID)r_soundid;
 		Arg
 			sid = args[0],
 			vol = args["vol", "volume"] ?? 1f,
@@ -695,7 +695,7 @@ public static partial class HappenBuilding
 				$"Invalid SoundID ({args[0]})");
 			return;
 		}
-		SoundID soundid = (SoundID)objsid;
+		SoundID? soundid = (SoundID)objsid;
 		Arg sid = args[0];
 		string lastSid = sid.Str;
 		int cooldown = args["cd", "cooldown"]?.SecAsFrames ?? 2,
@@ -714,7 +714,7 @@ public static partial class HappenBuilding
 			{
 				if (room.updateList[i] is Player p)
 				{
-					ChunkSoundEmitter? em = room.PlaySound(soundid, p.firstChunk, false, vol.F32, pitch.F32);
+					ChunkSoundEmitter? em = room.PlaySound(soundid ?? SoundID.HUD_Karma_Reinforce_Bump, p.firstChunk, false, vol.F32, pitch.F32);
 					counter = cooldown;
 					limit--;
 					return;

@@ -11,11 +11,11 @@ namespace Atmo.Helpers;
 public static partial class Utils
 {
 	#region fields
-	/// <summary>
-	/// Unsafe string allocator
-	/// </summary>
-	public static readonly Func<int, string> stralloc =
-		GetFn<Func<int, string>>(null, methodof<string>("InternalAllocateStr", BF_ALL_CONTEXTS_STATIC)!)!;
+	// /// <summary>
+	// /// Unsafe string allocator
+	// /// </summary>
+	// public static readonly Func<int, string> stralloc =
+	// 	GetFn<Func<int, string>>(null, methodof<string>("InternalAllocateStr", BF_ALL_CONTEXTS_STATIC)!)!;
 	#endregion
 	#region collections
 	/// <summary>
