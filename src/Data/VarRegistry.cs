@@ -25,12 +25,12 @@ public static partial class VarRegistry
 	/// <summary>
 	/// <see cref="DeathPersistentSaveData"/> hash to slugcat number.
 	/// </summary>
-	private static readonly Dictionary<int, int> DPSD_Slug = new();
+	private static readonly Dictionary<int, int> __DPSD_Slug = new();
 	internal const string PREFIX_VOLATILE = "v_";
 	internal const string PREFIX_GLOBAL = "g_";
 	internal const string PREFIX_PERSISTENT = "p_";
 	//internal const string PREFIX_FMT = "$FMT_";
-	internal static Arg Defarg => string.Empty;
+	internal static Arg __Defarg = string.Empty;
 	/// <summary>
 	/// Var sets per save. Key is saveslot number + character index.
 	/// </summary>
@@ -45,144 +45,144 @@ public static partial class VarRegistry
 	public static readonly NamedVars VarsVolatile = new();
 	#endregion
 	#region lifecycle
-	internal static void Clear()
+	internal static void __Clear()
 	{
 		plog.LogDebug("Clear VarRegistry hooks");
 		try
 		{
-			On.SaveState.LoadGame -= ReadNormal;
-			On.SaveState.SaveToString -= WriteNormal;
+			On.SaveState.LoadGame -= __ReadNormal;
+			On.SaveState.SaveToString -= __WriteNormal;
 
-			On.DeathPersistentSaveData.ctor -= RegDPSD;
-			On.DeathPersistentSaveData.FromString -= ReadPers;
-			On.DeathPersistentSaveData.SaveToString -= WritePers;
+			On.DeathPersistentSaveData.ctor -= __RegDPSD;
+			On.DeathPersistentSaveData.FromString -= __ReadPers;
+			On.DeathPersistentSaveData.SaveToString -= __WritePers;
 
-			On.PlayerProgression.WipeAll -= WipeAll;
-			On.PlayerProgression.WipeSaveState -= WipeSavestate;
+			On.PlayerProgression.WipeAll -= __WipeAll;
+			On.PlayerProgression.WipeSaveState -= __WipeSavestate;
 			foreach (int slot in VarsGlobal.Keys)
 			{
-				WriteGlobal(slot);
+				__WriteGlobal(slot);
 			}
 		}
 		catch (Exception ex)
 		{
-			plog.LogFatal(ErrorMessage(site: Site.Clear, message: "Unhandled exception", ex: ex));
+			plog.LogFatal(__ErrorMessage(site: Site.Clear, message: "Unhandled exception", ex: ex));
 		}
 	}
-	internal static void Init()
+	internal static void __Init()
 	{
 		plog.LogDebug("Init VarRegistry hooks");
 		try
 		{
-			FillSpecials();
+			__FillSpecials();
 
-			On.SaveState.LoadGame += ReadNormal;
-			On.SaveState.SaveToString += WriteNormal;
+			On.SaveState.LoadGame += __ReadNormal;
+			On.SaveState.SaveToString += __WriteNormal;
 
-			On.DeathPersistentSaveData.ctor += RegDPSD;
-			On.DeathPersistentSaveData.FromString += ReadPers;
-			On.DeathPersistentSaveData.SaveToString += WritePers;
+			On.DeathPersistentSaveData.ctor += __RegDPSD;
+			On.DeathPersistentSaveData.FromString += __ReadPers;
+			On.DeathPersistentSaveData.SaveToString += __WritePers;
 
-			On.PlayerProgression.WipeAll += WipeAll;
-			On.PlayerProgression.WipeSaveState += WipeSavestate;
+			On.PlayerProgression.WipeAll += __WipeAll;
+			On.PlayerProgression.WipeSaveState += __WipeSavestate;
 		}
 		catch (Exception ex)
 		{
-			plog.LogFatal(ErrorMessage(Site.Init, "Unhandled exception", ex));
+			plog.LogFatal(__ErrorMessage(Site.Init, "Unhandled exception", ex));
 		}
 
 	}
-
-	private static void TrackCycleLength(
+	#region hooks
+	private static void __TrackCycleLength(
 		On.RainCycle.orig_ctor orig,
 		RainCycle self,
 		World world,
 		float minutes)
 	{
 		orig(self, world, minutes);
-		SpecialVars[SpVar.cycletime].F32 = minutes * 60f;
-		plog.DbgVerbose($"Setting $cycletime to {SpecialVars[SpVar.cycletime]}");
+		__SpecialVars[SpVar.cycletime].F32 = minutes * 60f;
+		plog.DbgVerbose($"Setting $cycletime to {__SpecialVars[SpVar.cycletime]}");
 	}
 
-	private static void WipeSavestate(
+	private static void __WipeSavestate(
 		On.PlayerProgression.orig_WipeSaveState orig,
 		PlayerProgression self,
 		int saveStateNumber)
 	{
-		Save save = MakeSD(CurrentSaveslot ?? -1, saveStateNumber);
+		Save save = MakeSD(__CurrentSaveslot ?? -1, saveStateNumber);
 		try
 		{
 			plog.LogDebug($"Wiping data for save {save}");
-			EraseData(save);
+			__EraseData(save);
 		}
 		catch (Exception ex)
 		{
-			plog.LogError(ErrorMessage(Site.HookWipe, $"Failed to wipe saveslot {save}", ex));
+			plog.LogError(__ErrorMessage(Site.HookWipe, $"Failed to wipe saveslot {save}", ex));
 		}
 		orig(self, saveStateNumber);
 	}
-	private static void WipeAll(
+	private static void __WipeAll(
 		On.PlayerProgression.orig_WipeAll orig,
 		PlayerProgression self)
 	{
-		int ss = CurrentSaveslot ?? -1;
+		int ss = __CurrentSaveslot ?? -1;
 		try
 		{
 			plog.LogDebug($"Wiping data for slot {ss}");
 			foreach ((Save save, VarSet set) in VarsPerSave)
 			{
 				if (save.a != ss) continue;
-				EraseData(save);
+				__EraseData(save);
 				foreach (DataSection sec in Enum.GetValues(typeof(DataSection)))
 				{
-					set.FillFrom(null, sec);
+					set._FillFrom(null, sec);
 				}
 			}
 		}
 		catch (Exception ex)
 		{
-			plog.LogError(ErrorMessage(Site.HookWipe, $"Failed to wipe all saves for slot {ss}", ex));
+			plog.LogError(__ErrorMessage(Site.HookWipe, $"Failed to wipe all saves for slot {ss}", ex));
 		}
 		orig(self);
 	}
 
-	private static void RegDPSD(
+	private static void __RegDPSD(
 		On.DeathPersistentSaveData.orig_ctor orig,
 		DeathPersistentSaveData self,
 		int slugcat)
 	{
 		orig(self, slugcat);
-		DPSD_Slug.Set(self.GetHashCode(), slugcat);
+		__DPSD_Slug.Set(self.GetHashCode(), slugcat);
 	}
-	private static void ReadPers(
+	private static void __ReadPers(
 		On.DeathPersistentSaveData.orig_FromString orig,
 		DeathPersistentSaveData self,
 		string s)
 	{
 		try
 		{
-			int? ss = CurrentSaveslot;
+			int? ss = __CurrentSaveslot;
 			//int ch = CurrentCharacter ?? -1;
 			if (ss is null)
 			{
-				plog.LogError(ErrorMessage(Site.HookPersistent, "Could not find current saveslot", null));
+				plog.LogError(__ErrorMessage(Site.HookPersistent, "Could not find current saveslot", null));
 				return;
 			}
-			Save save = MakeSD(ss.Value, DPSD_Slug[self.GetHashCode()]);
+			Save save = MakeSD(ss.Value, __DPSD_Slug[self.GetHashCode()]);
 			plog.LogDebug($"Attempting to load persistent vars for save {save}");
-			SerDict? data = TryReadData(save, DataSection.Persistent);
+			SerDict? data = __TryReadData(save, DataSection.Persistent);
 			if (data is null) plog.LogDebug("Could not load file, varset will be empty");
 			VarsPerSave
 				.EnsureAndGet(save, () => new(save))
-				.FillFrom(data ?? new(), DataSection.Persistent);
+				._FillFrom(data ?? new(), DataSection.Persistent);
 		}
 		catch (Exception ex)
 		{
-			plog.LogError(ErrorMessage(Site.HookPersistent, "Error on read", ex));
+			plog.LogError(__ErrorMessage(Site.HookPersistent, "Error on read", ex));
 		}
 		orig(self, s);
 	}
-	private static string WritePers(
+	private static string __WritePers(
 		On.DeathPersistentSaveData.orig_SaveToString orig,
 		DeathPersistentSaveData self,
 		bool saveAsIfPlayerDied,
@@ -190,28 +190,28 @@ public static partial class VarRegistry
 	{
 		try
 		{
-			int? ss = CurrentSaveslot;
+			int? ss = __CurrentSaveslot;
 			if (ss is null)
 			{
-				plog.LogError(ErrorMessage(Site.HookPersistent, "Could not find current saveslot", null));
+				plog.LogError(__ErrorMessage(Site.HookPersistent, "Could not find current saveslot", null));
 				goto done;
 			}
-			Save save = MakeSD(ss.Value, DPSD_Slug[self.GetHashCode()]);
+			Save save = MakeSD(ss.Value, __DPSD_Slug[self.GetHashCode()]);
 			plog.LogDebug($"Attempting to write persistent vars for {save}");
 			SerDict? data = VarsPerSave
 				.EnsureAndGet(save, () => new(save))
-				.GetSer(DataSection.Normal);
-			TryWriteData(save, DataSection.Persistent, data);
+				._GetSer(DataSection.Normal);
+			__TryWriteData(save, DataSection.Persistent, data);
 		}
 		catch (Exception ex)
 		{
-			plog.LogError(ErrorMessage(Site.HookPersistent, "Error on write", ex));
+			plog.LogError(__ErrorMessage(Site.HookPersistent, "Error on write", ex));
 		}
 	done:
 		return orig(self, saveAsIfPlayerDied, saveAsIfPlayerQuit);
 	}
 
-	private static void ReadNormal(
+	private static void __ReadNormal(
 		On.SaveState.orig_LoadGame orig,
 		SaveState self,
 		string str,
@@ -220,51 +220,52 @@ public static partial class VarRegistry
 		orig(self, str, game);
 		try
 		{
-			int? ss = CurrentSaveslot;
+			int? ss = __CurrentSaveslot;
 			if (ss is null)
 			{
-				plog.LogError(ErrorMessage(Site.HookNormal, "Could not find current saveslot", null));
+				plog.LogError(__ErrorMessage(Site.HookNormal, "Could not find current saveslot", null));
 				return;
 			}
 			Save save = MakeSD(ss.Value, self.saveStateNumber);
 			plog.LogDebug($"Attempting to load non-persistent vars for save {save}");
-			SerDict? data = TryReadData(save, DataSection.Normal);
+			SerDict? data = __TryReadData(save, DataSection.Normal);
 			if (data is null) plog.LogDebug("Could not load file, varset will be empty");
 			VarsPerSave
 				.EnsureAndGet(save, () => new(save))
-				.FillFrom(data ?? new(), DataSection.Normal);
+				._FillFrom(data ?? new(), DataSection.Normal);
 		}
 		catch (Exception ex)
 		{
-			plog.LogError(ErrorMessage(Site.HookNormal, "Error on read", ex));
+			plog.LogError(__ErrorMessage(Site.HookNormal, "Error on read", ex));
 		}
 	}
-	private static string WriteNormal(
+	private static string __WriteNormal(
 		On.SaveState.orig_SaveToString orig,
 		SaveState self)
 	{
 		try
 		{
-			int? ss = CurrentSaveslot;
+			int? ss = __CurrentSaveslot;
 			if (ss is null)
 			{
-				plog.LogError(ErrorMessage(Site.HookNormal, "Could not find current saveslot", null));
+				plog.LogError(__ErrorMessage(Site.HookNormal, "Could not find current saveslot", null));
 				goto done;
 			}
 			Save save = MakeSD(ss.Value, self.saveStateNumber);
 			SerDict? data = VarsPerSave
 				.EnsureAndGet(save, () => new(save))
-				.GetSer(DataSection.Normal);
-			TryWriteData(save, DataSection.Normal, data);
+				._GetSer(DataSection.Normal);
+			__TryWriteData(save, DataSection.Normal, data);
 		}
 		catch (Exception ex)
 		{
-			plog.LogError(ErrorMessage(Site.HookNormal, "Error on write", ex));
+			plog.LogError(__ErrorMessage(Site.HookNormal, "Error on write", ex));
 		}
 	done:
 		return orig(self);
 	}
-	#endregion
+	#endregion hooks
+	#endregion lifecycle
 	#region methods
 	/// <summary>
 	/// Fetches a stored variable. Creates a new one if does not exist. You can use prefixes to request death-persistent ("p_") and global ("g_") variables. Persistent variables follow the lifecycle of <see cref="DeathPersistentSaveData"/>; global variables are shared across the entire saveslot.
@@ -294,15 +295,15 @@ public static partial class VarRegistry
 				.EnsureAndGet(saveslot, () =>
 				{
 					plog.LogDebug("No global record found, creating");
-					return ReadGlobal(saveslot);
+					return __ReadGlobal(saveslot);
 				})
-				.EnsureAndGet(name, () => Defarg);
+				.EnsureAndGet(name, () => __Defarg);
 		}
 		else if (name.StartsWith(PREFIX_VOLATILE))
 		{
 			name = name.Substring(PREFIX_VOLATILE.Length);
 			return VarsVolatile
-				.EnsureAndGet(name, () => Defarg);
+				.EnsureAndGet(name, () => __Defarg);
 		}
 		Save save = MakeSD(saveslot, character);
 		return VarsPerSave
@@ -310,7 +311,7 @@ public static partial class VarRegistry
 			.GetVar(name);
 	}
 	#region filemanip
-	internal static NamedVars ReadGlobal(int slot)
+	internal static NamedVars __ReadGlobal(int slot)
 	{
 		NamedVars res = new();
 		IO.FileInfo fi = new(GlobalFile(slot));
@@ -326,11 +327,11 @@ public static partial class VarRegistry
 		}
 		catch (IO.IOException ex)
 		{
-			plog.LogError(ErrorMessage(Site.ReadData, $"Could not read global vars for slot {slot}", ex));
+			plog.LogError(__ErrorMessage(Site.ReadData, $"Could not read global vars for slot {slot}", ex));
 		}
 		return res;
 	}
-	internal static void WriteGlobal(int slot)
+	internal static void __WriteGlobal(int slot)
 	{
 		IO.DirectoryInfo dir = new(SaveFolder(new(slot, -1)));
 		IO.FileInfo fi = new(GlobalFile(slot));
@@ -346,10 +347,10 @@ public static partial class VarRegistry
 		}
 		catch (IO.IOException ex)
 		{
-			plog.LogError(ErrorMessage(Site.WriteData, $"Could not write global vars for slot {slot}", ex));
+			plog.LogError(__ErrorMessage(Site.WriteData, $"Could not write global vars for slot {slot}", ex));
 		}
 	}
-	internal static SerDict? TryReadData(Save save, DataSection section)
+	internal static SerDict? __TryReadData(Save save, DataSection section)
 	{
 		IO.FileInfo fi = new(SaveFile(save, section));
 		if (!fi.Exists) return null;
@@ -360,11 +361,11 @@ public static partial class VarRegistry
 		}
 		catch (Exception ex)
 		{
-			plog.LogError(ErrorMessage(Site.ReadData, $"error reading {section} for slot {save} ({fi.FullName})", ex));
+			plog.LogError(__ErrorMessage(Site.ReadData, $"error reading {section} for slot {save} ({fi.FullName})", ex));
 			return null;
 		}
 	}
-	internal static bool TryWriteData(Save save, DataSection section, SerDict dict)
+	internal static bool __TryWriteData(Save save, DataSection section, SerDict dict)
 	{
 		IO.DirectoryInfo dir = new(SaveFolder(save));
 		IO.FileInfo file = new(SaveFile(save, section));
@@ -378,11 +379,11 @@ public static partial class VarRegistry
 		}
 		catch (Exception ex)
 		{
-			plog.LogError(ErrorMessage(Site.WriteData, $"error writing {section} for slot {save} ({file.FullName})", ex));
+			plog.LogError(__ErrorMessage(Site.WriteData, $"error writing {section} for slot {save} ({file.FullName})", ex));
 			return false;
 		}
 	}
-	internal static void EraseData(in Save save)
+	internal static void __EraseData(in Save save)
 	{
 		foreach (DataSection sec in Enum.GetValues(typeof(DataSection)))
 		{
@@ -393,7 +394,7 @@ public static partial class VarRegistry
 			}
 			catch (IO.IOException ex)
 			{
-				plog.LogError(ErrorMessage(Site.WipeData, $"Error erasing file for {save}", ex));
+				plog.LogError(__ErrorMessage(Site.WipeData, $"Error erasing file for {save}", ex));
 			}
 		}
 	}
@@ -406,7 +407,6 @@ public static partial class VarRegistry
 	{
 		return VarsPerSave.EnsureAndGet(save, () => new(save));
 	}
-
 	/// <summary>
 	/// Returns the folder a given save should reside in.
 	/// </summary>
@@ -420,7 +420,7 @@ public static partial class VarRegistry
 	/// </summary>
 	public static string SaveFile(in Save save, DataSection section)
 	{
-		return CombinePath(SaveFolder(save), $"{SlugName(save.b)}_{section}.json");
+		return CombinePath(SaveFolder(save), $"{__SlugName(save.b)}_{section}.json");
 	}
 
 	/// <summary>
@@ -442,7 +442,7 @@ public static partial class VarRegistry
 		return new(slot, @char, "SaveData", "slot", "char");
 	}
 
-	private static string ErrorMessage(Site site, string message, Exception? ex)
+	private static string __ErrorMessage(Site site, string message, Exception? ex)
 	{
 		return $"{nameof(VarRegistry)}: {site}: {message}\nException: {ex?.ToString() ?? "NULL"}";
 	}

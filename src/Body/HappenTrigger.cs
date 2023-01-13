@@ -1,6 +1,6 @@
 ﻿namespace Atmo.Body;
 /// <summary>
-/// Base class for triggers. Triggers determine when happens are allowed to run; They are composed into a <see cref="PredicateInlay"/> instance, that acts as a logical expression tree. Derive from this class to define your custom trigger to be used in <see cref="API.AddNamedTrigger(string, Atmo.API.Create_NamedTriggerFactory, bool)"/> overloads, or use the event-driven child <see cref="EventfulTrigger"/> if you prefer composition with callbacks here as well.
+/// Base class for triggers. Triggers determine when happens are allowed to run; They are composed into a <see cref="PredicateInlay"/> instance, that acts as a logical expression tree. Derive from this class to define your custom trigger to be used in <see cref="API.V0.AddNamedTrigger"/> overloads, or use the event-driven child <see cref="EventfulTrigger"/> if you prefer composition with callbacks here as well.
 /// <para>
 /// This expression: <code> WHEN: (maybe 0.7 OR karma 1 2 3) AND fry 25 5 </code> will be turned into a set of happentrigger children that do the following:
 /// <list type="number">
@@ -26,8 +26,8 @@ public abstract partial class HappenTrigger
 	/// <summary>
 	/// Provide an owning happen if you need to. You can provide null or omit the parameter if you do not require it.
 	/// </summary>
-	/// <param name="ow">The happen instance that owns this trigger. Can be null.</param>
-	public HappenTrigger(Happen? ow = null) { owner = ow; }
+	/// <param name="owner">The happen instance that owns this trigger. Can be null.</param>
+	public HappenTrigger(Happen? owner = null) { this.owner = owner; }
 	/// <summary>
 	/// Answers if a trigger is currently ready. This may be called up to once per frame.
 	/// </summary>
@@ -61,56 +61,6 @@ public abstract partial class HappenTrigger
 		/// The required rain world instance.
 		/// </summary>
 		protected readonly RainWorldGame game;
-	}
-	/// <summary>
-	/// An event-driven trigger. Does not inherit <see cref="NeedsRWG"/>, intended to be used with lambdas and local capture for state. The following example's factory uses that to create an instance that will, every frame, roll a number between 0 and 5, and the trigger will be active if it rolled 0 that frame:
-	/// <code>
-	/// <see cref="API.Create_NamedTriggerFactory"/> fac = (args, game, happ) =>
-	///	{
-	///		int x = 6;
-	///		int c = 0;
-	///		return new <see cref="EventfulTrigger"/>()
-	///		{
-	///			On_Update = 
-	///				() => { c = <see cref="UnityEngine.Random"/>.Range(0, x); },
-	///			On_ShouldRunUpdates =
-	///				() => c is 0,
-	///		};
-	///	}
-	/// </code>
-	/// <see cref="EventfulTrigger.ShouldRunUpdates"/> defaults to false if callback is null.
-	/// </summary>
-	public sealed class EventfulTrigger : HappenTrigger
-	{
-		/// <summary>
-		/// Attach to this to fill in the behaviour of <see cref="EvalResults(bool)"/>.
-		/// </summary>
-		public Action<bool>? On_EvalResults;
-		/// <summary>
-		/// Attach to this to fill in the behaviour of <see cref="Update"/>.
-		/// </summary>
-		public Action? On_Update;
-		/// <summary>
-		/// Attach to this to fill in the behaviour of <see cref="ShouldRunUpdates"/>. False if null.
-		/// </summary>
-		public Func<bool>? On_ShouldRunUpdates;
-		/// <inheritdoc/>
-		public override void EvalResults(bool res)
-		{
-			On_EvalResults?.Invoke(res);
-		}
-
-		/// <inheritdoc/>
-		public override void Update()
-		{
-			On_Update?.Invoke();
-		}
-
-		/// <inheritdoc/>
-		public override bool ShouldRunUpdates()
-		{
-			return On_ShouldRunUpdates?.Invoke() ?? false;
-		}
 	}
 
 }

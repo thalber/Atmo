@@ -1,4 +1,5 @@
 ﻿using Atmo.Data.Payloads;
+//using static Atmo.API.V0;
 
 using NamedVars = System.Collections.Generic.Dictionary<Atmo.Data.VarRegistry.SpVar, Atmo.Data.Arg>;
 
@@ -7,24 +8,31 @@ namespace Atmo.Data;
 public static partial class VarRegistry
 {
 	#region fields
-	internal static readonly NamedVars SpecialVars = new();
-	private static readonly TXT.Regex Metaf_Sub = new("^\\w+(\\s.+$|$)");
-	private static readonly TXT.Regex Metaf_Name = new("^\\w+(?=\\s|$)");
+	internal static readonly NamedVars __SpecialVars = new();
+	internal static readonly TXT.Regex __Metaf_Sub = new("^\\w+(\\s.+$|$)");
+	internal static readonly TXT.Regex __Metaf_Name = new("^\\w+(?=\\s|$)");
 	#endregion;
-	internal static Arg? GetMetaFunction(string text, in int saveslot, in int character)
+	/// <summary>
+	/// Attempts constructing a metafunction under specified name for specified saveslot and character, wrapped in an Arg
+	/// </summary>
+	/// <param name="text">Raw text (including the name)</param>
+	/// <param name="saveslot">Save slot to look at</param>
+	/// <param name="character">Character to look at</param>
+	/// <returns></returns>
+	public static Arg? GetMetaFunction(string text, in int saveslot, in int character)
 	{
 		TXT.Match _is;
-		if (!(_is = Metaf_Sub.Match(text)).Success) return null;
-		string name = Metaf_Name.Match(text).Value;//text.Substring(0, Mathf.Max(_is.Index - 1, 0));
+		if (!(_is = __Metaf_Sub.Match(text)).Success) return null;
+		string name = __Metaf_Name.Match(text).Value;//text.Substring(0, Mathf.Max(_is.Index - 1, 0));
 		plog.DbgVerbose($"Attempting to create metafun from {text} (name {name}, match {_is.Value})");
-		IEnumerable<API.Create_RawMetaFunction?>? invl = API.AM_invl;
+		IEnumerable<V0_Create_RawMetaFunction?>? invl = __AM_invl;
 		IArgPayload? res = null;
 		if (invl is null)
 		{
 			plog.DbgVerbose("No metafun handlers attached");
 			return null;
 		}
-		foreach (API.Create_RawMetaFunction? inv in invl)
+		foreach (V0_Create_RawMetaFunction? inv in invl)
 		{
 			try
 			{
@@ -45,15 +53,20 @@ public static partial class VarRegistry
 		//text = _is.Groups[1].Value;
 		
 	}
-	internal static Arg? GetSpecial(string name)
+	/// <summary>
+	/// Attempts fetching a special variable by name.
+	/// </summary>
+	/// <param name="name">Supposed var name</param>
+	/// <returns>null if not a special</returns>
+	public static Arg? GetSpecial(string name)
 	{
-		SpVar tp = SpecialForName(name);
+		SpVar tp = __SpecialForName(name);
 		if (tp is SpVar.NONE) return null;
-		return SpecialVars[tp];
+		return __SpecialVars[tp];
 	}
-	private static void FillSpecials()
+	internal static void __FillSpecials()
 	{
-		SpecialVars.Clear();
+		__SpecialVars.Clear();
 		foreach (SpVar tp in Enum.GetValues(typeof(SpVar)))
 		{
 			static RainWorldGame? FindRWG()
@@ -62,8 +75,8 @@ public static partial class VarRegistry
 				=> FindRWG()?.GetStorySession?.saveState.deathPersistentSaveData.karma ?? -1;
 			static int findKarmaCap()
 				=> FindRWG()?.GetStorySession?.saveState.deathPersistentSaveData.karmaCap ?? -1;
-			static int findClock() => FindRWG()?.world.rainCycle?.cycleLength ?? _temp_World?.rainCycle.cycleLength ?? -1;
-			SpecialVars.Add(tp, tp switch
+			static int findClock() => FindRWG()?.world.rainCycle?.cycleLength ?? __temp_World?.rainCycle.cycleLength ?? -1;
+			__SpecialVars.Add(tp, tp switch
 			{
 				SpVar.NONE => 0,
 				SpVar.version => Ver,
@@ -82,7 +95,7 @@ public static partial class VarRegistry
 					getStr = () => $"{findClock() / 40} seconds / {findClock()} frames"
 				}),
 				SpVar.root => RootFolderDirectory(),
-				SpVar.realm => FindAssembliesByName("Realm").Count() > 0, //check if right
+				SpVar.realm => FindAssemblies("Realm").Count() > 0, //check if right
 				SpVar.os => Environment.OSVersion.Platform.ToString(),
 				SpVar.memused => new(new ByCallbackGetOnly()
 				{
@@ -108,7 +121,7 @@ public static partial class VarRegistry
 			}); ;
 		}
 	}
-	private static SpVar SpecialForName(string name)
+	internal static SpVar __SpecialForName(string name)
 	{
 		return name.ToLower() switch
 		{
