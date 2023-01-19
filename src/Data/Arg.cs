@@ -213,7 +213,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 			_payload.GetExtEnum(out value);
 			return;
 		}
-		if (ExtEnumBase.TryParse(typeof(T), Str, out object res))
+		if (ExtEnumBase.TryParse(typeof(T), Str, false, out ExtEnumBase res))
 		{
 			value = (T)res;
 		}

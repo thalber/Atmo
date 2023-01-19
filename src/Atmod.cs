@@ -82,7 +82,6 @@ public sealed partial class Atmod : BaseUnityPlugin
 		Logger.LogWarning($"Atmo booting... {THR.Thread.CurrentThread.ManagedThreadId}");
 		try
 		{
-
 			On.AbstractRoom.Update += RunHappensAbstUpd;
 			On.RainWorldGame.Update += DoBodyUpdates;
 			On.Room.Update += RunHappensRealUpd;

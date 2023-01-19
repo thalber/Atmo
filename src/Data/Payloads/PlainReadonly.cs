@@ -53,7 +53,7 @@ public readonly record struct PlainReadonly : IArgPayload
 	/// <inheritdoc/>
 	public void GetExtEnum<T>(out T? value) where T : ExtEnumBase
 	{
-		if (ExtEnumBase.TryParse(typeof(T), _str, out object res))
+		if (ExtEnumBase.TryParse(typeof(T), _str, false, out ExtEnumBase res))
 		{
 			value = (T)res;
 		}

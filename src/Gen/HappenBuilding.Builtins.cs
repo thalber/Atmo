@@ -622,7 +622,7 @@ public static partial class HappenBuilding
 			__NotifyArgsMissing(Make_SoundLoop, "soundid");
 			return;
 		}
-		if (!SoundID.TryParse(typeof(SoundID), args[0].Str, out object r_soundid))
+		if (!SoundID.TryParse(typeof(SoundID), args[0].Str, true, out ExtEnumBase r_soundid))
 		{
 			__NotifyArgsMissing(Make_SoundLoop, "soundid");
 			return;
@@ -689,7 +689,7 @@ public static partial class HappenBuilding
 			return;
 		}
 
-		if (!ExtEnumBase.TryParse(typeof(SoundID), args[0].Str, out object objsid))
+		if (!ExtEnumBase.TryParse(typeof(SoundID), args[0].Str, false, out ExtEnumBase objsid))
 		{
 			plog.LogError($"Happen {ha.name}: sound action: " +
 				$"Invalid SoundID ({args[0]})");

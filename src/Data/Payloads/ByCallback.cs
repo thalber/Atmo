@@ -152,7 +152,7 @@ public struct ByCallback : IArgPayload
 
 	public void GetExtEnum<T>(out T? value) where T : ExtEnumBase
 	{
-		if (ExtEnumBase.TryParse(typeof(T), Str, out object res))
+		if (ExtEnumBase.TryParse(typeof(T), Str, false, out ExtEnumBase res))
 		{
 			value = (T)res;
 		}
