@@ -54,32 +54,36 @@ public sealed class HappenSet
 		this.world = world;
 		game = world.game;
 		//if (world is null || file is null) return;
-		if (file is not null)
+		if (file is not null && file.Exists)
 		{
 			HappenParser.Parse(file, this, game);
+		}
+		else {
+			plog.LogWarning($"No atmo file found for {file?.FullName ?? "NULL"}, leaving blank");
 		}
 
 		//subregions as groups
 		Dictionary<string, List<string>> subContents = new();
-
+		
 		foreach (string sub in world.region.subRegions)
 		{
-			int index = world.region.subRegions.IndexOf(sub);
+			//int index = world.region.subRegions.IndexOf(sub);
 			//plog.DbgVerbose($"\"{sub}\" :: {index}");
 			subContents
 				.EnsureAndGet(sub, () => new())
 				.AddRange(
 					world.abstractRooms
-					.Where(x => x.subRegion == index)
+					.Where(x => x.subregionName == sub)
 					.Select(x => x.name));
 		}
-		foreach ((string? sub, List<string>? rooms) in subContents) {
+		foreach ((string? sub, List<string>? rooms) in subContents)
+		{
 			InsertGroup(sub, rooms);
-			//plog.DbgVerbose($"{sub} :: {rooms.Stitch()}");
+			plog.DbgVerbose($"{sub} :: {rooms.Stitch()}");
 		}
-		// foreach (var g in RoomsToGroups.EnumerateRight()){
-		// 	plog.DbgVerbose($">>{g}: {RoomsToGroups.IndexFromRight(g).Stitch()}");
-		// }
+		foreach (var g in RoomsToGroups.EnumerateRight()){
+			plog.DbgVerbose($">>{g}: {RoomsToGroups.IndexFromRight(g).Stitch()}");
+		}
 	}
 	/// <summary>
 	/// Yields all rooms a given happen should be active in.
@@ -283,7 +287,9 @@ public sealed class HappenSet
 		BangBang(world, nameof(world));
 		HappenSet? res = null;
 #if REMIX
-        throw new NotImplementedException("REMIX behaviour is not implemented yet!");
+		IO.FileInfo fi = new(AssetManager.ResolveFilePath($"world/{world.name}.atmo"));
+		res = new(world, fi);
+		return res;
 #else
 		try
 		{

@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Serialization;
 using static Atmo.Data.VarRegistry;
 using NamedVars = System.Collections.Generic.Dictionary<string, Atmo.Data.Arg>;
-using Save = Atmo.Helpers.VT<int, int>;
+using Save = Atmo.Helpers.VT<int, SlugcatStats.Name>;
 using SerDict = System.Collections.Generic.Dictionary<string, object>;
 
 namespace Atmo.Data;

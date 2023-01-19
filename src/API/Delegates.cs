@@ -61,7 +61,7 @@ public delegate HappenTrigger? V0_Create_NamedTriggerFactory(ArgSet args, RainWo
 /// <param name="saveslot">Current saveslot number.</param>
 /// <param name="character">Current character number.</param>
 /// <returns><see cref="IArgPayload"/> object linking to metafun's output; null if name does not fit or there was an error.</returns>
-public delegate IArgPayload? V0_Create_RawMetaFunction(string name, string value, int saveslot, int character);
+public delegate IArgPayload? V0_Create_RawMetaFunction(string name, string value, int saveslot, SlugcatStats.Name character);
 /// <summary>
 /// Delegate for registering named metafunctions. Used by <see cref="V0.AddNamedMetafun"/> overloads.
 /// </summary>
@@ -69,6 +69,6 @@ public delegate IArgPayload? V0_Create_RawMetaFunction(string name, string value
 /// <param name="saveslot">Current saveslot number.</param>
 /// <param name="character">Current character number.</param>
 /// <returns><see cref="IArgPayload"/> object linking to metafun's output; null if there was an error.</returns>
-public delegate IArgPayload? V0_Create_NamedMetaFunction(string value, int saveslot, int character);
+public delegate IArgPayload? V0_Create_NamedMetaFunction(string value, int saveslot, SlugcatStats.Name character);
 #endregion
 #pragma warning restore CS0419

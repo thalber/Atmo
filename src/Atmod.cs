@@ -2,6 +2,7 @@
 using Atmo.Gen;
 using BepInEx;
 
+using THR = System.Threading;
 using CFG = BepInEx.Configuration;
 //using VREG = Atmo.Helpers.VarRegistry;
 
@@ -20,7 +21,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <summary>
 	/// Mod version
 	/// </summary>
-	public const string Ver = "0.9";
+	public const string Ver = "0.11";
 	/// <summary>
 	/// Mod UID
 	/// </summary>
@@ -78,6 +79,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		const string CFG_LOGGING = "logging";
 		inst = this;
 		log_verbose = Config.Bind(section: CFG_LOGGING, key: "verbose", defaultValue: true, description: "Enable more verbose logging. Can create clutter.");
+		Logger.LogWarning($"Atmo booting... {THR.Thread.CurrentThread.ManagedThreadId}");
 		try
 		{
 			On.AbstractRoom.Update += RunHappensAbstUpd;
@@ -94,7 +96,9 @@ public sealed partial class Atmod : BaseUnityPlugin
 		}
 		try
 		{
+#if false
 			ConsoleFace.Apply();
+#endif
 		}
 		catch (Exception ex)
 		{
@@ -118,6 +122,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		dying = true;
 		try
 		{
+			Utils.__slugnameNotFound = new(SLUG_NOT_FOUND, true);
 			//On.World.ctor -= FetchHappenSet;
 			On.Room.Update -= RunHappensRealUpd;
 			On.RainWorldGame.Update -= DoBodyUpdates;
@@ -174,9 +179,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 		}
 		finally
 		{
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-			inst = null;
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+			inst = null!;
 		}
 	}
 	/// <summary>
@@ -208,12 +211,15 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <param name="self"></param>
 	private void SetTempSSN(On.OverWorld.orig_LoadFirstWorld orig, OverWorld self)
 	{
-		Utils.__tempSSN = self.PlayerCharacterNumber;
+
+		Utils.__tempSlugName = self.PlayerCharacterNumber;
+		plog.LogMessage($"Setting temp SSN: {__tempSlugName}, {THR.Thread.CurrentThread.ManagedThreadId}");
 		orig(self);
-		Utils.__tempSSN = null;
+		Utils.__tempSlugName = null;
 	}
-	private void FetchHappenSet(On.World.orig_LoadWorld orig, World self, int slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates)
+	private void FetchHappenSet(On.World.orig_LoadWorld orig, World self, SlugcatStats.Name slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates)
 	{
+		plog.LogMessage($"Fetching happenset for {self.name} {THR.Thread.CurrentThread.ManagedThreadId}");
 		orig(self, slugcatNumber, abstractRoomsList, swarmRooms, shelters, gates);
 		if (self.singleRoomWorld) return;
 		__temp_World = self;

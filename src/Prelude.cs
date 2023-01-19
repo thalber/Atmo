@@ -16,7 +16,7 @@ global using static RWCustom.Custom;
 global using static Atmo.API.Backing;
 
 global using LOG = BepInEx.Logging;
-global using CRS = CustomRegions.Mod;
+//global using CRS = CustomRegions.Mod;
 global using DBG = System.Diagnostics;
 global using IO = System.IO;
 global using RFL = System.Reflection;
