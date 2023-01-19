@@ -51,6 +51,25 @@ public readonly record struct PlainReadonly : IArgPayload
 		};
 	}
 	/// <inheritdoc/>
+	public void GetExtEnum<T>(out T? value) where T : ExtEnumBase
+	{
+		if (ExtEnumBase.TryParse(typeof(T), _str, false, out ExtEnumBase res))
+		{
+			value = (T)res;
+		}
+		else
+		{
+			var ent = ExtEnumBase.GetExtEnumType(typeof(T)).GetEntry(_i32);
+			value = ent is null ? null : (T)ExtEnumBase.Parse(typeof(T), ent, true);
+		}
+	}
+
+	/// <inheritdoc/>
 	public void SetEnum<TE>(in TE value) where TE : Enum { }
+	/// <inheritdoc/>
+	public void SetExtEnum<T>(in T value) where T : ExtEnumBase
+	{
+		throw new NotImplementedException();
+	}
 	#endregion
 }

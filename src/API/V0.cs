@@ -223,7 +223,7 @@ public static class V0
 		}
 		if (__namedMetafuncs.ContainsKey(name)) return false;
 		StringComparer comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
-		IArgPayload? newCb(string n, string val, int ss, int ch)
+		IArgPayload? newCb(string n, string val, int ss, SlugcatStats.Name ch)
 		{
 			if (comp.Compare(n, name) == 0) return handler(val, ss, ch);
 			return null;

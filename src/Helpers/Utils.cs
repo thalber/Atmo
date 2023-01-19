@@ -11,11 +11,11 @@ namespace Atmo.Helpers;
 public static partial class Utils
 {
 	#region fields
-	/// <summary>
-	/// Unsafe string allocator
-	/// </summary>
-	public static readonly Func<int, string> stralloc =
-		GetFn<Func<int, string>>(null, methodof<string>("InternalAllocateStr", BF_ALL_CONTEXTS_STATIC)!)!;
+	// /// <summary>
+	// /// Unsafe string allocator
+	// /// </summary>
+	// public static readonly Func<int, string> stralloc =
+	// 	GetFn<Func<int, string>>(null, methodof<string>("InternalAllocateStr", BF_ALL_CONTEXTS_STATIC)!)!;
 	#endregion
 	#region collections
 	/// <summary>
@@ -104,7 +104,7 @@ public static partial class Utils
 	/// <summary>
 	/// Binding flags for all normal contexts.
 	/// </summary>
-	public const BindingFlags BF_ALL_CONTEXTS 
+	public const BindingFlags BF_ALL_CONTEXTS
 		= BindingFlags.Public
 		| BindingFlags.NonPublic
 		| BindingFlags.Instance
@@ -112,21 +112,21 @@ public static partial class Utils
 	/// <summary>
 	/// Binding flags for all instance members regardless of visibility.
 	/// </summary>
-	public const BindingFlags BF_ALL_CONTEXTS_INSTANCE 
+	public const BindingFlags BF_ALL_CONTEXTS_INSTANCE
 		= BindingFlags.Public
 		| BindingFlags.NonPublic
 		| BindingFlags.Instance;
 	/// <summary>
 	/// Binding flags for all static members regardless of visibility.
 	/// </summary>
-	public const BindingFlags BF_ALL_CONTEXTS_STATIC 
+	public const BindingFlags BF_ALL_CONTEXTS_STATIC
 		= BindingFlags.Public
 		| BindingFlags.NonPublic
 		| BindingFlags.Static;
 	/// <summary>
 	/// Binding flags for all constructors.
 	/// </summary>
-	public const BindingFlags BF_ALL_CONTEXTS_CTOR 
+	public const BindingFlags BF_ALL_CONTEXTS_CTOR
 		= BindingFlags.Public
 		| BindingFlags.NonPublic
 		| BindingFlags.CreateInstance;
@@ -193,7 +193,7 @@ public static partial class Utils
 	{
 		return t.GetMethod(mname, context);
 	}
-	
+
 	/// <summary>
 	/// Gets constructorinfo from T. no cctors by default.
 	/// </summary>
@@ -605,16 +605,16 @@ public static partial class Utils
 	/// Strings that evaluate to bool.false
 	/// </summary>
 	public static readonly string[] falseStrings = new[] { "false", "0", "no", };
-	internal static int? __tempSSN;
+	internal static SlugcatStats.Name? __tempSlugName;
 	internal static World? __temp_World;
 	internal static int? __CurrentSaveslot => inst.RW?.options?.saveSlot;
-	internal static int? __CurrentCharacter
-		=> (int?)
+	internal static SlugcatStats.Name? __CurrentCharacter
+		=>
 		inst.RW?.
 		processManager.FindSubProcess<RainWorldGame>()?
 		.GetStorySession?
 		.characterStats.name
-		?? __tempSSN;
+		?? __tempSlugName;
 	internal static void DbgVerbose(
 		this LOG.ManualLogSource logger,
 		object data)
@@ -645,18 +645,22 @@ public static partial class Utils
 	/// Save name for when character is not found
 	/// </summary>
 	public const string SLUG_NOT_FOUND = "ATMO_SER_NOCHAR";
+	//todo: init this
+	internal static SlugcatStats.Name __slugnameNotFound = null!;
 	/// <summary>
-	/// Cache to speed up <see cref="__SlugName(int)"/>.
+	/// Cache to speed up <see cref="__SlugNameString(int)"/>.
 	/// </summary>
 	internal static readonly Dictionary<int, string> __SlugNameCache = new();
-
+	//might not need it at all honestly
+#if false
 	/// <summary>
 	/// Returns slugcat name for a given index.
 	/// </summary>
 	/// <param name="slugNumber"></param>
 	/// <returns>Resulting name for the slugcat; <see cref="SLUG_NOT_FOUND"/> if the index is below zero, </returns>
-	internal static string __SlugName(int slugNumber)
+	private static string __SlugNameString(int slugNumber)
 	{
+		//todo: look at how custom slugs will work and revise
 		return __SlugNameCache.EnsureAndGet(slugNumber, () =>
 		{
 			string? res = slugNumber switch
@@ -683,7 +687,7 @@ public static partial class Utils
 	{
 		return SlugBase.PlayerManager.GetCustomPlayer(slugNumber)?.Name ?? SLUG_NOT_FOUND;
 	}
-
+#endif
 	internal static readonly Dictionary<char, char> __literalEscapes = new()
 	{
 		{ 'q', '\'' },

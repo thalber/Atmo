@@ -10,13 +10,16 @@ Atmo is a Rain World mod that acts as a regpack-centric scripting addon for [Reg
 
 ## Usage
 
-Atmo searches regionpack subfolders `[regpack]/World/[region]/[region-acronym].atmo` for specialized config files. For example, if Better Shelters had a .atmo file for Outskirts, it would be put into `Rain World/Mods/CustomResources/BetterShelters/World/SU/SU.atmo`.
+Atmo uses `world/[region-name].atmo` resource path to obtain script files: this means that if, for example, if your mod wants to add a .atmo file to SU, you will place your .atmo file in `[your-mod-folder]/world/su.atmo`. Use merge files feature of Remix if you need to combine several mods.
 
 `.atmo` files should be plaintext files encoded in UTF-8.
 
 A shorter example of how an atmo script file could look:
 
 ```
+//note that, despite room filenames being lowercase after DP
+//they should still be written as uppercase in script files
+
 GROUP: group1
 SU_S01 SU_S03 SU_S04
 END GROUP
@@ -32,7 +35,7 @@ This would reduce gravity in all shelters in Outskirts.
 Full file format example (with comments) can be found [here](syntax.txt). If you are using Notepad++, there is a User-Defined Language config for it in this repo, which gives you syntax highlighting (for [dark mode](../extras/atmoscript.udl.xml) and [light mode](../extras/atmoscript.lightmode.udl.xml)).
 
 A happen block can have multiple `WHAT:` and `WHERE:` clauses, but *only one* `WHEN:` clause.
-Inside each `WHERE:` clause line, parsing starts with reading *group names*. After you've switched to included or excluded rooms by using a `+`/`-` separator, you can switch back to groups by using a `=` separator.
+Inside each `WHERE:` clause line, parsing starts with reading *group names*. After you've switched to included or excluded rooms by using a `+`/`-` separator, you can switch back to groups by using a `=` separator (`WHERE: g1 + r1 r2 - r3 = g2` includes groups `g1` and `g2` and rooms `r1` and `r2`, and excludes room `r3`).
 
 ## Actions
 
