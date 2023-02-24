@@ -472,15 +472,6 @@ public static partial class Utils
 		return new(Min(p1.x, p2.x), Min(p1.y, p2.y), Max(p1.x, p2.x), Max(p1.y, p2.y));
 	}
 	/// <summary>
-	/// <see cref="IO.Path.Combine"/> but params.
-	/// </summary>
-	/// <param name="parts"></param>
-	/// <returns></returns>
-	public static string CombinePath(params string[] parts)
-	{
-		return parts.Aggregate(IO.Path.Combine);
-	}
-	/// <summary>
 	/// Current RainWorld instance. Uses Unity lookup, may be slow.
 	/// </summary>
 	public static RainWorld CRW

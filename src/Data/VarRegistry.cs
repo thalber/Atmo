@@ -6,12 +6,12 @@ using SerDict = System.Collections.Generic.Dictionary<string, object>;
 namespace Atmo.Data;
 /// <summary>
 /// Allows accessing a pool of variables, global or save-specific.
-/// You can use <see cref="GetVar(string, int, int)"/> to fetch variables by name.
+/// You can use <see cref="GetVar"/> to fetch variables by name.
 /// Variables are returned as <see cref="Arg"/>s (NOTE: they may be mutable!
 /// Be careful not to mess the values up, especially if you are requesting
 /// a variable made by someone else). Use 'p_' prefix to look for a death-persistent variable,
 /// and 'g_' prefix to look for a global variable.
-/// <seealso cref="GetVar(string, int, int)"/> for more details on fetching, prefixes 
+/// <seealso cref="GetVar"/> for more details on fetching, prefixes 
 /// and some examples.
 /// <para>
 /// <see cref="VarRegistry"/>'s primary purpose is being used by arguments in .atmo files
@@ -413,7 +413,7 @@ public static partial class VarRegistry
 	/// </summary>
 	public static string SaveFolder(in Save save)
 	{
-		return CombinePath(RootFolderDirectory(), "UserData", "Atmo", $"{save.a}");
+		return IO.Path.Combine(RootFolderDirectory(), "UserData", "Atmo", $"{save.a}");
 	}
 
 	/// <summary>
@@ -421,7 +421,7 @@ public static partial class VarRegistry
 	/// </summary>
 	public static string SaveFile(in Save save, DataSection section)
 	{
-		return CombinePath(SaveFolder(save), $"{save.b.ToString()}_{section}.json");
+		return IO.Path.Combine(SaveFolder(save), $"{save.b.ToString()}_{section}.json");
 	}
 
 	/// <summary>
@@ -429,7 +429,7 @@ public static partial class VarRegistry
 	/// </summary>
 	public static string GlobalFile(int slot)
 	{
-		return CombinePath(SaveFolder(new(slot, __slugnameNotFound)), "global.json");
+		return IO.Path.Combine(SaveFolder(new(slot, __slugnameNotFound)), "global.json");
 	}
 	#endregion pathbuild
 	/// <summary>

@@ -79,7 +79,9 @@ public struct ByCallbackGetOnly : IArgPayload
 	public ArgType DataType
 		=> ArgType.OTHER;
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Attempts to get value of the instance as an enum
+	/// </summary>
 	public void GetEnum<T>(out T? value) where T : Enum
 	{
 		if (!TryParseEnum(Str, out value))
@@ -87,7 +89,9 @@ public struct ByCallbackGetOnly : IArgPayload
 			value = (T)Convert.ChangeType(I32, typeof(T));
 		};
 	}
-
+	/// <summary>
+	/// Attempts to get value of the instance as an ExtEnum
+	/// </summary>
 	public void GetExtEnum<T>(out T? value) where T : ExtEnumBase
 	{
 		if (ExtEnumBase.TryParse(typeof(T), Str, false, out ExtEnumBase res))
@@ -101,13 +105,16 @@ public struct ByCallbackGetOnly : IArgPayload
 		}
 	}
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Does not do anything.
+	/// </summary>
 	public void SetEnum<T>(in T value) where T : Enum
 	{
-#warning notsupported revise
 		return;
 	}
-
+	/// <summary>
+	/// Does not do anything.
+	/// </summary>
 	public void SetExtEnum<T>(in T value) where T : ExtEnumBase
 	{
 

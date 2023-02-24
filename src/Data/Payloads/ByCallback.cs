@@ -149,7 +149,7 @@ public struct ByCallback : IArgPayload
 		Str = value.ToString();
 		I32 = (int)Convert.ChangeType(value, typeof(int));
 	}
-
+	/// <inheritdoc/>
 	public void GetExtEnum<T>(out T? value) where T : ExtEnumBase
 	{
 		if (ExtEnumBase.TryParse(typeof(T), Str, false, out ExtEnumBase res))
@@ -162,7 +162,7 @@ public struct ByCallback : IArgPayload
 			value = ent is null ? null : (T)ExtEnumBase.Parse(typeof(T), ent, true);
 		}
 	}
-
+	/// <inheritdoc/>
 	public void SetExtEnum<T>(in T value) where T : ExtEnumBase
 	{
 		I32 = value?.Index ?? -1;
