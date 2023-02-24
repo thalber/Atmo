@@ -49,7 +49,7 @@ public static partial class HappenBuilding
 		AddNamedTrigger(new[] { "varmatch", "variableregex", "varregex" }, TMake_VarMatch);
 
 		//todo: document all triggers below:
-
+		AddNamedTrigger(new[] { "ghost, echo" }, TMake_EchoPresence);
 		//do not document:
 		AddNamedTrigger(new[] { "thisbreaks" }, (args, rwg, ha) =>
 		{
@@ -57,12 +57,65 @@ public static partial class HappenBuilding
 			EventfulTrigger evt = new();
 			switch (((string)when))
 			{
-			case "eval": evt.On_EvalResults += delegate { throw new Exception(); }; break;
-			case "upd": evt.On_Update += delegate { throw new Exception(); }; break;
-			case "sru": evt.On_ShouldRunUpdates += delegate { throw new Exception(); }; break;
+			case "eval": evt.On_EvalResults += delegate { throw new Exception("Intentional exception on Eval"); }; break;
+			case "upd": evt.On_Update += delegate { throw new Exception("Intentional exception on Update"); }; break;
+			case "sru": evt.On_ShouldRunUpdates += delegate { throw new Exception("Intentional exception on ShouldRun"); }; break;
 			}
 			return evt;
 		});
+	}
+	private static HappenTrigger? TMake_ExpeditionEnabled(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		EventfulTrigger evt = new()
+		{
+			On_ShouldRunUpdates = () => ModManager.Expedition
+		};
+		return evt;
+	}
+	private static HappenTrigger? TMake_JollyEnabled(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		EventfulTrigger evt = new()
+		{
+			On_ShouldRunUpdates = () => ModManager.JollyCoop
+		};
+		return evt;
+	}
+	private static HappenTrigger? TMake_MMFEnabled(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		EventfulTrigger evt = new()
+		{
+			On_ShouldRunUpdates = () => ModManager.MMF
+		};
+		return evt;
+	}
+	private static HappenTrigger? TMake_MSCEnabled(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		EventfulTrigger evt = new()
+		{
+			On_ShouldRunUpdates = () => ModManager.MSC
+		};
+		return evt;
+	}
+	private static HappenTrigger? TMake_RemixModEnabled(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		if (args.Count < 1)
+		{
+			__NotifyArgsMissing(TMake_RemixModEnabled, "modid");
+			return null;
+		}
+		EventfulTrigger evt = new()
+		{
+			On_ShouldRunUpdates = () => ModManager.ActiveMods.Any(x => x.name == args[0].Str)
+		};
+		return evt;
+	}
+	private static HappenTrigger? TMake_EchoPresence(ArgSet args, RainWorldGame rwg, Happen ha)
+	{
+		EventfulTrigger evt = new()
+		{
+			On_ShouldRunUpdates = () => rwg.world?.worldGhost is not null
+		};
+		return evt;
 	}
 	/// <summary>
 	/// Creates a trigger that is active based on difficulty. 
@@ -615,6 +668,7 @@ public static partial class HappenBuilding
 	}
 	private static void Make_SoundLoop(Happen ha, ArgSet args)
 	{
+		//BUG: doesn't turn off when exiting into a room where the happen isnt active. need to kill them manually?
 		//does not work in HI (???). does not automatically get discontinued when leaving an affected room.
 		//Breaks with warp.
 		if (args.Count == 0)
@@ -939,9 +993,34 @@ public static partial class HappenBuilding
 		AddNamedMetafun(new[] { "SCREENRES", "RESOLUTION" }, MMake_ScreenRes);
 		AddNamedMetafun(new[] { "OWNSAPP", "OWNSGAME" }, MMake_AppFound);
 		//todo: document metafuncs below:
-
+		AddNamedMetafun(new[] {"LISTDIRECTORY", "ASSETDIR"}, MMake_ListDirectory );
+		AddNamedMetafun(new[] {"RESOLVEFILEPATH", "ASSETPATH"}, MMake_ResolveFilepath );
 		//do not document:
 		AddNamedMetafun(new[] { "FILEREADWRITE", "TEXTIO" }, MMake_FileReadWrite);
+	}
+	private static IArgPayload? MMake_ListDirectory(string text, int ss, SlugcatStats.Name ch)
+	{
+		try
+		{
+			return Arg.Coerce(AssetManager.ListDirectory(text).Stitch((x, y) => $"{x}:{y}"));
+		}
+		catch
+		{
+			plog.LogError($"INVALID assetpath {text}");
+			return new Arg("");
+		}
+	}
+	private static IArgPayload? MMake_ResolveFilepath(string text, int ss, SlugcatStats.Name ch)
+	{
+		try
+		{
+			return Arg.Coerce(AssetManager.ResolveFilePath(text));
+		}
+		catch
+		{
+			plog.LogError($"INVALID assetpath {text}");
+			return new Arg("");
+		}
 	}
 	private static IArgPayload? MMake_AppFound(string text, int ss, SlugcatStats.Name ch)
 	{
