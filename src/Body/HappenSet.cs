@@ -287,7 +287,7 @@ public sealed class HappenSet
 		BangBang(world, nameof(world));
 		HappenSet? res = null;
 #if REMIX
-		IO.FileInfo fi = new(AssetManager.ResolveFilePath($"world/{world.name}.atmo"));
+		IO.FileInfo fi = new(AssetManager.ResolveFilePath($"world/{world.name}/{world.name}.atmo"));
 		res = new(world, fi);
 		return res;
 #else
