@@ -10,29 +10,40 @@ namespace Atmo;
 internal static class ConsoleFace {
 	#region fields
 	private static ulong mfinv_uid;
-	private const string Help_AtmoVar = """
+	private static string[] __autocomplete_empty = new string[0];
+	private static string[] __autocomplete_listcall = new[] { _LIST, _CALL };
+	private static string[] __ac_getset = new[] { _GET, _SET };
+	private static string[] __autocomplete_printsave = new[] { _PRINT, _SAVE };
+	private const string _SET = "set";
+	private const string _GET = "get";
+	private const string _LIST = "list";
+	private const string _CALL = "call";
+	private const string _PRINT = "print";
+	private const string _SAVE = "save";
+	private const string _HELP_VAR = """
 		Invalid args!
 		atmo_var get [varname] - fetches value of specified variable
 		atmo_var set [varname] [value] - sets specified variable to value
 		""";
-	private const string Help_AtmoMetaf = """
+	private const string _HELP_METAF = """
 		Invalid args!
 		atmo_metafunc list - lists all available metafunctions
 		atmo_metafunc call [name] [input] (print|save) (DECIMAL|INTEGER|VECTOR|BOOL|STRING?)=STRING - calls a specified metafunction with given input, and either prints result to console or stores it in a variable, using specified datatype. NOTE: Only the immediate result is stored, if result is dynamic, it will be discarded.
 		""";
+
 	#endregion;
 	public static void Apply() {
 		new CMD.CommandBuilder("atmo_var")
-			.AutoComplete(AtmoVar_ac)
-			.Run(AtmoVar_run)
+			.AutoComplete(__Autocomplete_Var)
+			.Run(__Run_Var)
 			.Help("""
 			atmo_var get [varname]
 			atmo_var set [varname] [value]
 			""")
 			.Register();
 		new CMD.CommandBuilder("atmo_metafunc")
-			.AutoComplete(MetafunInv_ac)
-			.Run(MetafunInv_run)
+			.AutoComplete(__Autocomplete_Metafun)
+			.Run(__Run_Metafun)
 			.Help("""
 			atmo_metafunc list
 			atmo_metafunc call [name] [input] (print|save) (DECIMAL|INTEGER|VECTOR|BOOL|STRING?)=STRING
@@ -50,31 +61,27 @@ internal static class ConsoleFace {
 			//.Help("atmo_perf - Fetches performance records from currently active happens")
 			.Register();
 	}
-	private static IEnumerable<string> AtmoVar_ac(string[] args) {
-		switch (args.Length) {
-		case 0: {
-			yield return "get";
-			yield return "set";
-			yield break;
-		}
-		}
-	}
-	private static void AtmoVar_run(string[] args) {
+	private static IEnumerable<string> __Autocomplete_Var(string[] args)
+		=> args switch {
+			[] => __ac_getset,
+			_ => __autocomplete_empty
+		};
+	private static void __Run_Var(string[] args) {
 		void showhelp() {
-			DCLI.WriteLine(Help_AtmoVar);
+			DCLI.WriteLine(_HELP_VAR);
 		}
 		if (args.Length < 2) {
-			NotifyArgsMissing(AtmoVar_run, "action", "name");
+			__NotifyArgsMissing(__Run_Var, "action", "name");
 			showhelp();
 			return;
 		}
 		Arg target = VarRegistry.GetVar(args[1], __CurrentSaveslot ?? -1, __CurrentCharacter ?? __slugnameNotFound);
-		if (args.AtOr(0, "get") is "get") {
+		if (args.AtOr(0, _GET) is _GET) {
 			DCLI.WriteLine(target.ToString());
 		}
 		else {
 			if (args.Length < 3) {
-				NotifyArgsMissing(AtmoVar_run, "value");
+				__NotifyArgsMissing(__Run_Var, "value");
 				showhelp();
 				return;
 			}
@@ -83,48 +90,28 @@ internal static class ConsoleFace {
 
 	}
 
-	private static IEnumerable<string> MetafunInv_ac(string[] args) {
-		switch (args.Length) {
-		case 0: {
-			yield return "list";
-			yield return "call";
-			yield break;
-		}
-		case 1: {
-			if (args[0] is "call") {
-				foreach (string name in __namedMetafuncs.Keys) yield return name;
-			}
-			yield break;
-		}
-		case 3: {
-			if (args[0] is "call") {
-				yield return "print";
-				yield return "save";
-			}
-			yield break;
-		}
-		case 5: {
-			if (args[0] is "call") {
-				foreach (var name in Enum.GetNames(typeof(ArgType))) yield return name;
-			}
-			yield break;
-		}
-		}
-	}
-	private static void MetafunInv_run(string[] args) {
+	private static IEnumerable<string> __Autocomplete_Metafun(string[] args)
+		=> args switch {
+			[] => __autocomplete_listcall,
+			[_CALL] => __namedMetafuncs.Keys,
+			[_CALL, _, _] => __autocomplete_printsave,
+			[_CALL, _, _, _, _] => Enum.GetNames(typeof(ArgType)),
+			_ => __autocomplete_empty
+		};
+	private static void __Run_Metafun(string[] args) {
 		void showhelp() {
-			DCLI.WriteLine(Help_AtmoMetaf);
+			DCLI.WriteLine(_HELP_METAF);
 		}
-		switch (args.AtOr(0, "list")) {
-		case "list": {
+		switch (args.AtOr(0, _LIST)) {
+		case _LIST: {
 			DCLI.WriteLine($"Registered metafunctions: [ {__namedMetafuncs.Keys.Stitch()} ]");
 			break;
 		}
-		case "call": {
+		case _CALL: {
 			int ss = __CurrentSaveslot ?? -1;
 			SlugcatStats.Name ch = __CurrentCharacter ?? SlugcatStats.Name.Red;
 			if (args.Length < 3) {
-				NotifyArgsMissing(MetafunInv_run, "name", "input");
+				__NotifyArgsMissing(__Run_Metafun, "name", "input");
 				showhelp();
 				break;
 			}
@@ -150,9 +137,8 @@ internal static class ConsoleFace {
 		}
 	}
 
-	private static void NotifyArgsMissing(Delegate where, params string[] args) {
+	private static void __NotifyArgsMissing(Delegate where, params string[] args) {
 		DCLI.WriteLine($"ATMO.CLI: {where.Method}: Missing arguments! " +
 			$"Required arguments: {args.Stitch()}");
 	}
-
 }
