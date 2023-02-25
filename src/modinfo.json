@@ -1,0 +1,10 @@
+{
+	"id": "atmo",
+	"name": "atmo",
+	"version": "0.12",
+	"authors": "thalber",
+	"description": "Asset-driven region scripting layer.",
+	"requirements": [],
+	"requirements_names": [],
+	"checksum_override_version": false
+}

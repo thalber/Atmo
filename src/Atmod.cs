@@ -19,7 +19,7 @@ public sealed partial class Atmod : BaseUnityPlugin {
 	/// <summary>
 	/// Mod version
 	/// </summary>
-	public const string Ver = "0.11";
+	public const string Ver = "0.12";
 	/// <summary>
 	/// Mod UID
 	/// </summary>
