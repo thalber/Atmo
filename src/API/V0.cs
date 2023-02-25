@@ -13,8 +13,7 @@ namespace Atmo.API;
 /// </list>
 /// See also: <seealso cref="Happen"/> for core lifecycle logic, <seealso cref="HappenTrigger"/> for how conditions work, <seealso cref="HappenSet"/> for additional info on how happens are composed.
 /// </summary>
-public static class V0
-{
+public static class V0 {
 	#region API proper
 	/// <summary>
 	/// Registers a named action. Multiple names. Up to one callback for every lifecycle event. No args support.
@@ -32,8 +31,7 @@ public static class V0
 		V0_lc_RealizedUpdate? ru = null,
 		V0_lc_Init? oi = null,
 		V0_lc_CoreUpdate? cu = null,
-		bool ignoreCase = true)
-	{
+		bool ignoreCase = true) {
 		return names
 				.Select((name) => AddNamedAction(name, au, ru, oi, cu, ignoreCase) ? 0 : 1)
 				.Aggregate((x, y) => x + y);
@@ -55,16 +53,12 @@ public static class V0
 		V0_lc_RealizedUpdate? ru = null,
 		V0_lc_Init? oi = null,
 		V0_lc_CoreUpdate? cu = null,
-		bool ignoreCase = true)
-	{
+		bool ignoreCase = true) {
 		StringComparer? comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
 		if (__namedActions.ContainsKey(name)) { return false; }
-		void newCb(Happen ha)
-		{
-			foreach (string? ac in ha.actions.Keys)
-			{
-				if (comp.Compare(ac, name) == 0)
-				{
+		void newCb(Happen ha) {
+			foreach (string? ac in ha.actions.Keys) {
+				if (comp.Compare(ac, name) == 0) {
 					ha.On_AbstUpdate += au;
 					ha.On_RealUpdate += ru;
 					ha.On_Init += oi;
@@ -87,8 +81,7 @@ public static class V0
 	public static int AddNamedAction(
 		string[] names,
 		V0_Create_NamedHappenBuilder builder,
-		bool ignoreCase = true)
-	{
+		bool ignoreCase = true) {
 		return names
 				.Select((name) => AddNamedAction(name, builder, ignoreCase) ? 0 : 1)
 				.Aggregate((x, y) => x + y);
@@ -104,21 +97,16 @@ public static class V0
 	public static bool AddNamedAction(
 		string name,
 		V0_Create_NamedHappenBuilder builder,
-		bool ignoreCase = true)
-	{
-		if (TXT.Regex.Match(name, "\\w+").Length != name.Length)
-		{
-			plog.LogWarning($"Invalid action name: {name}");
+		bool ignoreCase = true) {
+		if (TXT.Regex.Match(name, "\\w+").Length != name.Length) {
+			__logger.LogWarning($"Invalid action name: {name}");
 			return false;
 		}
 		if (__namedTriggers.ContainsKey(name)) { return false; }
 		StringComparer? comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
-		void newCb(Happen ha)
-		{
-			foreach (KeyValuePair<string, string[]> ac in ha.actions)
-			{
-				if (comp.Compare(ac.Key, name) == 0)
-				{
+		void newCb(Happen ha) {
+			foreach (KeyValuePair<string, string[]> ac in ha.actions) {
+				if (comp.Compare(ac.Key, name) == 0) {
 					builder?.Invoke(ha, ac.Value);
 				}
 			}
@@ -131,8 +119,7 @@ public static class V0
 	/// Removes a named callback.
 	/// </summary>
 	/// <param name="action"></param>
-	public static void RemoveNamedAction(string action)
-	{
+	public static void RemoveNamedAction(string action) {
 		if (!__namedActions.TryGetValue(action, out V0_Create_RawHappenBuilder? builder)) return;
 		EV_MakeNewHappen -= builder;
 		__namedActions.Remove(action);
@@ -147,8 +134,7 @@ public static class V0
 	public static int AddNamedTrigger(
 		string[] names,
 		V0_Create_NamedTriggerFactory fac,
-		bool ignoreCase = true)
-	{
+		bool ignoreCase = true) {
 		return names
 				.Select((name) => AddNamedTrigger(name, fac, ignoreCase) ? 1 : 0)
 				.Aggregate((x, y) => x + y);
@@ -163,18 +149,15 @@ public static class V0
 	public static bool AddNamedTrigger(
 		string name,
 		V0_Create_NamedTriggerFactory fac,
-		bool ignoreCase = true)
-	{
-		if (TXT.Regex.Match(name, "\\w+").Length != name.Length)
-		{
-			plog.LogWarning($"Invalid trigger name: {name}");
+		bool ignoreCase = true) {
+		if (TXT.Regex.Match(name, "\\w+").Length != name.Length) {
+			__logger.LogWarning($"Invalid trigger name: {name}");
 			return false;
 		}
 		if (__namedTriggers.ContainsKey(name)) { return false; }
 		StringComparer? comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
 
-		HappenTrigger? newCb(string n, ArgSet args, RainWorldGame rwg, Happen ha)
-		{
+		HappenTrigger? newCb(string n, ArgSet args, RainWorldGame rwg, Happen ha) {
 			if (comp.Compare(n, name) == 0) return fac(args, rwg, ha);
 			return null;
 		}
@@ -186,8 +169,7 @@ public static class V0
 	/// Removes a registered trigger by name.
 	/// </summary>
 	/// <param name="name"></param>
-	public static void RemoveNamedTrigger(string name)
-	{
+	public static void RemoveNamedTrigger(string name) {
 		if (!__namedTriggers.TryGetValue(name, out V0_Create_RawTriggerFactory? fac)) return;
 		EV_MakeNewTrigger -= fac;
 		__namedTriggers.Remove(name);
@@ -214,17 +196,14 @@ public static class V0
 	public static bool AddNamedMetafun(
 		string name,
 		V0_Create_NamedMetaFunction handler,
-		bool ignoreCase = true)
-	{
-		if (TXT.Regex.Match(name, "\\w+").Length != name.Length)
-		{
-			plog.LogWarning($"Invalid metafun name: {name}");
+		bool ignoreCase = true) {
+		if (TXT.Regex.Match(name, "\\w+").Length != name.Length) {
+			__logger.LogWarning($"Invalid metafun name: {name}");
 			return false;
 		}
 		if (__namedMetafuncs.ContainsKey(name)) return false;
 		StringComparer comp = ignoreCase ? StringComparer.CurrentCultureIgnoreCase : StringComparer.CurrentCulture;
-		IArgPayload? newCb(string n, string val, int ss, SlugcatStats.Name ch)
-		{
+		IArgPayload? newCb(string n, string val, int ss, SlugcatStats.Name ch) {
 			if (comp.Compare(n, name) == 0) return handler(val, ss, ch);
 			return null;
 		}
@@ -236,8 +215,7 @@ public static class V0
 	/// Clears a metafunction name binding.
 	/// </summary>
 	/// <param name="name"></param>
-	public static void RemoveNamedMetafun(string name)
-	{
+	public static void RemoveNamedMetafun(string name) {
 		if (!__namedMetafuncs.TryGetValue(name, out V0_Create_RawMetaFunction? handler)) return;
 		EV_ApplyMetafunctions -= handler;
 		__namedMetafuncs.Remove(name);
@@ -246,14 +224,11 @@ public static class V0
 	/// Subscribe to this to attach your custom callbacks to newly created happen objects.
 	/// You can also use <see cref="AddNamedAction"/> overloads as name-safe wrappers.
 	/// </summary>
-	public static event V0_Create_RawHappenBuilder? EV_MakeNewHappen
-	{
-		add
-		{
+	public static event V0_Create_RawHappenBuilder? EV_MakeNewHappen {
+		add {
 			Backing.__EV_MakeNewHappen += value;
 		}
-		remove
-		{
+		remove {
 			Backing.__EV_MakeNewHappen -= value;
 		}
 	}
@@ -262,14 +237,11 @@ public static class V0
 	/// Subscribe to this to dispense your custom triggers.
 	/// You can also use <see cref="AddNamedTrigger"/> overloads as a name-safe wrappers.
 	/// </summary>
-	public static event V0_Create_RawTriggerFactory? EV_MakeNewTrigger
-	{
-		add
-		{
+	public static event V0_Create_RawTriggerFactory? EV_MakeNewTrigger {
+		add {
 			Backing.__EV_MakeNewTrigger += value;
 		}
-		remove
-		{
+		remove {
 			Backing.__EV_MakeNewTrigger -= value;
 		}
 
@@ -278,14 +250,11 @@ public static class V0
 	/// <summary>
 	/// Subscribe to this to register custom variables-macros. You can also use <see cref="AddNamedMetafun"/> overloads as name-safe wrappers.
 	/// </summary>
-	public static event V0_Create_RawMetaFunction? EV_ApplyMetafunctions
-	{
-		add
-		{
+	public static event V0_Create_RawMetaFunction? EV_ApplyMetafunctions {
+		add {
 			Backing.__EV_ApplyMetafunctions += value;
 		}
-		remove
-		{
+		remove {
 			Backing.__EV_ApplyMetafunctions -= value;
 		}
 	}

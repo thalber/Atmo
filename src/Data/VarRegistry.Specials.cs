@@ -5,8 +5,7 @@ using NamedVars = System.Collections.Generic.Dictionary<Atmo.Data.VarRegistry.Sp
 
 namespace Atmo.Data;
 
-public static partial class VarRegistry
-{
+public static partial class VarRegistry {
 	#region fields
 	internal static readonly NamedVars __SpecialVars = new();
 	internal static readonly TXT.Regex __Metaf_Sub = new("^\\w+(\\s.+$|$)");
@@ -19,35 +18,29 @@ public static partial class VarRegistry
 	/// <param name="saveslot">Save slot to look at</param>
 	/// <param name="character">Character to look at</param>
 	/// <returns></returns>
-	public static Arg? GetMetaFunction(string text, in int saveslot, in SlugcatStats.Name character)
-	{
+	public static Arg? GetMetaFunction(string text, in int saveslot, in SlugcatStats.Name character) {
 		TXT.Match _is;
 		if (!(_is = __Metaf_Sub.Match(text)).Success) return null;
 		string name = __Metaf_Name.Match(text).Value;//text.Substring(0, Mathf.Max(_is.Index - 1, 0));
-		plog.DbgVerbose($"Attempting to create metafun from {text} (name {name}, match {_is.Value})");
+		__logger.DbgVerbose($"Attempting to create metafun from {text} (name {name}, match {_is.Value})");
 		IEnumerable<V0_Create_RawMetaFunction?>? invl = __AM_invl;
 		IArgPayload? res = null;
-		if (invl is null)
-		{
-			plog.DbgVerbose("No metafun handlers attached");
+		if (invl is null) {
+			__logger.DbgVerbose("No metafun handlers attached");
 			return null;
 		}
-		foreach (V0_Create_RawMetaFunction? inv in invl)
-		{
-			try
-			{
-				if ((res = inv?.Invoke(name, _is.Value, saveslot, character)) is not null)
-				{
+		foreach (V0_Create_RawMetaFunction? inv in invl) {
+			try {
+				if ((res = inv?.Invoke(name, _is.Value, saveslot, character)) is not null) {
 					return new(res);
 				}
 			}
-			catch (Exception ex)
-			{
-				plog.LogError($"VarRegistry: Error invoking metafun handler {inv}//{inv?.Method} for {name}, {_is.Value}:" +
+			catch (Exception ex) {
+				__logger.LogError($"VarRegistry: Error invoking metafun handler {inv}//{inv?.Method} for {name}, {_is.Value}:" +
 					$"\n{ex}");
 			}
 		}
-		plog.DbgVerbose($"No metafun {name}, variable lookup continues as normal");
+		__logger.DbgVerbose($"No metafun {name}, variable lookup continues as normal");
 		return null;
 		//if (!(_is = FMT_Is.Match(text)).Success) return null;
 		//text = _is.Groups[1].Value;
@@ -58,17 +51,14 @@ public static partial class VarRegistry
 	/// </summary>
 	/// <param name="name">Supposed var name</param>
 	/// <returns>null if not a special</returns>
-	public static Arg? GetSpecial(string name)
-	{
+	public static Arg? GetSpecial(string name) {
 		SpVar tp = __SpecialForName(name);
 		if (tp is SpVar.NONE) return null;
 		return __SpecialVars[tp];
 	}
-	internal static void __FillSpecials()
-	{
+	internal static void __FillSpecials() {
 		__SpecialVars.Clear();
-		foreach (SpVar tp in Enum.GetValues(typeof(SpVar)))
-		{
+		foreach (SpVar tp in Enum.GetValues(typeof(SpVar))) {
 			static RainWorldGame? FindRWG()
 				=> inst.RW?.processManager?.FindSubProcess<RainWorldGame>();
 			static int findKarma()
@@ -76,62 +66,52 @@ public static partial class VarRegistry
 			static int findKarmaCap()
 				=> FindRWG()?.GetStorySession?.saveState.deathPersistentSaveData.karmaCap ?? -1;
 			static int findClock() => FindRWG()?.world.rainCycle?.cycleLength ?? __temp_World?.rainCycle.cycleLength ?? -1;
-			try{
-
-
-			__SpecialVars.Add(tp, tp switch
-			{
-				SpVar.NONE => 0,
-				SpVar.version => Ver,
-				SpVar.time => new(new ByCallbackGetOnly()
-				{
-					getStr = () => DateTime.Now.ToString()
-				}),
-				SpVar.utctime => new(new ByCallbackGetOnly()
-				{
-					getStr = () => DateTime.UtcNow.ToString()
-				}),
-				SpVar.cycletime => new(new ByCallbackGetOnly()
-				{
-					getI32 = findClock,
-					getF32 = () => findClock() / 40,
-					getStr = () => $"{findClock() / 40} seconds / {findClock()} frames"
-				}),
-				SpVar.root => RootFolderDirectory(),
-				SpVar.realm => FindAssemblies("Realm").Count() > 0, //check if right
-				SpVar.os => Environment.OSVersion.Platform.ToString(),
-				SpVar.memused => new(new ByCallbackGetOnly()
-				{
-					getStr = () => GC.GetTotalMemory(false).ToString()
-				}),
-				SpVar.memtotal => new(new ByCallbackGetOnly()
-				{
-					getStr = () => "???"
-				}),
-				SpVar.username => Environment.UserName,
-				SpVar.machinename => Environment.MachineName,
-				SpVar.karma => new(new ByCallbackGetOnly()
-				{
-					getI32 = findKarma,
-					getF32 = static () => findKarma(),
-				}),
-				SpVar.karmacap => new(new ByCallbackGetOnly()
-				{
-					getI32 = findKarmaCap,
-					getF32 = static () => findKarmaCap(),
-				}),
-				_ => 0,
-			}); ;
+			try {
+				__SpecialVars.Add(tp, tp switch {
+					SpVar.NONE => 0,
+					SpVar.version => Ver,
+					SpVar.time => new(new ByCallbackGetOnly() {
+						getStr = () => DateTime.Now.ToString()
+					}),
+					SpVar.utctime => new(new ByCallbackGetOnly() {
+						getStr = () => DateTime.UtcNow.ToString()
+					}),
+					SpVar.cycletime => new(new ByCallbackGetOnly() {
+						getI32 = findClock,
+						getF32 = () => findClock() / 40,
+						getStr = () => $"{findClock() / 40} seconds / {findClock()} frames"
+					}),
+					SpVar.root => new(new ByCallbackGetOnly() {
+						getStr = Custom.RootFolderDirectory
+					}),
+					SpVar.realm => FindAssemblies("Realm").Count() > 0, //check if right
+					SpVar.os => Environment.OSVersion.Platform.ToString(),
+					SpVar.memused => new(new ByCallbackGetOnly() {
+						getStr = () => GC.GetTotalMemory(false).ToString()
+					}),
+					SpVar.memtotal => new(new ByCallbackGetOnly() {
+						getStr = () => "???"
+					}),
+					SpVar.username => Environment.UserName,
+					SpVar.machinename => Environment.MachineName,
+					SpVar.karma => new(new ByCallbackGetOnly() {
+						getI32 = findKarma,
+						getF32 = static () => findKarma(),
+					}),
+					SpVar.karmacap => new(new ByCallbackGetOnly() {
+						getI32 = findKarmaCap,
+						getF32 = static () => findKarmaCap(),
+					}),
+					_ => 0,
+				}); ;
 			}
-			catch (Exception ex){
-				plog.LogError(__ErrorMessage(Site.InitSpecials, $"Error registering a special: {tp}", ex));
+			catch (Exception ex) {
+				__logger.LogError(__ErrorMessage(Site.InitSpecials, $"Error registering a special: {tp}", ex));
 			}
 		}
 	}
-	internal static SpVar __SpecialForName(string name)
-	{
-		return name.ToLower() switch
-		{
+	internal static SpVar __SpecialForName(string name) {
+		return name.ToLower() switch {
 			"root" or "rootfolder" => SpVar.root,
 			"now" or "time" => SpVar.time,
 			"utcnow" or "utctime" => SpVar.utctime,
@@ -149,8 +129,7 @@ public static partial class VarRegistry
 		};
 	}
 
-	internal enum SpVar
-	{
+	internal enum SpVar {
 		NONE,
 		time,
 		utctime,

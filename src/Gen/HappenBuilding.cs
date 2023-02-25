@@ -6,24 +6,19 @@ namespace Atmo.Gen;
 /// <summary>
 /// Manages happens' initialization and builtin behaviours.
 /// </summary>
-public static partial class HappenBuilding
-{
+public static partial class HappenBuilding {
 	/// <summary>
 	/// Populates a happen with callbacks. Called automatically by the constructor.
 	/// </summary>
 	/// <param name="happen"></param>
-	internal static void __NewHappen(Happen happen)
-	{
+	internal static void __NewHappen(Happen happen) {
 		if (__MNH_invl is null) return;
-		foreach (V0_Create_RawHappenBuilder? cb in __MNH_invl)
-		{
-			try
-			{
+		foreach (V0_Create_RawHappenBuilder? cb in __MNH_invl) {
+			try {
 				cb?.Invoke(happen);
 			}
-			catch (Exception ex)
-			{
-				plog.LogError(
+			catch (Exception ex) {
+				__logger.LogError(
 					$"Happenbuild: NewEvent:" +
 					$"Error invoking happen factory {cb}//{cb?.Method.Name} for {happen}:" +
 					$"\n{ex}");
@@ -43,31 +38,26 @@ public static partial class HappenBuilding
 		string id,
 		string[] args,
 		RainWorldGame rwg,
-		Happen owner)
-	{
+		Happen owner) {
 		HappenTrigger? res = null;
 		//res = DefaultTrigger(id, args, rwg, owner);
 
 		if (__MNT_invl is null) goto finish;
-		foreach (V0_Create_RawTriggerFactory? cb in __MNT_invl)
-		{
+		foreach (V0_Create_RawTriggerFactory? cb in __MNT_invl) {
 			if (res is not null) break;
-			try
-			{
+			try {
 				res ??= cb?.Invoke(id, args.Select(x => x.ApplyEscapes()).ToArray(), rwg, owner);
 			}
-			catch (Exception ex)
-			{
-				plog.LogError(
+			catch (Exception ex) {
+				__logger.LogError(
 					$"Happenbuild: CreateTrigger: Error invoking trigger factory " +
 					$"{cb}//{cb?.Method.Name} for {id}({args.Stitch()}):" +
 					$"\n{ex}");
 			}
 		}
 	finish:
-		if (res is null)
-		{
-			plog.LogWarning($"Failed to create a trigger! {id}, args: {args.Stitch()}. Replacing with a stub");
+		if (res is null) {
+			__logger.LogWarning($"Failed to create a trigger! {id}, args: {args.Stitch()}. Replacing with a stub");
 			res = new EventfulTrigger() { On_ShouldRunUpdates = () => true };
 		}
 		return res;

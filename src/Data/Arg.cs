@@ -39,8 +39,7 @@ namespace Atmo.Data;
 /// </list>
 /// </para>
 /// </summary>
-public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
-{
+public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible {
 	//private bool _skipparse = false;
 	private bool _readonly = false;
 	private ArgType _dt = ArgType.STRING;
@@ -57,38 +56,32 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// <summary>
 	/// Raw string previously used to create the argument. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.STRING"/>.
 	/// </summary>
-	public string Raw
-	{
+	public string Raw {
 		get => _payload?.Raw ?? _raw;
-		set
-		{
+		set {
 			if (_readonly) return;
 			if (value is null) throw new ArgumentNullException(nameof(value));
 			if (_payload is not null) { _payload.Raw = value; return; }
 			_raw = value;
 			Name = null;
 			int splPoint = _raw.IndexOf('=');
-			if (splPoint is not -1 && splPoint < _raw.Length - 1)
-			{
+			if (splPoint is not -1 && splPoint < _raw.Length - 1) {
 				Name = _raw.Substring(0, splPoint);
 				value = value.Substring(splPoint + 1);
 			}
-			if (value.StartsWith("$"))
-			{
+			if (value.StartsWith("$")) {
 				int? ss = __CurrentSaveslot;
 				SlugcatStats.Name? ch = __CurrentCharacter;
-				plog.DbgVerbose($"Linking variable {value}: {ss}, {ch}");
-				if (ss is null)
-				{
-					plog.LogError($"Impossible to link variable! {value}: could not find RainWorldGame.");
+				__logger.DbgVerbose($"Linking variable {value}: {ss}, {ch}");
+				if (ss is null) {
+					__logger.LogError($"Impossible to link variable! {value}: could not find RainWorldGame.");
 					Str = value;
 					return;
 				}
 				_payload = VarRegistry.GetVar(value.Substring(1), ss.Value, ch ?? __slugnameNotFound);
 				//DataType = ArgType.VAR;
 			}
-			else
-			{
+			else {
 				Str = value;
 			}
 
@@ -98,15 +91,12 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// <summary>
 	/// String value of the argument. If the argument is unnamed, this is equivalent to <see cref="Raw"/>; if the argument is named, returns everything after first "=" character. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.STRING"/>.
 	/// </summary>
-	public string Str
-	{
+	public string Str {
 		get => _payload?.Str ?? _str;
-		set
-		{
+		set {
 			if (_readonly) return;
 			if (_payload is not null) { _payload.Str = value; }
-			else
-			{
+			else {
 				__Coerce_Str(in value, out _i32, out _f32, out _bool, out _vec, out _);
 				_str = value;
 			}
@@ -115,11 +105,9 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// <summary>
 	/// Int value of the argument. 0 if int value couldn't be parsed; rounded if <see cref="Arg"/> is created from a float; 1 or 0 if created from a bool; rounded magnitude of a vector if instance created from vector. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.INTEGER"/>.
 	/// </summary>
-	public int I32
-	{
+	public int I32 {
 		get => _payload?.I32 ?? _i32;
-		set
-		{
+		set {
 
 			if (_readonly) return;
 			if (_payload is not null) { _payload.I32 = value; return; }
@@ -131,11 +119,9 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// <summary>
 	/// Float value of the argument; 0f if float value couldn't be parsed; equal to <see cref="I32"/> if <see cref="Arg"/> is created from an int (may lose precision on large values!); 1f or 0f if created from a bool; magnitude of a vector if instance is created from vector. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.DECIMAL"/>.
 	/// </summary>
-	public float F32
-	{
+	public float F32 {
 		get => _payload?.F32 ?? _f32;
-		set
-		{
+		set {
 			if (_readonly) return;
 			if (_payload is not null) { _payload.F32 = value; return; }
 			__Coerce_F32(in value, out _str, out _i32, out _bool, out _vec);
@@ -146,11 +132,9 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// <summary>
 	/// Boolean value of the argument; false by default. False if original string is found in <see cref="falseStrings"/>, or if <see cref="Arg"/> is created from a zero int or float; True if original string is found in <see cref="trueStrings"/>, or of <see cref="Arg"/> is created from a non-zero int, float or vector. Using the setter sets <see cref="DataType"/> to <see cref="ArgType.BOOLEAN"/>.
 	/// </summary>
-	public bool Bool
-	{
+	public bool Bool {
 		get => _payload?.Bool ?? _bool;
-		set
-		{
+		set {
 			if (_readonly) return;
 			if (_payload is not null) { _payload.Bool = value; return; }
 			__Coerce_Bool(in value, out _str, out _i32, out _f32, out _vec);
@@ -161,12 +145,10 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// <summary>
 	/// Vector value of the instance. Zeroed unless instance has been created from a vector or successfully parsed the vector from string.
 	/// </summary>
-	public Vector4 Vec
-	{
+	public Vector4 Vec {
 		get
 			=> _payload?.Vec ?? _vec;
-		set
-		{
+		set {
 			if (_readonly) return;
 			if (_payload is not null) { _payload.Vec = value; return; }
 			__Coerce_Vec(in value, out _str, out _i32, out _f32, out _bool);
@@ -181,10 +163,8 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// <typeparam name="T">Type of the enum.</typeparam>
 	/// <param name="value">Out param. Contains resulting enum value.</param>
 	public void GetEnum<T>(out T? value)
-		where T : Enum
-	{
-		if (_payload is not null)
-		{
+		where T : Enum {
+		if (_payload is not null) {
 			_payload.GetEnum(out value);
 			return;
 		}
@@ -197,8 +177,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// <typeparam name="T">Type of the enum.</typeparam>
 	/// <param name="value">Value to be set.</param>
 	public void SetEnum<T>(in T value)
-		where T : Enum
-	{
+		where T : Enum {
 		if (_readonly) return;
 		//BangBang(value);
 		if (_payload is not null) { _payload.SetEnum(value); return; }
@@ -206,26 +185,21 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		_str = value.ToString();
 	}
 	/// <inheritdoc/>
-	public void GetExtEnum<T>(out T? value) where T : ExtEnumBase
-	{
-		if (_payload is not null)
-		{
+	public void GetExtEnum<T>(out T? value) where T : ExtEnumBase {
+		if (_payload is not null) {
 			_payload.GetExtEnum(out value);
 			return;
 		}
-		if (ExtEnumBase.TryParse(typeof(T), Str, false, out ExtEnumBase res))
-		{
+		if (ExtEnumBase.TryParse(typeof(T), Str, false, out ExtEnumBase res)) {
 			value = (T)res;
 		}
-		else
-		{
+		else {
 			var ent = ExtEnumBase.GetExtEnumType(typeof(T)).GetEntry(I32);
 			value = ent is null ? null : (T)ExtEnumBase.Parse(typeof(T), ent, true);
 		}
 	}
 	/// <inheritdoc/>
-	public void SetExtEnum<T>(in T value) where T : ExtEnumBase
-	{
+	public void SetExtEnum<T>(in T value) where T : ExtEnumBase {
 		if (_readonly) return;
 		//BangBang(value);
 		I32 = value?.Index ?? -1;
@@ -236,88 +210,73 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// </summary>
 	public int SecAsFrames => (int)(F32 * 40f);
 	#region iconv
-	TypeCode IConvertible.GetTypeCode()
-	{
+	///<inheritdoc/>
+	public TypeCode GetTypeCode() {
 		return TypeCode.Object;
 	}
-
-	bool IConvertible.ToBoolean(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public bool ToBoolean(IFormatProvider provider) {
 		return Bool;
 	}
-
-	char IConvertible.ToChar(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public char ToChar(IFormatProvider provider) {
 		return (char)I32;
 	}
-
-	sbyte IConvertible.ToSByte(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public sbyte ToSByte(IFormatProvider provider) {
 		return (sbyte)I32;
 	}
-
-	byte IConvertible.ToByte(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public byte ToByte(IFormatProvider provider) {
 		return (byte)I32;
 	}
-
-	short IConvertible.ToInt16(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public short ToInt16(IFormatProvider provider) {
 		return (short)I32;
 	}
-
-	ushort IConvertible.ToUInt16(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public ushort ToUInt16(IFormatProvider provider) {
 		return (ushort)I32;
 	}
-
-	int IConvertible.ToInt32(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public int ToInt32(IFormatProvider provider) {
 		return I32;
 	}
-
-	uint IConvertible.ToUInt32(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public uint ToUInt32(IFormatProvider provider) {
 		return (uint)I32;
 	}
-
-	long IConvertible.ToInt64(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public long ToInt64(IFormatProvider provider) {
 		return I32;
 	}
-
-	ulong IConvertible.ToUInt64(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public ulong ToUInt64(IFormatProvider provider) {
 		return (ulong)I32;
 	}
-
-	float IConvertible.ToSingle(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public float ToSingle(IFormatProvider provider) {
 		return (float)F32;
 	}
-
-	double IConvertible.ToDouble(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public double ToDouble(IFormatProvider provider) {
 		return (double)F32;
 	}
-
-	decimal IConvertible.ToDecimal(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public decimal ToDecimal(IFormatProvider provider) {
 		return (decimal)F32;
 	}
-
-	DateTime IConvertible.ToDateTime(IFormatProvider provider)
-	{
-		throw new InvalidCastException();
+	///<inheritdoc/>
+	public DateTime ToDateTime(IFormatProvider provider) {
+		__logger.LogError("Cannot convert from Arg to DateTime");
+		return new(1984, 01, 01);
 	}
-
-	string IConvertible.ToString(IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public string ToString(IFormatProvider provider) {
 		return ToString();
 	}
-
-	object IConvertible.ToType(Type conversionType, IFormatProvider provider)
-	{
+	///<inheritdoc/>
+	public object ToType(Type conversionType, IFormatProvider provider) {
 		throw new NotImplementedException();
 	}
 	#endregion iconv
@@ -334,11 +293,9 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// <summary>
 	/// Indicates what data type was this instance's contents filled from.
 	/// </summary>
-	public ArgType DataType
-	{
+	public ArgType DataType {
 		get => _payload?.DataType ?? _dt;
-		private set
-		{
+		private set {
 			if (IsVar) return;
 			_dt = value;
 		}
@@ -346,8 +303,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// <summary>
 	/// Gets value of the specified type from the instance.
 	/// </summary>
-	public object this[ArgType at] => at switch
-	{
+	public object this[ArgType at] => at switch {
 		ArgType.DECIMAL => F32,
 		ArgType.INTEGER => I32,
 		ArgType.BOOLEAN => Bool,
@@ -361,13 +317,10 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// </summary>
 	/// <param name="other"></param>
 	/// <returns>whether instances are identical</returns>
-	public bool Equals(Arg? other)
-	{
+	public bool Equals(Arg? other) {
 		if (other is null) return false;
-		if (DataType == other.DataType)
-		{
-			return DataType switch
-			{
+		if (DataType == other.DataType) {
+			return DataType switch {
 				ArgType.DECIMAL => other.F32 == F32,
 				ArgType.INTEGER => other.I32 == I32,
 				ArgType.STRING => other.Str == Str,
@@ -380,24 +333,20 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 		return _str == other._str;
 	}
 	/// <inheritdoc/>
-	public override int GetHashCode()
-	{
+	public override int GetHashCode() {
 		return _str.GetHashCode();
 	}
 
 	/// <inheritdoc/>
-	public override string ToString()
-	{
+	public override string ToString() {
 		StringBuilder sb = new();
 		sb.Append(Name is not null ? Name : "Arg");
-		if (IsVar)
-		{
+		if (IsVar) {
 
 			sb.Append($"(var){{{_payload}}}");
 			return sb.ToString();
 		}
-		sb.Append(string.Format("{{ {0} : {1} }}", DataType, DataType switch
-		{
+		sb.Append(string.Format("{{ {0} : {1} }}", DataType, DataType switch {
 			ArgType.DECIMAL => F32,
 			ArgType.INTEGER => I32,
 			ArgType.STRING => Str,
@@ -416,8 +365,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// Makes current instance read-only. Not undoable.
 	/// </summary>
 	/// <returns></returns>
-	internal Arg MakeReadOnly()
-	{
+	internal Arg MakeReadOnly() {
 		_readonly = true;
 		return this;
 	}
@@ -428,16 +376,14 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// </summary>
 	/// <param name="orig">String to create argument from. Named arguments receive "name=value" type strings here. Can not be null.</param>
 	/// <param name="linkage">Whether to check the provided string's structure, determining name and linking to a variable if needed. Off by default, for implicit casts</param>
-	public Arg(string orig, bool linkage = false)
-	{
+	public Arg(string orig, bool linkage = false) {
 		BangBang(orig, nameof(orig));
 		_raw = orig;
 		_f32 = default;
 		_i32 = default;
 		_bool = default;
 		if (linkage) Raw = orig;
-		else
-		{
+		else {
 			_str = orig;
 			__Coerce_Str(_str, out _i32, out _f32, out _bool, out _vec, out bool asv);
 			DataType = asv ? ArgType.VECTOR : ArgType.STRING;
@@ -448,8 +394,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// Creates the structure from a given int. Always unnamed. Mostly used for implicit casts.
 	/// </summary>
 	/// <param name="val"></param>
-	public Arg(int val)
-	{
+	public Arg(int val) {
 		I32 = val;
 		_raw ??= val.ToString();
 		_str ??= val.ToString();
@@ -458,8 +403,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// Creates the structure from a given float. Always unnamed. Mostly used for implicit casts.
 	/// </summary>
 	/// <param name="val"></param>
-	public Arg(float val)
-	{
+	public Arg(float val) {
 		F32 = val;
 		_raw ??= val.ToString();
 		_str ??= val.ToString();
@@ -468,8 +412,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// Creates the structure from a given bool. Always unnamed. Mostly used for implicit casts.
 	/// </summary>
 	/// <param name="val"></param>
-	public Arg(bool val)
-	{
+	public Arg(bool val) {
 		Bool = val;
 		_raw ??= val.ToString();
 		_str ??= val.ToString();
@@ -478,8 +421,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// Creates an instance from a vector.
 	/// </summary>
 	/// <param name="val"></param>
-	public Arg(Vector4 val)
-	{
+	public Arg(Vector4 val) {
 		Vec = val;
 		_raw ??= val.ToString();
 		_str ??= val.ToString();
@@ -490,8 +432,7 @@ public sealed partial class Arg : IEquatable<Arg>, IArgPayload, IConvertible
 	/// </summary>
 	/// <param name="val">Another arg instance that serves as a variable. Must not be null.</param>
 	/// <param name="name">Name of the new instance.</param>
-	public Arg(IArgPayload val, string? name = null)
-	{
+	public Arg(IArgPayload val, string? name = null) {
 		BangBang(val, nameof(val));
 		_payload = val;
 		Name = name;

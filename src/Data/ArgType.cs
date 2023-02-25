@@ -3,8 +3,7 @@
 /// <summary>
 /// Displays what kind of data an <see cref="IArgPayload"/> instance was constructed from.
 /// </summary>
-public enum ArgType
-{
+public enum ArgType {
 	/// <summary>
 	/// Value was originally assigned as float.
 	/// </summary>

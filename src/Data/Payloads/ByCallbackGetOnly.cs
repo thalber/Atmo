@@ -3,8 +3,7 @@
 /// <summary>
 /// Simple read-only callback-driven <see cref="IArgPayload"/>
 /// </summary>
-public struct ByCallbackGetOnly : IArgPayload
-{
+public struct ByCallbackGetOnly : IArgPayload {
 	/// <summary>
 	/// Callback to get int value.
 	/// </summary>
@@ -28,48 +27,42 @@ public struct ByCallbackGetOnly : IArgPayload
 	/// <summary>
 	/// Operation is not supported.
 	/// </summary>
-	public string Raw
-	{
+	public string Raw {
 		get => string.Empty;
 		set { }
 	}
 	/// <summary>
 	/// Float value of the instance. Read-only.
 	/// </summary>
-	public float F32
-	{
+	public float F32 {
 		get => getF32?.Invoke() ?? 0f;
 		set { }
 	}
 	/// <summary>
 	/// Int value of the instance. Read-only.
 	/// </summary>
-	public int I32
-	{
+	public int I32 {
 		get => getI32?.Invoke() ?? 0;
 		set { }
 	}
 	/// <summary>
 	/// String value of the instance. Read-only.
 	/// </summary>
-	public string Str
-	{
+	public string Str {
 		get => getStr?.Invoke() ?? string.Empty;
 		set { }
 	}
 	/// <summary>
 	/// Bool value of the instance. Read-only.
 	/// </summary>
-	public bool Bool
-	{
+	public bool Bool {
 		get => getBool?.Invoke() ?? false;
 		set { }
 	}
 	/// <summary>
 	/// Vector value of the instance. Read-only.
 	/// </summary>
-	public Vector4 Vec
-	{
+	public Vector4 Vec {
 		get => getVec?.Invoke() ?? default;
 		set { }
 	}
@@ -79,43 +72,42 @@ public struct ByCallbackGetOnly : IArgPayload
 	public ArgType DataType
 		=> ArgType.OTHER;
 
-	/// <inheritdoc/>
-	public void GetEnum<T>(out T? value) where T : Enum
-	{
-		if (!TryParseEnum(Str, out value))
-		{
+	/// <summary>
+	/// Attempts to get value of the instance as an enum
+	/// </summary>
+	public void GetEnum<T>(out T? value) where T : Enum {
+		if (!TryParseEnum(Str, out value)) {
 			value = (T)Convert.ChangeType(I32, typeof(T));
 		};
 	}
-
-	public void GetExtEnum<T>(out T? value) where T : ExtEnumBase
-	{
-		if (ExtEnumBase.TryParse(typeof(T), Str, false, out ExtEnumBase res))
-		{
+	/// <summary>
+	/// Attempts to get value of the instance as an ExtEnum
+	/// </summary>
+	public void GetExtEnum<T>(out T? value) where T : ExtEnumBase {
+		if (ExtEnumBase.TryParse(typeof(T), Str, false, out ExtEnumBase res)) {
 			value = (T)res;
 		}
-		else
-		{
+		else {
 			var ent = ExtEnumBase.GetExtEnumType(typeof(T)).GetEntry(I32);
 			value = ent is null ? null : (T)ExtEnumBase.Parse(typeof(T), ent, true);
 		}
 	}
 
-	/// <inheritdoc/>
-	public void SetEnum<T>(in T value) where T : Enum
-	{
-#warning notsupported revise
+	/// <summary>
+	/// Does not do anything.
+	/// </summary>
+	public void SetEnum<T>(in T value) where T : Enum {
 		return;
 	}
-
-	public void SetExtEnum<T>(in T value) where T : ExtEnumBase
-	{
+	/// <summary>
+	/// Does not do anything.
+	/// </summary>
+	public void SetExtEnum<T>(in T value) where T : ExtEnumBase {
 
 	}
 
 	/// <inheritdoc/>
-	public override string ToString()
-	{
+	public override string ToString() {
 		return Str;
 	}
 }

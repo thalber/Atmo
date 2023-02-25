@@ -1,15 +1,13 @@
 ﻿using System.Reflection;
 using System.Text;
-using static UnityEngine.Mathf;
-
 using Atmo.Data.Payloads;
+using static UnityEngine.Mathf;
 
 namespace Atmo.Helpers;
 /// <summary>
 /// contains general purpose utility methods
 /// </summary>
-public static partial class Utils
-{
+public static partial class Utils {
 	#region fields
 	// /// <summary>
 	// /// Unsafe string allocator
@@ -26,8 +24,7 @@ public static partial class Utils
 	/// <param name="index">Target index</param>
 	/// <param name="def">Default value</param>
 	/// <returns></returns>
-	public static T AtOr<T>(this IList<T> arr, int index, T def)
-	{
+	public static T AtOr<T>(this IList<T> arr, int index, T def) {
 		BangBang(arr, nameof(arr));
 		if (index >= arr.Count || index < 0) return def;
 		return arr[index];
@@ -35,8 +32,7 @@ public static partial class Utils
 	/// <summary>
 	/// Attempts to get a char at a specified position.
 	/// </summary>
-	public static char? Get(this string str, int index)
-	{
+	public static char? Get(this string str, int index) {
 		BangBang(str, nameof(str));
 		if (index >= str.Length || index < 0) return null;
 		return str[index];
@@ -44,8 +40,7 @@ public static partial class Utils
 	/// <summary>
 	/// Attempts to get a char at a specified position.
 	/// </summary>
-	public static char? Get(this StringBuilder sb, int index)
-	{
+	public static char? Get(this StringBuilder sb, int index) {
 		BangBang(sb, nameof(sb));
 		if (index >= sb.Length || index < 0) return null;
 		return sb[index];
@@ -62,13 +57,11 @@ public static partial class Utils
 	public static Tval EnsureAndGet<Tkey, Tval>(
 		this IDictionary<Tkey, Tval> dict,
 		Tkey key,
-		Func<Tval> defval)
-	{
+		Func<Tval> defval) {
 		BangBang(dict, nameof(dict));
 		if (key is not ValueType) BangBang(key, nameof(key));
 		if (dict.TryGetValue(key, out Tval oldVal)) { return oldVal; }
-		else
-		{
+		else {
 			Tval def = defval();
 			dict.Add(key, def);
 			return def;
@@ -78,10 +71,8 @@ public static partial class Utils
 	/// Shifts contents of a BitArray one position to the right.
 	/// </summary>
 	/// <param name="arr">Array in question</param>
-	public static void RightShift(this System.Collections.BitArray arr)
-	{
-		for (int i = arr.Count - 2; i >= 0; i--)
-		{
+	public static void RightShift(this System.Collections.BitArray arr) {
+		for (int i = arr.Count - 2; i >= 0; i--) {
 			arr[i + 1] = arr[i];//arr.Set(i + 1, arr.Get(i));//[i + 1] = arr[i];
 		}
 		arr[0] = false;
@@ -94,8 +85,7 @@ public static partial class Utils
 	/// <param name="dict">Dictionary in question</param>
 	/// <param name="key">Key to look up</param>
 	/// <param name="val">Value to set</param>
-	public static void Set<Tk, Tv>(this Dictionary<Tk, Tv> dict, Tk key, Tv val)
-	{
+	public static void Set<Tk, Tv>(this Dictionary<Tk, Tv> dict, Tk key, Tv val) {
 		if (dict.ContainsKey(key)) dict[key] = val;
 		else dict.Add(key, val);
 	}
@@ -133,6 +123,22 @@ public static partial class Utils
 	#endregion
 	#region refl helpers
 	/// <summary>
+	/// Loads all types from an assembly, ignoring reflection.
+	/// </summary>
+	/// <param name="asm"></param>
+	/// <param name="reflError"></param>
+	/// <returns></returns>
+	public static IEnumerable<Type> GetTypesSafe(this Assembly asm, out ReflectionTypeLoadException? reflError) {
+		try {
+			reflError = null;
+			return asm.GetTypes();
+		}
+		catch (ReflectionTypeLoadException e) {
+			reflError = e;
+			return e.Types.Where(t => t != null);
+		}
+	}
+	/// <summary>
 	/// Gets a method regardless of visibility.
 	/// </summary>
 	/// <param name="self">Type to get methods from</param>
@@ -140,8 +146,7 @@ public static partial class Utils
 	/// <returns></returns>
 	public static MethodInfo? GetMethodAllContexts(
 		this Type self,
-		string name)
-	{
+		string name) {
 		return self.GetMethod(name, BF_ALL_CONTEXTS);
 	}
 
@@ -153,16 +158,14 @@ public static partial class Utils
 	/// <returns></returns>
 	public static PropertyInfo? GetPropertyAllContexts(
 		this Type self,
-		string name)
-	{
+		string name) {
 		return self.GetProperty(name, BF_ALL_CONTEXTS);
 	}
 
 	/// <summary>
 	/// Returns autoimplemented property backing field name
 	/// </summary>
-	public static string BackingFieldName(string propname)
-	{
+	public static string BackingFieldName(string propname) {
 		return $"<{propname}>k__BackingField";
 	}
 
@@ -175,8 +178,7 @@ public static partial class Utils
 	/// <returns></returns>
 	public static MethodInfo? methodof<T>(
 		string mname,
-		BindingFlags context = BF_ALL_CONTEXTS_INSTANCE)
-	{
+		BindingFlags context = BF_ALL_CONTEXTS_INSTANCE) {
 		return typeof(T).GetMethod(mname, context);
 	}
 	/// <summary>
@@ -189,8 +191,7 @@ public static partial class Utils
 	public static MethodInfo? methodof(
 		Type t,
 		string mname,
-		BindingFlags context = BF_ALL_CONTEXTS_STATIC)
-	{
+		BindingFlags context = BF_ALL_CONTEXTS_STATIC) {
 		return t.GetMethod(mname, context);
 	}
 
@@ -203,8 +204,7 @@ public static partial class Utils
 	/// <returns></returns>
 	public static ConstructorInfo? ctorof<T>(
 		BindingFlags context = BF_ALL_CONTEXTS_CTOR,
-		params Type[] pms)
-	{
+		params Type[] pms) {
 		return typeof(T).GetConstructor(context, null, pms, null);
 	}
 
@@ -214,8 +214,7 @@ public static partial class Utils
 	/// <typeparam name="T">Type to look at.</typeparam>
 	/// <param name="pms">Constructor parameter types.</param>
 	/// <returns></returns>
-	public static ConstructorInfo? ctorof<T>(params Type[] pms)
-	{
+	public static ConstructorInfo? ctorof<T>(params Type[] pms) {
 		return typeof(T).GetConstructor(pms);
 	}
 
@@ -226,8 +225,7 @@ public static partial class Utils
 	/// <param name="name">Field name</param>
 	/// <param name="context">Context, default private+public+instance</param>
 	/// <returns></returns>
-	public static FieldInfo? fieldof<T>(string name, BindingFlags context = BF_ALL_CONTEXTS_INSTANCE)
-	{
+	public static FieldInfo? fieldof<T>(string name, BindingFlags context = BF_ALL_CONTEXTS_INSTANCE) {
 		return typeof(T).GetField(name, context);
 	}
 	/// <summary>
@@ -235,8 +233,7 @@ public static partial class Utils
 	/// </summary>
 	/// <param name="pattern">Regular expression to filter assemblies</param>
 	/// <returns>A yield ienumerable with results</returns>
-	public static IEnumerable<Assembly> FindAssemblies(string pattern)
-	{
+	public static IEnumerable<Assembly> FindAssemblies(string pattern) {
 		Assembly[] lasms = AppDomain.CurrentDomain.GetAssemblies();
 		for (int i = lasms.Length - 1; i > -1; i--)
 			if (TXT.Regex.Match(lasms[i].FullName, pattern).Success) yield return lasms[i];
@@ -251,11 +248,9 @@ public static partial class Utils
 	public static void CloneInstance<T>(
 		T from,
 		T to,
-		BindingFlags context = BF_ALL_CONTEXTS_INSTANCE)
-	{
+		BindingFlags context = BF_ALL_CONTEXTS_INSTANCE) {
 		Type tt = typeof(T);
-		foreach (FieldInfo field in tt.GetFields(context))
-		{
+		foreach (FieldInfo field in tt.GetFields(context)) {
 			if (field.IsStatic) continue;
 			field.SetValue(to, field.GetValue(from), context, null, System.Globalization.CultureInfo.CurrentCulture);
 		}
@@ -264,27 +259,22 @@ public static partial class Utils
 	/// Cleans up static reference members in a type.
 	/// </summary>
 	/// <param name="t">Target type</param>
-	public static VT<List<string>, List<string>> CleanupStatic(this Type t)
-	{
+	public static VT<List<string>, List<string>> CleanupStatic(this Type t) {
 		List<string> success = new();
 		List<string> failure = new();
 
 		foreach (FieldInfo field in t.GetFields(BF_ALL_CONTEXTS_STATIC))
-			if (!field.FieldType.IsValueType)
-			{
+			if (!field.FieldType.IsValueType) {
 				string fullname = $"{t.FullName}.{field.Name}";
-				try
-				{
+				try {
 					field.SetValue(null, null, BF_ALL_CONTEXTS_STATIC, null, System.Globalization.CultureInfo.CurrentCulture);
 					success.Add(fullname);
 				}
-				catch (Exception ex)
-				{
+				catch (Exception ex) {
 					failure.Add(fullname + $" (exception: {ex.Message})");
 				}
 			}
-		foreach (Type nested in t.GetNestedTypes(BF_ALL_CONTEXTS_STATIC))
-		{
+		foreach (Type nested in t.GetNestedTypes(BF_ALL_CONTEXTS_STATIC)) {
 			VT<List<string>, List<string>> res = nested.CleanupStatic();
 			success.AddRange(res.a);
 			failure.AddRange(res.b);
@@ -300,8 +290,7 @@ public static partial class Utils
 	/// <param name="method">Target method.</param>
 	/// <returns>Resulting delegate; null if failure.</returns>
 	public static T? GetFn<T>(object? inst, MethodInfo method)
-		where T : MulticastDelegate
-	{
+		where T : MulticastDelegate {
 		BangBang(method, nameof(method));
 		return (T)Delegate.CreateDelegate(typeof(T), inst, method);
 	}
@@ -310,8 +299,7 @@ public static partial class Utils
 	/// </summary>
 	/// <param name="s"></param>
 	/// <returns></returns>
-	public static Action<int, char> Fn_SetChar(this string s)
-	{
+	public static Action<int, char> Fn_SetChar(this string s) {
 		MethodInfo method = methodof<string>("InternalSetChar", BF_ALL_CONTEXTS_INSTANCE)!;
 		return GetFn<Action<int, char>>(s, method)!;
 	}
@@ -329,8 +317,7 @@ public static partial class Utils
 		int start,
 		int mDev,
 		int minRes = int.MinValue,
-		int maxRes = int.MaxValue)
-	{
+		int maxRes = int.MaxValue) {
 		return IntClamp(RND.Range(start - mDev, start + mDev), minRes, maxRes);
 	}
 
@@ -346,8 +333,7 @@ public static partial class Utils
 		this float start,
 		float mDev,
 		float minRes = float.NegativeInfinity,
-		float maxRes = float.PositiveInfinity)
-	{
+		float maxRes = float.PositiveInfinity) {
 		return Clamp(Lerp(start - mDev, start + mDev, RND.value), minRes, maxRes);
 	}
 
@@ -355,8 +341,7 @@ public static partial class Utils
 	/// Gives you a random sign.
 	/// </summary>
 	/// <returns>1f or -1f on a coinflip.</returns>
-	public static float RandSign()
-	{
+	public static float RandSign() {
 		return RND.value > 0.5f ? -1f : 1f;
 	}
 
@@ -366,8 +351,7 @@ public static partial class Utils
 	/// <param name="a">First vector.</param>
 	/// <param name="b">Second vector.</param>
 	/// <returns>Resulting vector.</returns>
-	public static Vector2 V2RandLerp(Vector2 a, Vector2 b)
-	{
+	public static Vector2 V2RandLerp(Vector2 a, Vector2 b) {
 		return Vector2.Lerp(a, b, RND.value);
 	}
 
@@ -376,8 +360,7 @@ public static partial class Utils
 	/// </summary>
 	/// <param name="bcol"></param>
 	/// <returns></returns>
-	public static Color Clamped(this Color bcol)
-	{
+	public static Color Clamped(this Color bcol) {
 		return new(Clamp01(bcol.r), Clamp01(bcol.g), Clamp01(bcol.b));
 	}
 	/// <summary>
@@ -387,8 +370,7 @@ public static partial class Utils
 	/// <param name="dbound">deviations</param>
 	/// <param name="clamped">whether to clamp the result to reasonable values</param>
 	/// <returns>resulting colour</returns>
-	public static Color RandDev(this Color bcol, Color dbound, bool clamped = true)
-	{
+	public static Color RandDev(this Color bcol, Color dbound, bool clamped = true) {
 		Color res = default;
 		for (int i = 0; i < 3; i++) res[i] = bcol[i] + (dbound[i] * RND.Range(-1f, 1f));
 		return clamped ? res.Clamped() : res;
@@ -403,13 +385,10 @@ public static partial class Utils
 	/// <param name="result">out-result.</param>
 	/// <returns>Whether parsing was successful.</returns>
 	public static bool TryParseEnum<T>(string str, out T? result)
-		where T : Enum
-	{
+		where T : Enum {
 		Array values = Enum.GetValues(typeof(T));
-		foreach (T val in values)
-		{
-			if (str == val.ToString())
-			{
+		foreach (T val in values) {
+			if (str == val.ToString()) {
 				result = val;
 				return true;
 			}
@@ -420,16 +399,13 @@ public static partial class Utils
 	/// <summary>
 	/// Attempts to parse a vector4 from string; expected format is "x;y;z;w", z or w may be absent.
 	/// </summary>
-	public static bool TryParseVec4(string str, out Vector4 vec)
-	{
+	public static bool TryParseVec4(string str, out Vector4 vec) {
 		string[] spl;
 		Vector4 vecres = default;
 		bool vecparsed = false;
-		if ((spl = TXT.Regex.Split(str, "\\s*;\\s*")).Length is 2 or 3 or 4)
-		{
+		if ((spl = TXT.Regex.Split(str, "\\s*;\\s*")).Length is 2 or 3 or 4) {
 			vecparsed = true;
-			for (int i = 0; i < spl.Length; i++)
-			{
+			for (int i = 0; i < spl.Length; i++) {
 				if (!float.TryParse(spl[i], out float val)) vecparsed = false;
 				vecres[i] = val;
 			}
@@ -443,20 +419,18 @@ public static partial class Utils
 	/// <param name="x"></param>
 	/// <param name="y"></param>
 	/// <returns></returns>
-	public static string JoinWithComma(string x, string y)
-	{
+	public static string JoinWithComma(string x, string y) {
 		return $"{x}, {y}";
 	}
 	/// <summary>
-	/// Stitches a given collection with, returns an empty string if empty.
+	/// Stitches a given string collection with aggregator, returns an empty string if empty.
 	/// </summary>
 	/// <param name="coll"></param>
 	/// <param name="aggregator">Aggregator function. <see cref="JoinWithComma"/> by default.</param>
 	/// <returns>Resulting string.</returns>
 	public static string Stitch(
 		this IEnumerable<string> coll,
-		Func<string, string, string>? aggregator = null)
-	{
+		Func<string, string, string>? aggregator = null) {
 		BangBang(coll, nameof(coll));
 		return coll is null || coll.Count() is 0 ? string.Empty : coll.Aggregate(aggregator ?? JoinWithComma);
 	}
@@ -466,19 +440,9 @@ public static partial class Utils
 	/// <param name="p1"></param>
 	/// <param name="p2"></param>
 	/// <returns></returns>
-	public static IntRect ConstructIR(IntVector2 p1, IntVector2 p2)
-	{
+	public static IntRect ConstructIR(IntVector2 p1, IntVector2 p2) {
 		Vector4 vec = new Color();
 		return new(Min(p1.x, p2.x), Min(p1.y, p2.y), Max(p1.x, p2.x), Max(p1.y, p2.y));
-	}
-	/// <summary>
-	/// <see cref="IO.Path.Combine"/> but params.
-	/// </summary>
-	/// <param name="parts"></param>
-	/// <returns></returns>
-	public static string CombinePath(params string[] parts)
-	{
-		return parts.Aggregate(IO.Path.Combine);
 	}
 	/// <summary>
 	/// Current RainWorld instance. Uses Unity lookup, may be slow.
@@ -490,8 +454,7 @@ public static partial class Utils
 	/// </summary>
 	/// <param name="t"></param>
 	/// <returns></returns>
-	public static CreatureTemplate GetCreatureTemplate(CreatureTemplate.Type t)
-	{
+	public static CreatureTemplate GetCreatureTemplate(CreatureTemplate.Type t) {
 		return StaticWorld.creatureTemplates[(int)t];
 	}
 	/// <summary>
@@ -501,8 +464,7 @@ public static partial class Utils
 	/// <param name="manager">must not be null.</param>
 	/// <returns>Found subprocess; null if none.</returns>
 	public static T? FindSubProcess<T>(this ProcessManager manager)
-		where T : MainLoopProcess
-	{
+		where T : MainLoopProcess {
 		BangBang(manager, nameof(manager));
 		if (manager.currentMainLoop is T tmain) return tmain;
 		foreach (MainLoopProcess sideprocess in manager.sideProcesses) if (sideprocess is T tside) return tside;
@@ -511,11 +473,9 @@ public static partial class Utils
 	/// <summary>
 	/// Attempts to find an <see cref="UpdatableAndDeletable"/> of specified type
 	/// </summary>
-	public static T? FindUAD<T>(this Room rm)
-	{
+	public static T? FindUAD<T>(this Room rm) {
 		BangBang(rm, nameof(rm));
-		for (int i = 0; i < rm.updateList.Count; i++)
-		{
+		for (int i = 0; i < rm.updateList.Count; i++) {
 			if (rm.updateList[i] is T t) return t;
 		}
 		return default;
@@ -523,10 +483,8 @@ public static partial class Utils
 	/// <summary>
 	/// Yields all <see cref="UpdatableAndDeletable"/>s of specified type.
 	/// </summary>
-	public static IEnumerable<T> FindAllUAD<T>(this Room rm)
-	{
-		for (int i = 0; i < rm.updateList.Count; i++)
-		{
+	public static IEnumerable<T> FindAllUAD<T>(this Room rm) {
+		for (int i = 0; i < rm.updateList.Count; i++) {
 			if (rm.updateList[i] is T t) yield return t;
 		}
 	}
@@ -536,8 +494,7 @@ public static partial class Utils
 	/// <param name="resname">name of the resource</param>
 	/// <param name="casm">target assembly. If unspecified, RK asm</param>
 	/// <returns>resulting byte array</returns>
-	public static byte[]? ResourceBytes(string resname, Assembly? casm = null)
-	{
+	public static byte[]? ResourceBytes(string resname, Assembly? casm = null) {
 		if (resname is null) throw new ArgumentNullException("can not get with a null name");
 		casm ??= Assembly.GetExecutingAssembly();
 		IO.Stream? str = casm.GetManifestResourceStream(resname);
@@ -552,16 +509,14 @@ public static partial class Utils
 	/// <param name="enc">Encoding. If none is specified, UTF-8</param>
 	/// <param name="casm">assembly to get resource from. If unspecified, RK asm.</param> 
 	/// <returns>Resulting string. If none is found, <c>null</c> </returns>
-	public static string? ResourceAsString(string resname, Encoding? enc = null, Assembly? casm = null)
-	{
+	public static string? ResourceAsString(string resname, Encoding? enc = null, Assembly? casm = null) {
 		enc ??= Encoding.UTF8;
 		casm ??= Assembly.GetExecutingAssembly();
-		try
-		{
+		try {
 			byte[]? bf = ResourceBytes(resname, casm);
 			return bf is null ? null : enc.GetString(bf);
 		}
-		catch (Exception ee) { plog.LogError($"Error getting ER: {ee}"); return null; }
+		catch (Exception ee) { __logger.LogError($"Error getting ER: {ee}"); return null; }
 	}
 	/// <summary>
 	/// Deconstructs a KeyValuePair.
@@ -571,23 +526,20 @@ public static partial class Utils
 	/// <param name="kvp"></param>
 	/// <param name="k"></param>
 	/// <param name="v"></param>
-	public static void Deconstruct<TKey, TVal>(this KeyValuePair<TKey, TVal> kvp, out TKey k, out TVal v)
-	{
+	public static void Deconstruct<TKey, TVal>(this KeyValuePair<TKey, TVal> kvp, out TKey k, out TVal v) {
 		k = kvp.Key;
 		v = kvp.Value;
 	}
 	/// <summary>
 	/// Throws <see cref="System.ArgumentNullException"/> if item is null.
 	/// </summary>
-	public static void BangBang(object? item, string name = "???")
-	{
+	public static void BangBang(object? item, string name = "???") {
 		if (item is null) throw new ArgumentNullException(name);
 	}
 	/// <summary>
 	/// Throws <see cref="System.InvalidOperationException"/> if item is not null.
 	/// </summary>
-	public static void AntiBang(object? item, string name)
-	{
+	public static void AntiBang(object? item, string name) {
 		if (item is not null) throw new InvalidOperationException($"{name} is not null");
 	}
 	/// <summary>
@@ -617,8 +569,7 @@ public static partial class Utils
 		?? __tempSlugName;
 	internal static void DbgVerbose(
 		this LOG.ManualLogSource logger,
-		object data)
-	{
+		object data) {
 		BangBang(logger, nameof(logger));
 		if (log_verbose?.Value ?? false) logger.LogDebug(data);
 	}
@@ -626,14 +577,11 @@ public static partial class Utils
 		List<TimeSpan> realup_times,
 		TimeSpan frame,
 		LinkedList<double> realup_readings,
-		int storeCap)
-	{
+		int storeCap) {
 		realup_times.Add(frame);
-		if (realup_times.Count == realup_times.Capacity)
-		{
+		if (realup_times.Count == realup_times.Capacity) {
 			TimeSpan total = new(0);
-			for (int i = 0; i < realup_times.Count; i++)
-			{
+			for (int i = 0; i < realup_times.Count; i++) {
 				total += realup_times[i];
 			}
 			realup_readings.AddLast(total.TotalMilliseconds / realup_times.Capacity);
@@ -647,12 +595,12 @@ public static partial class Utils
 	public const string SLUG_NOT_FOUND = "ATMO_SER_NOCHAR";
 	//todo: init this
 	internal static SlugcatStats.Name __slugnameNotFound = null!;
+#if false
 	/// <summary>
 	/// Cache to speed up <see cref="__SlugNameString(int)"/>.
 	/// </summary>
 	internal static readonly Dictionary<int, string> __SlugNameCache = new();
 	//might not need it at all honestly
-#if false
 	/// <summary>
 	/// Returns slugcat name for a given index.
 	/// </summary>
@@ -694,39 +642,31 @@ public static partial class Utils
 		{ 't', '\t' },
 		{ 'n', '\n' }
 	};
-	internal static string ApplyEscapes(this string str)
-	{
+	internal static string ApplyEscapes(this string str) {
 		StringBuilder res = new(str.Length);
 		int slashrow = 0;
-		for (int i = 0; i < str.Length; i++)
-		{
+		for (int i = 0; i < str.Length; i++) {
 			char c = str[i];
-			if (c == '\\')
-			{
+			if (c == '\\') {
 				slashrow++;
 			}
-			else if (slashrow > 0)
-			{
-				if (!__literalEscapes.TryGetValue(c, out char escaped))
-				{
+			else if (slashrow > 0) {
+				if (!__literalEscapes.TryGetValue(c, out char escaped)) {
 					res.Append('\\', slashrow);
 					slashrow = 0;
 					continue;
 				}
-				if (slashrow % 2 is 0)
-				{
+				if (slashrow % 2 is 0) {
 					res.Append('\\', slashrow / 2);
 					res.Append(c);
 				}
-				else
-				{
+				else {
 					res.Append('\\', Max((slashrow - 1) / 2, 0));
 					res.Append(escaped);
 				}
 				slashrow = 0;
 			}
-			else
-			{
+			else {
 				res.Append(c);
 				slashrow = 0;
 			}
@@ -741,35 +681,28 @@ public static partial class Utils
 	/// <param name="datatype">Preferred data type.</param>
 	public static void Assign<TV, TT>(TV argv, TT target, ArgType datatype = ArgType.STRING)
 	where TV : IArgPayload
-	where TT : IArgPayload
-	{
-		switch (datatype)
-		{
-		case ArgType.DECIMAL:
-		{
+	where TT : IArgPayload {
+		switch (datatype) {
+		case ArgType.DECIMAL: {
 			target.F32 = argv.F32;
 			break;
 		}
-		case ArgType.INTEGER:
-		{
+		case ArgType.INTEGER: {
 			target.I32 = argv.I32;
 			break;
 		}
-		case ArgType.BOOLEAN:
-		{
+		case ArgType.BOOLEAN: {
 			target.Bool = argv.Bool;
 			break;
 		}
-		case ArgType.VECTOR:
-		{
+		case ArgType.VECTOR: {
 			target.Vec = argv.Vec;
 			break;
 		}
 		case ArgType.STRING:
 		case ArgType.ENUM:
 		case ArgType.OTHER:
-		default:
-		{
+		default: {
 			target.Str = argv.Str;
 			break;
 		}
@@ -788,8 +721,7 @@ public static partial class Utils
 		FakeProp<string>? p_str = null,
 		FakeProp<bool>? p_bool = null,
 		FakeProp<Vector4>? p_vec = null)
-		where T : IArgPayload
-	{
+		where T : IArgPayload {
 		return new WrapExcept<T>(wrap, p_i32, p_f32, p_str, p_bool, p_vec);
 	}
 	/// <summary>
@@ -804,8 +736,7 @@ public static partial class Utils
 		bool? @bool = null,
 		Vector4? vec = null
 		)
-		where T : IArgPayload
-	{
+		where T : IArgPayload {
 		return new WrapExcept<T>(
 			wrap,
 			i32?.FakeAutoimpl(),
