@@ -1,7 +1,6 @@
-namespace Atmo.API;
+﻿namespace Atmo.API;
 
-internal static class Backing
-{
+internal static class Backing {
 	#region fields
 	internal static readonly Dictionary<string, V0_Create_RawHappenBuilder> __namedActions = new();
 	internal static readonly Dictionary<string, V0_Create_RawTriggerFactory> __namedTriggers = new();

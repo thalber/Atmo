@@ -7,8 +7,7 @@ namespace Atmo.Gen;
 /// <summary>
 /// Responsible for filling <see cref="HappenSet"/>s from atmo script files.
 /// </summary>
-public class HappenParser
-{
+public class HappenParser {
 	//this is still a mess but manageable
 	#region fields
 	#region statfields
@@ -36,54 +35,45 @@ public class HappenParser
 	/// Creates a parser for a specified file. <see cref="_Advance"/> the return value until it's <see cref="done"/>.
 	/// </summary>
 	/// <param name="file">Input file.</param>
-	public HappenParser(IO.FileInfo file)
-	{
+	public HappenParser(IO.FileInfo file) {
 		BangBang(file, nameof(file));
 		_cline = string.Empty;
-		plog.DbgVerbose($"HappenParse: booting for file: {file.FullName}");
-		if (!file.Exists){
+		__logger.DbgVerbose($"HappenParse: booting for file: {file.FullName}");
+		if (!file.Exists) {
 			_aborted = true;
-			plog.LogWarning($"HappenParse: file does not exist. aborted");
+			__logger.LogWarning($"HappenParse: file does not exist. aborted");
 			_allLines = new string[0];
 			return;
 		}
 		_allLines = IO.File.ReadAllLines(file.FullName, Encoding.UTF8);
 	}
-	internal void _Advance()
-	{
+	internal void _Advance() {
 		_cline = _allLines[_index];
 		TXT.Match
 				group_que = __LineMatchers[LineKind.GroupBegin].Match(_cline),
 				happn_que = __LineMatchers[LineKind.HappenBegin].Match(_cline);
 		if (_cline.StartsWith("//") || _aborted) goto stop;
-		try
-		{
-			switch (_phase)
-			{
-			case ParsePhase.None:
-			{
-				if (group_que.Success)
-				{
+		try {
+			switch (_phase) {
+			case ParsePhase.None: {
+				if (group_que.Success) {
 					_cGroupName = _cline.Substring(group_que.Length);
-					plog.DbgVerbose($"HappenParse: Beginning group block: {_cGroupName}");
+					__logger.DbgVerbose($"HappenParse: Beginning group block: {_cGroupName}");
 					_phase = ParsePhase.Group;
 				}
-				else if (happn_que.Success)
-				{
+				else if (happn_que.Success) {
 					_cHapp = new(_cline.Substring(happn_que.Length));
-					plog.DbgVerbose($"HappenParse: Beginning happen block: {_cHapp.name}");
+					__logger.DbgVerbose($"HappenParse: Beginning happen block: {_cHapp.name}");
 					_phase = ParsePhase.Happen;
 
 				}
 			}
 			break;
-			case ParsePhase.Group:
-			{
+			case ParsePhase.Group: {
 				_ParseGroup();
 			}
 			break;
-			case ParsePhase.Happen:
-			{
+			case ParsePhase.Happen: {
 				_ParseHappen();
 			}
 			break;
@@ -91,9 +81,8 @@ public class HappenParser
 				break;
 			}
 		}
-		catch (Exception ex)
-		{
-			plog.LogError($"HappenParse: Irrecoverable error:" +
+		catch (Exception ex) {
+			__logger.LogError($"HappenParse: Irrecoverable error:" +
 				$"\n{ex}" +
 				$"\nAborting");
 			_aborted = true;
@@ -101,68 +90,54 @@ public class HappenParser
 	stop:
 		_index++;
 	}
-	private void _ParseGroup()
-	{
+	private void _ParseGroup() {
 		TXT.Match ge;
-		if (_cGroupName is null)
-		{
-			plog.LogWarning($"Error parsing group: current name is null! aborting!");
+		if (_cGroupName is null) {
+			__logger.LogWarning($"Error parsing group: current name is null! aborting!");
 			_phase = ParsePhase.None;
 			return;
 		}
-		if ((ge = __LineMatchers[LineKind.GroupEnd].Match(_cline)).Success && ge.Index == 0)
-		{
+		if ((ge = __LineMatchers[LineKind.GroupEnd].Match(_cline)).Success && ge.Index == 0) {
 			_FinalizeGroup();
 			_phase = ParsePhase.None;
 			return;
 		}
-		if (_cline?.Length > 4 && _cline.StartsWith("./") && _cline.EndsWith("/."))
-		{
-			try
-			{
+		if (_cline?.Length > 4 && _cline.StartsWith("./") && _cline.EndsWith("/.")) {
+			try {
 				_cGroupContents.matchers.Add(new TXT.Regex(_cline.Substring(2, _cline.Length - 4)));
-				plog.DbgVerbose($"HappenParse: Created a regex matcher for: {_cline}");
+				__logger.DbgVerbose($"HappenParse: Created a regex matcher for: {_cline}");
 			}
-			catch (Exception ex)
-			{
-				plog.LogWarning($"HappenParse: error creating a regular expression in group block!" +
+			catch (Exception ex) {
+				__logger.LogWarning($"HappenParse: error creating a regular expression in group block!" +
 					$"\n{ex}" +
 					$"\nSource line: {_cline}");
 			}
 			return;
 		}
-		foreach (string? ss in __roomsep.Split(_cline))
-		{
+		foreach (string? ss in __roomsep.Split(_cline)) {
 			if (ss.Length is 0) continue;
 			_cGroupContents.rooms.Add(ss);
 		}
 	}
 
-	private void _ParseHappen()
-	{
-		foreach (LineKind prop in __happenProps)
-		{
+	private void _ParseHappen() {
+		foreach (LineKind prop in __happenProps) {
 			TXT.Match match;
 			TXT.Regex matcher = __LineMatchers[prop];
-			if ((match = matcher.Match(_cline)).Success && match.Index == 0)
-			{
+			if ((match = matcher.Match(_cline)).Success && match.Index == 0) {
 				string? payload = _cline.Substring(match.Length);
-				switch (prop)
-				{
-				case LineKind.HappenWhere:
-				{
-					plog.DbgVerbose("HappenParse: Recognized WHERE clause");
+				switch (prop) {
+				case LineKind.HappenWhere: {
+					__logger.DbgVerbose("HappenParse: Recognized WHERE clause");
 					WhereOps c = WhereOps.Group;
 
 					var items = Tokenize(payload);
-					foreach (Token t in items)
-					{
+					foreach (Token t in items) {
 						//tokenize to allow multiword subregion names
 						if (t.type is TokenType.Separator) continue;
 						string item = t.val;
 						if (item.Length == 0) continue;
-						switch (item)
-						{
+						switch (item) {
 						case "+":
 							c = WhereOps.Include; break;
 						case "-":
@@ -170,8 +145,7 @@ public class HappenParser
 						case "*":
 							c = WhereOps.Group; break;
 						default:
-							switch (c)
-							{
+							switch (c) {
 							case WhereOps.Group:
 								_cHapp.groups.Add(item);
 								break;
@@ -187,15 +161,12 @@ public class HappenParser
 					}
 				}
 				break;
-				case LineKind.HappenWhat:
-				{
-					plog.DbgVerbose("HappenParse: Recognized WHAT clause");
+				case LineKind.HappenWhat: {
+					__logger.DbgVerbose("HappenParse: Recognized WHAT clause");
 					PredicateInlay.Token[]? tokens = PredicateInlay.Tokenize(payload).ToArray();
-					for (int i = 0; i < tokens.Length; i++)
-					{
+					for (int i = 0; i < tokens.Length; i++) {
 						PredicateInlay.Token tok = tokens[i];
-						if (tok.type == PredicateInlay.TokenType.Word)
-						{
+						if (tok.type == PredicateInlay.TokenType.Word) {
 							PredicateInlay.Leaf leaf = PredicateInlay.MakeLeaf(tokens, in i) ?? new();
 							_cHapp.actions.Set(leaf.funcName, leaf.args.Select(x => x.ApplyEscapes()).ToArray());
 						}
@@ -203,31 +174,27 @@ public class HappenParser
 				}
 				break;
 				case LineKind.HappenWhen:
-					try
-					{
-						if (_cHapp.conditions is not null)
-						{
-							plog.LogWarning("HappenParse: Duplicate WHEN clause! Skipping! (Did you forget to close a previous Happen with END HAPPEN?)");
+					try {
+						if (_cHapp.conditions is not null) {
+							__logger.LogWarning("HappenParse: Duplicate WHEN clause! Skipping! (Did you forget to close a previous Happen with END HAPPEN?)");
 							break;
 						}
-						plog.DbgVerbose("HappenParse: Recognized WHEN clause");
+						__logger.DbgVerbose("HappenParse: Recognized WHEN clause");
 						_cHapp.conditions = new PredicateInlay(
 							expression: payload,
 							exchanger: null,
-							logger: (data) =>
-							{
-								plog.LogWarning($"{_cHapp.name}: {data}");
+							logger: (data) => {
+								__logger.LogWarning($"{_cHapp.name}: {data}");
 							},
 							mendOnThrow: true);
 					}
-					catch (Exception ex)
-					{
-						plog.LogError($"HappenParse: Error creating eval tree from a WHEN block for {_cHapp.name}:\n{ex}");
+					catch (Exception ex) {
+						__logger.LogError($"HappenParse: Error creating eval tree from a WHEN block for {_cHapp.name}:\n{ex}");
 						_cHapp.conditions = null;
 					}
 					break;
 				case LineKind.HappenEnd:
-					plog.DbgVerbose("HappenParse: finishing a happen block");
+					__logger.DbgVerbose("HappenParse: finishing a happen block");
 					_FinalizeHappen();
 					_phase = ParsePhase.None;
 					break;
@@ -239,22 +206,18 @@ public class HappenParser
 		}
 	}
 
-	private void _FinalizeHappen()
-	{
+	private void _FinalizeHappen() {
 		_retrievedHappens.Add(_cHapp);
 		_cHapp = default;
 	}
 
-	private void _FinalizeGroup()
-	{
-		if (_cGroupName is null)
-		{
-			plog.LogWarning("HappenParse: attempted to finalize group while group is null!");
+	private void _FinalizeGroup() {
+		if (_cGroupName is null) {
+			__logger.LogWarning("HappenParse: attempted to finalize group while group is null!");
 
 		}
-		else
-		{
-			plog.DbgVerbose($"HappenParse: ending group: {_cGroupName}. " +
+		else {
+			__logger.DbgVerbose($"HappenParse: ending group: {_cGroupName}. " +
 							$"Regex patterns: {_cGroupContents.matchers.Count}, " +
 							$"Literal rooms: {_cGroupContents.rooms.Count}");
 			_allGroupContents.Add(_cGroupName, _cGroupContents);
@@ -263,33 +226,26 @@ public class HappenParser
 		_cGroupContents = new();
 	}
 	#region nested
-	private struct GroupContents
-	{
+	private struct GroupContents {
 		internal List<string> rooms = new();
 		internal List<TXT.Regex> matchers = new();
-		public GroupContents()
-		{
+		public GroupContents() {
 		}
-		public GroupContents Finalize(World w)
-		{
-			foreach (TXT.Regex? matcher in matchers)
-			{
-				for (int i = 0; i < w.abstractRooms.Length; i++)
-				{
+		public GroupContents Finalize(World w) {
+			foreach (TXT.Regex? matcher in matchers) {
+				for (int i = 0; i < w.abstractRooms.Length; i++) {
 					if (matcher.IsMatch(w.abstractRooms[i].name)) rooms.Add(w.abstractRooms[i].name);
 				}
 			}
 			return this;
 		}
 	}
-	private enum WhereOps
-	{
+	private enum WhereOps {
 		Group,
 		Include,
 		Exclude,
 	}
-	private enum LineKind
-	{
+	private enum LineKind {
 		Comment,
 		GroupBegin,
 		GroupEnd,
@@ -300,18 +256,15 @@ public class HappenParser
 		HappenEnd,
 		Other,
 	}
-	private enum ParsePhase
-	{
+	private enum ParsePhase {
 		None,
 		Group,
 		Happen
 	}
 	#endregion
 	#region regex
-	private static TXT.Regex MatcherForLK(LineKind lk)
-	{
-		return lk switch
-		{
+	private static TXT.Regex MatcherForLK(LineKind lk) {
+		return lk switch {
 			LineKind.Comment => new TXT.Regex("//", OPTIONS),
 			LineKind.HappenWhat => new TXT.Regex("WHAT\\s*:\\s*", OPTIONS),
 			LineKind.HappenBegin => new TXT.Regex("HAPPEN\\s*:\\s*", OPTIONS),
@@ -331,35 +284,29 @@ public class HappenParser
 	/// <param name="file">File to check from.</param>
 	/// <param name="set">Happenset instance to add results to.</param>
 	/// <param name="game">Current RainWorldGame instance.</param>
-	public static void Parse(IO.FileInfo file, HappenSet set, RainWorldGame game)
-	{
+	public static void Parse(IO.FileInfo file, HappenSet set, RainWorldGame game) {
 		BangBang(file, "file");
 		BangBang(set, "set");
 		BangBang(game, "rwg");
 		HappenParser p = new(file);
-		for (int i = 0; i < p._allLines.Length; i++)
-		{
+		for (int i = 0; i < p._allLines.Length; i++) {
 			p._Advance();
 		}
-		if (p._cGroupName is not null)
-		{
-			plog.LogWarning($"HappenParse: Group {p._cGroupName} missing END! Last block in file, auto wrapping");
+		if (p._cGroupName is not null) {
+			__logger.LogWarning($"HappenParse: Group {p._cGroupName} missing END! Last block in file, auto wrapping");
 			p._FinalizeGroup();
 		}
-		if (p._cHapp.name is not null)
-		{
-			plog.LogWarning($"HappenParse: Happen {p._cHapp.name} missing END! Last block in file, auto wrapping");
+		if (p._cHapp.name is not null) {
+			__logger.LogWarning($"HappenParse: Happen {p._cHapp.name} missing END! Last block in file, auto wrapping");
 
 		}
 		Dictionary<string, IEnumerable<string>> groupsFinal = new();
-		foreach (KeyValuePair<string, GroupContents> groupPre in p._allGroupContents)
-		{
+		foreach (KeyValuePair<string, GroupContents> groupPre in p._allGroupContents) {
 			GroupContents fin = groupPre.Value.Finalize(set.world);
 			groupsFinal.Add(groupPre.Key, fin.rooms);
 		}
 		set.InsertGroups(groupsFinal);
-		foreach (HappenConfig cfg in p._retrievedHappens)
-		{
+		foreach (HappenConfig cfg in p._retrievedHappens) {
 			var ha = new Happen(cfg, set, game);
 			set.InsertHappens(new[] { ha });
 			set.AddBind(ha, cfg.groups);
@@ -367,8 +314,7 @@ public class HappenParser
 			set.AddIncludes(ha, cfg.include);
 		}
 	}
-	static HappenParser()
-	{
+	static HappenParser() {
 		__LineMatchers = new();
 		foreach (LineKind lk in Enum.GetValues(typeof(LineKind))) __LineMatchers.Add(lk, MatcherForLK(lk));
 	}

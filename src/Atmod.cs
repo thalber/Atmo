@@ -1,9 +1,8 @@
 ﻿using Atmo.Body;
 using Atmo.Gen;
 using BepInEx;
-
-using THR = System.Threading;
 using CFG = BepInEx.Configuration;
+using THR = System.Threading;
 //using VREG = Atmo.Helpers.VarRegistry;
 
 namespace Atmo;
@@ -15,8 +14,7 @@ namespace Atmo;
 /// </para>
 /// </summary>
 [BepInPlugin(GUID: Id, Name: DName, Version: Ver)]
-public sealed partial class Atmod : BaseUnityPlugin
-{
+public sealed partial class Atmod : BaseUnityPlugin {
 	#region field/const/prop
 	/// <summary>
 	/// Mod version
@@ -58,7 +56,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <summary>
 	/// publicized logger
 	/// </summary>
-	internal static LOG.ManualLogSource plog => inst.Logger;
+	internal static LOG.ManualLogSource __logger => inst.Logger;
 	internal static CFG.ConfigEntry<bool>? log_verbose;
 	private bool setupRan = false;
 	private bool dying = false;
@@ -74,14 +72,15 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <summary>
 	/// Applies hooks and sets <see cref="inst"/>.
 	/// </summary>
-	public void OnEnable()
-	{
+	public void OnEnable() {
 		const string CFG_LOGGING = "logging";
 		inst = this;
 		log_verbose = Config.Bind(section: CFG_LOGGING, key: "verbose", defaultValue: true, description: "Enable more verbose logging. Can create clutter.");
 		Logger.LogWarning($"Atmo booting... {THR.Thread.CurrentThread.ManagedThreadId}");
-		try
-		{
+		try {
+			Arg a = 0;
+			a.ToDateTime(null!);
+			//a.Except()
 			On.AbstractRoom.Update += RunHappensAbstUpd;
 			On.RainWorldGame.Update += DoBodyUpdates;
 			On.Room.Update += RunHappensRealUpd;
@@ -90,20 +89,16 @@ public sealed partial class Atmod : BaseUnityPlugin
 			VarRegistry.__Init();
 			HappenBuilding.__InitBuiltins();
 		}
-		catch (Exception ex)
-		{
+		catch (Exception ex) {
 			Logger.LogFatal($"Error on enable!\n{ex}");
 		}
-		try
-		{
+		try {
 #if false
 			ConsoleFace.Apply();
 #endif
 		}
-		catch (Exception ex)
-		{
-			switch (ex)
-			{
+		catch (Exception ex) {
+			switch (ex) {
 			case TypeLoadException or IO.FileNotFoundException:
 				Logger.LogWarning("DevConsole not present");
 				break;
@@ -117,11 +112,9 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <summary>
 	/// Undoes hooks and spins up a static cleanup member cleanup procedure.
 	/// </summary>
-	public void OnDisable()
-	{
+	public void OnDisable() {
 		dying = true;
-		try
-		{
+		try {
 			Utils.__slugnameNotFound = new(SLUG_NOT_FOUND, true);
 			//On.World.ctor -= FetchHappenSet;
 			On.Room.Update -= RunHappensRealUpd;
@@ -137,20 +130,16 @@ public sealed partial class Atmod : BaseUnityPlugin
 			bool verbose = log_verbose?.Value ?? false;
 			sw.Start();
 			cleanup_logger.LogMessage("Spooling cleanup thread.");
-			System.Threading.ThreadPool.QueueUserWorkItem((_) =>
-			{
+			System.Threading.ThreadPool.QueueUserWorkItem((_) => {
 				List<string> success = new();
 				List<string> failure = new();
-				foreach (Type t in typeof(Atmod).Assembly.GetTypes())
-				{
-					try
-					{
+				foreach (Type t in typeof(Atmod).Assembly.GetTypes()) {
+					try {
 						VT<List<string>, List<string>> res = t.CleanupStatic();
 						success.AddRange(res.a);
 						failure.AddRange(res.b);
 					}
-					catch (Exception ex)
-					{
+					catch (Exception ex) {
 						cleanup_logger
 						.LogError($"{t}: Unhandled Error cleaning up static fields:" +
 							$"\n{ex}");
@@ -158,14 +147,12 @@ public sealed partial class Atmod : BaseUnityPlugin
 				}
 				sw.Stop();
 
-				static string aggregator(string x, string y)
-				{
+				static string aggregator(string x, string y) {
 					return $"{x}\n\t{y}";
 				}
 
 				cleanup_logger.LogDebug($"Finished statics cleanup: {sw.Elapsed}.");
-				if (verbose)
-				{
+				if (verbose) {
 					cleanup_logger.LogDebug(
 						$"Successfully cleared: {success.Stitch(aggregator)}");
 					cleanup_logger.LogDebug(
@@ -173,32 +160,27 @@ public sealed partial class Atmod : BaseUnityPlugin
 				}
 			});
 		}
-		catch (Exception ex)
-		{
+		catch (Exception ex) {
 			Logger.LogFatal($"Error on disable!\n{ex}");
 		}
-		finally
-		{
+		finally {
 			inst = null!;
 		}
 	}
 	/// <summary>
 	/// Cleans up set if not ingame, updates some builtin variables.
 	/// </summary>
-	public void Update()
-	{
+	public void Update() {
 		if (dying) return;
 		RW ??= CRW;
-		if (!setupRan && RW is not null)
-		{
+		if (!setupRan && RW is not null) {
 			//maybe put something here
 			setupRan = true;
 		}
 
 		if (RW is null || CurrentSet is null) return;
 		if (RW.processManager.currentMainLoop is RainWorldGame) return;
-		if (RW?.processManager.FindSubProcess<RainWorldGame>() is null)
-		{
+		if (RW?.processManager.FindSubProcess<RainWorldGame>() is null) {
 			Logger.LogDebug("No RainWorldGame in processmanager, erasing currentset");
 			CurrentSet = null;
 		}
@@ -209,26 +191,22 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// </summary>
 	/// <param name="orig"></param>
 	/// <param name="self"></param>
-	private void SetTempSSN(On.OverWorld.orig_LoadFirstWorld orig, OverWorld self)
-	{
+	private void SetTempSSN(On.OverWorld.orig_LoadFirstWorld orig, OverWorld self) {
 
 		Utils.__tempSlugName = self.PlayerCharacterNumber;
-		plog.LogMessage($"Setting temp SSN: {__tempSlugName}, {THR.Thread.CurrentThread.ManagedThreadId}");
+		__logger.LogMessage($"Setting temp SSN: {__tempSlugName}, {THR.Thread.CurrentThread.ManagedThreadId}");
 		orig(self);
 		Utils.__tempSlugName = null;
 	}
-	private void FetchHappenSet(On.World.orig_LoadWorld orig, World self, SlugcatStats.Name slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates)
-	{
-		plog.LogMessage($"Fetching happenset for {self.name} {THR.Thread.CurrentThread.ManagedThreadId}");
+	private void FetchHappenSet(On.World.orig_LoadWorld orig, World self, SlugcatStats.Name slugcatNumber, List<AbstractRoom> abstractRoomsList, int[] swarmRooms, int[] shelters, int[] gates) {
+		__logger.LogMessage($"Fetching happenset for {self.name} {THR.Thread.CurrentThread.ManagedThreadId}");
 		orig(self, slugcatNumber, abstractRoomsList, swarmRooms, shelters, gates);
 		if (self.singleRoomWorld) return;
 		__temp_World = self;
-		try
-		{
+		try {
 			CurrentSet = HappenSet.TryCreate(self);
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			Logger.LogError($"Could not create a happenset: {e}");
 		}
 		__temp_World = null;
@@ -238,20 +216,16 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// </summary>
 	/// <param name="orig"></param>
 	/// <param name="self"></param>
-	private void DoBodyUpdates(On.RainWorldGame.orig_Update orig, RainWorldGame self)
-	{
+	private void DoBodyUpdates(On.RainWorldGame.orig_Update orig, RainWorldGame self) {
 		orig(self);
 		if (CurrentSet is null) return;
 		if (self.pauseMenu != null) return;
-		foreach (Happen? ha in CurrentSet.AllHappens)
-		{
+		foreach (Happen? ha in CurrentSet.AllHappens) {
 			if (ha is null) continue;
-			try
-			{
+			try {
 				ha.CoreUpdate();
 			}
-			catch (Exception e)
-			{
+			catch (Exception e) {
 				Logger.LogError($"Error doing body update for {ha.name}:\n{e}");
 			}
 		}
@@ -262,24 +236,19 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// <param name="orig"></param>
 	/// <param name="self"></param>
 	/// <param name="timePassed"></param>
-	private void RunHappensAbstUpd(On.AbstractRoom.orig_Update orig, AbstractRoom self, int timePassed)
-	{
+	private void RunHappensAbstUpd(On.AbstractRoom.orig_Update orig, AbstractRoom self, int timePassed) {
 		orig(self, timePassed);
 		if (CurrentSet is null) return;
 		IEnumerable<Happen>? haps = CurrentSet.GetHappensForRoom(self.name);
-		foreach (Happen? ha in haps)
-		{
+		foreach (Happen? ha in haps) {
 			if (ha is null) continue;
-			try
-			{
-				if (ha.Active)
-				{
+			try {
+				if (ha.Active) {
 					if (!ha.InitRan) { ha.Init(self.world); ha.InitRan = true; }
 					ha.AbstUpdate(self, timePassed);
 				}
 			}
-			catch (Exception e)
-			{
+			catch (Exception e) {
 				Logger.LogError($"Error running event abstupdate for room {self.name}:\n{e}");
 			}
 		}
@@ -289,8 +258,7 @@ public sealed partial class Atmod : BaseUnityPlugin
 	/// </summary>
 	/// <param name="orig"></param>
 	/// <param name="self"></param>
-	private void RunHappensRealUpd(On.Room.orig_Update orig, Room self)
-	{
+	private void RunHappensRealUpd(On.Room.orig_Update orig, Room self) {
 		//#warning issue: for some reason geteventsforroom always returns none on real update
 		//in my infinite wisdom i set SU_S04 as test room instead of SU_C04. everything worked as intended except for my brain
 
@@ -298,18 +266,14 @@ public sealed partial class Atmod : BaseUnityPlugin
 		//DBG.Stopwatch sw = DBG.Stopwatch.StartNew();
 		if (CurrentSet is null) return;
 		IEnumerable<Happen>? haps = CurrentSet.GetHappensForRoom(self.abstractRoom.name);
-		foreach (Happen? ha in haps)
-		{
-			try
-			{
-				if (ha.Active)
-				{
+		foreach (Happen? ha in haps) {
+			try {
+				if (ha.Active) {
 					if (!ha.InitRan) { ha.Init(self.world); ha.InitRan = true; }
 					ha.RealUpdate(self);
 				}
 			}
-			catch (Exception e)
-			{
+			catch (Exception e) {
 				Logger.LogError($"Error running event realupdate for room {self.abstractRoom.name}:\n{e}");
 			}
 		}

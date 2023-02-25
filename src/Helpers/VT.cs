@@ -14,19 +14,16 @@ public record VT<T1, T2>(
 	T2 b,
 	string name,
 	string nameA,
-	string nameB)
-{
+	string nameB) {
 	/// <summary>
 	/// Creates a new instance, using default names.
 	/// </summary>
 	/// <param name="_a">Left item</param>
 	/// <param name="_b">Right item</param>
-	public VT(T1 _a, T2 _b) : this(_a, _b, defName ?? "VT", defAName ?? "a", defBName ?? "b")
-	{
+	public VT(T1 _a, T2 _b) : this(_a, _b, defName ?? "VT", defAName ?? "a", defBName ?? "b") {
 	}
 	/// <inheritdoc/>
-	public override string ToString()
-	{
+	public override string ToString() {
 		return $"{name} {{ {nameA} = {a}, {nameB} = {b} }}";
 	}
 
@@ -47,32 +44,28 @@ public record VT<T1, T2>(
 	/// </summary>
 	/// <param name="other"></param>
 	/// <returns></returns>
-	public virtual bool Equals(VT<T1, T2> other)
-	{
+	public virtual bool Equals(VT<T1, T2> other) {
 		return name == other.name
 				&& Equals(a, other.a)
 				&& Equals(b, other.b);
 	}
 
 	/// <inheritdoc/>
-	public override int GetHashCode()
-	{
+	public override int GetHashCode() {
 		return (a?.GetHashCode() ?? 0) ^ (b?.GetHashCode() ?? 0);
 	}
 
 	/// <summary>
 	/// Use this as a shorthand for creating several instances with similar names. Not thread safe (but that's okay because basically nothing in RW is)
 	/// </summary>
-	public struct Names : IDisposable
-	{
+	public struct Names : IDisposable {
 		/// <summary>
 		/// Sets name defaults to specified values.
 		/// </summary>
 		/// <param name="defname">default instance name</param>
 		/// <param name="defaname">default left item name</param>
 		/// <param name="defbname">default right item name</param>
-		public Names(string defname, string defaname, string defbname)
-		{
+		public Names(string defname, string defaname, string defbname) {
 			defName = defname;
 			defAName = defaname;
 			defBName = defbname;
@@ -80,8 +73,7 @@ public record VT<T1, T2>(
 		/// <summary>
 		/// Resets the static default names.
 		/// </summary>
-		public void Dispose()
-		{
+		public void Dispose() {
 			defName = null;
 			defAName = null;
 			defBName = null;
