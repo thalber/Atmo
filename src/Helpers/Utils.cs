@@ -123,6 +123,22 @@ public static partial class Utils {
 	#endregion
 	#region refl helpers
 	/// <summary>
+	/// Loads all types from an assembly, ignoring reflection.
+	/// </summary>
+	/// <param name="asm"></param>
+	/// <param name="reflError"></param>
+	/// <returns></returns>
+	public static IEnumerable<Type> GetTypesSafe(this Assembly asm, out ReflectionTypeLoadException? reflError) {
+		try {
+			reflError = null;
+			return asm.GetTypes();
+		}
+		catch (ReflectionTypeLoadException e) {
+			reflError = e;
+			return e.Types.Where(t => t != null);
+		}
+	}
+	/// <summary>
 	/// Gets a method regardless of visibility.
 	/// </summary>
 	/// <param name="self">Type to get methods from</param>
@@ -407,7 +423,7 @@ public static partial class Utils {
 		return $"{x}, {y}";
 	}
 	/// <summary>
-	/// Stitches a given collection with, returns an empty string if empty.
+	/// Stitches a given string collection with aggregator, returns an empty string if empty.
 	/// </summary>
 	/// <param name="coll"></param>
 	/// <param name="aggregator">Aggregator function. <see cref="JoinWithComma"/> by default.</param>

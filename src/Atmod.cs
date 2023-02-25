@@ -93,9 +93,7 @@ public sealed partial class Atmod : BaseUnityPlugin {
 			Logger.LogFatal($"Error on enable!\n{ex}");
 		}
 		try {
-#if false
 			ConsoleFace.Apply();
-#endif
 		}
 		catch (Exception ex) {
 			switch (ex) {
@@ -131,9 +129,13 @@ public sealed partial class Atmod : BaseUnityPlugin {
 			sw.Start();
 			cleanup_logger.LogMessage("Spooling cleanup thread.");
 			System.Threading.ThreadPool.QueueUserWorkItem((_) => {
+				static string aggregator(string x, string y) {
+					return $"{x}\n\t{y}";
+				}
 				List<string> success = new();
 				List<string> failure = new();
-				foreach (Type t in typeof(Atmod).Assembly.GetTypes()) {
+				IEnumerable<Type> types = typeof(Atmod).Assembly.GetTypesSafe(out System.Reflection.ReflectionTypeLoadException? tlex);
+				foreach (Type t in types) {
 					try {
 						VT<List<string>, List<string>> res = t.CleanupStatic();
 						success.AddRange(res.a);
@@ -146,12 +148,10 @@ public sealed partial class Atmod : BaseUnityPlugin {
 					}
 				}
 				sw.Stop();
-
-				static string aggregator(string x, string y) {
-					return $"{x}\n\t{y}";
-				}
-
 				cleanup_logger.LogDebug($"Finished statics cleanup: {sw.Elapsed}.");
+				if (tlex is not null){
+					cleanup_logger.LogWarning($"TypeLoadExceptions occured: {tlex.LoaderExceptions.Select(x => x.ToString()).Stitch(aggregator)}");
+				}
 				if (verbose) {
 					cleanup_logger.LogDebug(
 						$"Successfully cleared: {success.Stitch(aggregator)}");
