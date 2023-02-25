@@ -5,6 +5,8 @@ using static Atmo.Body.HappenTrigger;
 using static Atmo.Data.VarRegistry;
 using static UnityEngine.Mathf;
 
+using RoomFlasher = Atmo.Helpers.EventfulUAD.Extra<float, float, bool>;
+
 namespace Atmo.Gen;
 public static partial class HappenBuilding {
 	internal static void __InitBuiltins() {
@@ -407,9 +409,57 @@ public static partial class HappenBuilding {
 		AddNamedAction(new[] { "stun" }, Make_Stun);
 		AddNamedAction(new[] { "lightning" }, Make_Lightning);
 		//todo: document all actions below:
+		AddNamedAction(new[] { "flash" }, Make_Flash);
 		//do not document:
 	}
-
+	private static void Make_Flash(Happen ha, ArgSet args) {
+		Arg
+			color = args.AtOr(0, (Vector4)Color.white),
+			maxopacity = args.AtOr(1, 0.9f),
+			lerp = args["lerp"] ?? 0.04f,
+			step = args["step"] ?? 0.01f;
+		List<Guid> flashers = new();
+		ha.On_RealUpdate += (room) => {
+			var mine = (RoomFlasher)room.updateList.FirstOrDefault(x => x is RoomFlasher flasher && flashers.Contains(flasher.id));
+			if (mine is null) {
+				mine = new();
+				__logger.DbgVerbose("Creating new room flasher " + mine.id);
+				flashers.Add(mine.id);
+				mine.onUpdate = (_) => {
+					mine._1 = mine._0;
+					if (!mine._2) mine._0 = Clamp(LerpAndTick(mine._0, 0f, lerp.F32, step.F32), 0f, 1f);
+					mine._2 = false;
+					if (mine._0 == 0f) mine.Destroy();
+				};
+				mine.onInitSprites = (leaser, cam) => {
+					leaser.sprites = new FSprite[1];
+					leaser.sprites[0] = new FSprite("pixel", true) {
+						scaleX = 1366f,
+						scaleY = 768f,
+						anchorX = 0f,
+						anchorY = 0f,
+						color = Color.white
+					};
+					mine.AddToContainer(leaser, cam, null);
+				};
+				mine.onAddToContainer = (leaser, cam, cont) => {
+					leaser.sprites[0].RemoveFromContainer();
+					//todo: u sure it should be HUD or HUD2?
+					cont ??= cam.ReturnFContainer("HUD");
+					cont.AddChild(leaser.sprites[0]);
+					//leaser.sprites[0].addT
+				};
+				mine.onDestroy = () => { flashers.Remove(mine.id); };
+				mine.onDraw = (leaser, cam, ts, cpos) => {
+					leaser.sprites[0].alpha = Lerp(mine._1, mine._0, ts) * maxopacity.F32;
+				};
+				mine._0 = 1f;
+				mine._1 = 1f;
+				room.AddObject(mine);
+			}
+			mine._0 = 1f;
+		};
+	}
 	private static void Make_Lightning(Happen ha, ArgSet args) {
 		__logger.DbgVerbose("Making lightning!");
 		if (args.Count < 1) {
