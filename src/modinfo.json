@@ -3,7 +3,7 @@
 	"name": "atmo",
 	"version": "0.12",
 	"authors": "thalber",
-	"description": "Asset-driven region scripting layer.",
+	"description": "Asset-driven region scripting layer.<LINE>Source code and instructions can be found here: https://github.com/thalber/Atmo",
 	"requirements": [],
 	"requirements_names": [],
 	"checksum_override_version": false
