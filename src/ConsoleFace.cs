@@ -1,7 +1,5 @@
 ﻿//off until slime ports devconsole
 
-#if false
-
 using DC = DevConsole;
 using CMD = DevConsole.Commands;
 using DCLI = DevConsole.GameConsole;
@@ -170,12 +168,12 @@ internal static class ConsoleFace
 			TryParseEnum(args.AtOr(5, nameof(ArgType.STRING)), out ArgType at);
 			if (args.AtOr(3, "print") is "save")
 			{
-				plog.DbgVerbose($"Saving {res} to {dest}");
+				__logger.DbgVerbose($"Saving {res} to {dest}");
 				Assign(res, target, at);
 			}
 			else
 			{
-				plog.DbgVerbose($"Printing {res}[{at}] to console");
+				__logger.DbgVerbose($"Printing {res}[{at}] to console");
 				DCLI.WriteLine(res[at]?.ToString() ?? "NULL");
 			}
 			break;
@@ -190,4 +188,3 @@ internal static class ConsoleFace
 	}
 
 }
-#endif

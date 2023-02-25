@@ -579,12 +579,12 @@ public static partial class Utils {
 	public const string SLUG_NOT_FOUND = "ATMO_SER_NOCHAR";
 	//todo: init this
 	internal static SlugcatStats.Name __slugnameNotFound = null!;
+#if false
 	/// <summary>
 	/// Cache to speed up <see cref="__SlugNameString(int)"/>.
 	/// </summary>
 	internal static readonly Dictionary<int, string> __SlugNameCache = new();
 	//might not need it at all honestly
-#if false
 	/// <summary>
 	/// Returns slugcat name for a given index.
 	/// </summary>
