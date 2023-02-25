@@ -42,7 +42,7 @@ public static partial class HappenBuilding {
 		AddNamedTrigger(new[] { "varmatch", "variableregex", "varregex" }, TMake_VarMatch);
 
 		//todo: document all triggers below:
-		AddNamedTrigger(new[] { "ghost, echo" }, TMake_EchoPresence);
+		AddNamedTrigger(new[] { "ghost", "echo" }, TMake_EchoPresence);
 		//do not document:
 		AddNamedTrigger(new[] { "thisbreaks" }, (args, rwg, ha) => {
 			Arg when = args.AtOr(0, "eval");

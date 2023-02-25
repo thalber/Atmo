@@ -107,6 +107,7 @@ internal static class ConsoleFace {
 			DCLI.WriteLine($"Registered metafunctions: [ {__namedMetafuncs.Keys.Stitch()} ]");
 			break;
 		}
+
 		case _CALL: {
 			int ss = __CurrentSaveslot ?? -1;
 			SlugcatStats.Name ch = __CurrentCharacter ?? SlugcatStats.Name.Red;

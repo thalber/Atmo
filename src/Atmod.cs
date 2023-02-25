@@ -58,8 +58,8 @@ public sealed partial class Atmod : BaseUnityPlugin {
 	/// </summary>
 	internal static LOG.ManualLogSource __logger => inst.Logger;
 	internal static CFG.ConfigEntry<bool>? log_verbose;
-	private bool setupRan = false;
-	private bool dying = false;
+	private bool _setupRan = false;
+	private bool _dying = false;
 	/// <summary>
 	/// Currently active <see cref="HappenSet"/>. Null if not in session, if in arena session, or if failed to read from session.
 	/// </summary>
@@ -113,7 +113,7 @@ public sealed partial class Atmod : BaseUnityPlugin {
 	/// Undoes hooks and spins up a static cleanup member cleanup procedure.
 	/// </summary>
 	public void OnDisable() {
-		dying = true;
+		_dying = true;
 		try {
 			Utils.__slugnameNotFound = new(SLUG_NOT_FOUND, true);
 			//On.World.ctor -= FetchHappenSet;
@@ -171,11 +171,11 @@ public sealed partial class Atmod : BaseUnityPlugin {
 	/// Cleans up set if not ingame, updates some builtin variables.
 	/// </summary>
 	public void Update() {
-		if (dying) return;
+		if (_dying) return;
 		RW ??= CRW;
-		if (!setupRan && RW is not null) {
+		if (!_setupRan && RW is not null) {
 			//maybe put something here
-			setupRan = true;
+			_setupRan = true;
 		}
 
 		if (RW is null || CurrentSet is null) return;
