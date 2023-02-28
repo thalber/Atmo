@@ -123,14 +123,14 @@ public class EventfulUAD : UpdatableAndDeletable, IDrawable {
 		__logger.LogError($"EventfulUAD {uad.id}: error on {where.Method.Name}: {err}");
 	}
 	/// <inheritdoc/>
-	public class Extra<T> : EventfulUAD{
+	public class Extra<T> : EventfulUAD {
 		/// <summary>
 		/// First extra item.
 		/// </summary>
 		public T? _0;
 	}
 	/// <inheritdoc/>
-	public class Extra<T1, T2> : EventfulUAD{
+	public class Extra<T1, T2> : EventfulUAD {
 		/// <summary>
 		/// First extra item.
 		/// </summary>
@@ -141,7 +141,7 @@ public class EventfulUAD : UpdatableAndDeletable, IDrawable {
 		public T2? _1;
 	}
 	/// <inheritdoc/>
-	public class Extra<T1, T2, T3> : EventfulUAD{
+	public class Extra<T1, T2, T3> : EventfulUAD {
 		/// <summary>
 		/// First extra item.
 		/// </summary>
