@@ -4,7 +4,6 @@ using static Atmo.API.V0;
 using static Atmo.Body.HappenTrigger;
 using static Atmo.Data.VarRegistry;
 using static UnityEngine.Mathf;
-
 using RoomFlasher = Atmo.Helpers.EventfulUAD.Extra<float, float, bool>;
 
 namespace Atmo.Gen;
@@ -419,10 +418,12 @@ public static partial class HappenBuilding {
 			lerp = args["lerp"] ?? 0.04f,
 			step = args["step"] ?? 0.01f;
 		List<Guid> flashers = new();
+		//fields are:
+		//currentpow, oldpow, alive
 		ha.On_RealUpdate += (room) => {
 			var mine = (RoomFlasher)room.updateList.FirstOrDefault(x => x is RoomFlasher flasher && flashers.Contains(flasher.id));
 			if (mine is null) {
-				mine = new();
+				mine = new(1f, 1f, true);
 				__logger.DbgVerbose("Creating new room flasher " + mine.id);
 				flashers.Add(mine.id);
 				mine.onUpdate = (_) => {

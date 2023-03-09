@@ -125,34 +125,67 @@ public class EventfulUAD : UpdatableAndDeletable, IDrawable {
 	/// <inheritdoc/>
 	public class Extra<T> : EventfulUAD {
 		/// <summary>
-		/// First extra item.
+		/// Creates a new instance with specified contents.
 		/// </summary>
-		public T? _0;
-	}
-	/// <inheritdoc/>
-	public class Extra<T1, T2> : EventfulUAD {
+		public Extra(T item) {
+			_0 = item;
+		}
+
 		/// <summary>
 		/// First extra item.
 		/// </summary>
-		public T1? _0;
+		public T _0;
+		/// <inheritdoc/>
+		public void Deconstruct(out T? i0) {
+			i0 = this._0;
+		}
+	}
+	/// <inheritdoc/>
+	public class Extra<T0, T1> : EventfulUAD {
+		/// <inheritdoc/>
+		public Extra(T0 item0, T1 item1){
+			_0 = item0;
+			_1 = item1;
+		}
+
+		/// <summary>
+		/// First extra item.
+		/// </summary>
+		public T0 _0;
 		/// <summary>
 		/// Second extra item.
 		/// </summary>
-		public T2? _1;
+		public T1 _1;/// <inheritdoc/>
+		public void Deconstruct(out T0? i0, out T1 i1) {
+			i0 = _0;
+			i1 = _1;
+		}
 	}
 	/// <inheritdoc/>
-	public class Extra<T1, T2, T3> : EventfulUAD {
+	public class Extra<T0, T1, T2> : EventfulUAD {
+		/// <inheritdoc/>
+		public Extra(T0 item0, T1 item1, T2 item2){
+			_0 = item0;
+			_1 = item1;
+			_2 = item2;
+		}
 		/// <summary>
 		/// First extra item.
 		/// </summary>
-		public T1? _0;
+		public T0 _0;
 		/// <summary>
 		/// Second extra item.
 		/// </summary>
-		public T2? _1;
+		public T1 _1;
 		/// <summary>
 		/// Third extra item.
 		/// </summary>
-		public T3? _2;
+		public T2 _2;
+		/// <inheritdoc/>
+		public void Deconstruct(out T0 i0, out T1 i1, out T2 i2){
+			i0 = _0;
+			i1 = _1;
+			i2 = _2;
+		}
 	}
 }
