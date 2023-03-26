@@ -12,7 +12,7 @@ internal static class ConsoleFace {
 	private static ulong mfinv_uid;
 	private static string[] __autocomplete_empty = new string[0];
 	private static string[] __autocomplete_listcall = new[] { _LIST, _CALL };
-	private static string[] __ac_getset = new[] { _GET, _SET };
+	private static string[] __autocomplete_getset = new[] { _GET, _SET };
 	private static string[] __autocomplete_printsave = new[] { _PRINT, _SAVE };
 	private const string _SET = "set";
 	private const string _GET = "get";
@@ -63,7 +63,7 @@ internal static class ConsoleFace {
 	}
 	private static IEnumerable<string> __Autocomplete_Var(string[] args)
 		=> args switch {
-			[] => __ac_getset,
+			[] => __autocomplete_getset,
 			_ => __autocomplete_empty
 		};
 	private static void __Run_Var(string[] args) {
@@ -139,7 +139,7 @@ internal static class ConsoleFace {
 	}
 
 	private static void __NotifyArgsMissing(Delegate where, params string[] args) {
-		DCLI.WriteLine($"ATMO.CLI: {where.Method}: Missing arguments! " +
+		DCLI.WriteLine($"ATMO.CLI: {where?.Method}: Missing arguments! " +
 			$"Required arguments: {args.Stitch()}");
 	}
 }
