@@ -41,9 +41,8 @@ public static partial class HappenBuilding {
 		AddNamedTrigger(new[] { "vareq", "varequal", "variableeq" }, TMake_VarEq);
 		AddNamedTrigger(new[] { "varne", "varnot", "varnotequal" }, TMake_VarNe);
 		AddNamedTrigger(new[] { "varmatch", "variableregex", "varregex" }, TMake_VarMatch);
-
-		//todo: document all triggers below:
 		AddNamedTrigger(new[] { "ghost", "echo" }, TMake_EchoPresence);
+		//todo: document all triggers below:
 		//do not document:
 		AddNamedTrigger(new[] { "thisbreaks" }, (args, rwg, ha) => {
 			Arg when = args.AtOr(0, "eval");
@@ -407,8 +406,8 @@ public static partial class HappenBuilding {
 		AddNamedAction(new[] { "light", "tempglow" }, Make_Tempglow);
 		AddNamedAction(new[] { "stun" }, Make_Stun);
 		AddNamedAction(new[] { "lightning" }, Make_Lightning);
-		//todo: document all actions below:
 		AddNamedAction(new[] { "flash" }, Make_Flash);
+		//todo: document all actions below:
 		//do not document:
 	}
 	private static void Make_Flash(Happen ha, ArgSet args) {
