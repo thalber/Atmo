@@ -5,6 +5,7 @@ using static Atmo.Body.HappenTrigger;
 using static Atmo.Data.VarRegistry;
 using static UnityEngine.Mathf;
 using RoomFlasher = Atmo.Helpers.EventfulUAD.Extra<float, float, bool>;
+using RoomSoundPlayer = Atmo.Helpers.EventfulUAD.Extra<DisembodiedDynamicSoundLoop, System.Boolean>;
 
 namespace Atmo.Gen;
 public static partial class HappenBuilding {
@@ -619,44 +620,96 @@ public static partial class HappenBuilding {
 			limit = args["lim", "limit"] ?? float.PositiveInfinity;
 		string lastSid = sid.Str;
 		int timeAlive = 0;
-		//int timer = 0;
-		__logger.DbgVerbose(args.Select(x => x.ToString()).Stitch());
-		Dictionary<string, DisembodiedLoopEmitter> soundloops = new();//hashes = new();
-		ha.On_RealUpdate += (rm) => {
-			if (timeAlive * 40 > limit.F32) return;
-			for (int i = 0; i < rm.updateList.Count; i++) {
-				if (rm.updateList[i] is DisembodiedLoopEmitter dle && soundloops.ContainsValue(dle)) {
-					dle.soundStillPlaying = true;
-					dle.alive = true;
-					//plog.DbgVerbose($"Found loop! {dle.room}");
+		List<Guid> soundPlayers = new();
+		// __logger.DbgVerbose($"Creating action soundloop {activePlayers.GetHashCode()}");
+		// //bool wasActive = false;
+		// //int timer = 0;
+		// __logger.DbgVerbose(args.Select(x => x.ToString()).Stitch());
+		// //Dictionary<string, DisembodiedDynamicSoundLoop> soundloops = new();//hashes = new();
+		// ha.On_RealUpdate += (rm) => {
+		// 	if (timeAlive > limit.SecAsFrames) return;
+		// 	foreach (UAD uad in rm.updateList) {
+		// 		if (uad is RoomSoundPlayer pl && activePlayers.Contains(pl._2)) return;
+		// 	}
+		// 	RoomSoundPlayer player = null!;
+		// 	player = new(null!, false, Guid.NewGuid()) {
+		// 		room = rm,
+		// 		onUpdate = (eu) => {
+		// 			if (!ha.Active || timeAlive > limit.SecAsFrames) {
+		// 				player.Destroy();
+		// 				player._0.Stop();
+		// 				return;
+		// 			}
+		// 			bool shouldMakeSound = player.room.BeingViewed;
+		// 			Action? neededChange = (shouldMakeSound, player._1) switch {
+		// 				(true, false) => player._0.Start,
+		// 				(false, true) => player._0.Stop,
+		// 				_ => null
+		// 			};
+		// 			neededChange?.Invoke();
+		// 			if (neededChange is not null) __logger.LogDebug($"{player._2} {neededChange.Method.Name}");
+		// 			player._0.Update();
+		// 			player._1 = shouldMakeSound;
+		// 		}
+		// 	};
+		// 	player._0 = new(player) {
+		// 		destroyClipWhenDone = false,
+		// 		Volume = vol.F32,
+		// 		Pan = pan.F32,
+		// 		Pitch = pitch.F32,
+		// 	};
+		// 	__logger.LogDebug($"{rm.abstractRoom.name} creating new soundloop");
+		// 	rm.AddObject(player);
+		// 	activePlayers.Add(player._2);
+		// };
+		// ha.On_CoreUpdate += (rwg) => {
+		// 	if (ha.Active) timeAlive++;
+		// 	//lazy enum parsing
+		// 	if (sid.Str != lastSid) {
+		// 		sid.GetExtEnum(out soundid);
+		// 	}
+		// 	lastSid = sid.Str;
+		// 	//wasActive = ha.Active;
+		// 	if (!ha.Active) activePlayers.Clear();
+		// };
+		ha.On_RealUpdate += (room) => {
+			var mine = (RoomSoundPlayer)room.updateList.FirstOrDefault(x => x is RoomSoundPlayer player && soundPlayers.Contains(player.id));
+			if (mine is not null) {
+				return;
+			}
+			mine = new(null!, false);
+			__logger.DbgVerbose("Creating new loop holder " + mine.id);
+			soundPlayers.Add(mine.id);
+			mine._0 = new(mine) {
+				destroyClipWhenDone = false,
+				Volume = vol.F32,
+				Pan = pan.F32,
+				Pitch = pitch.F32,
+			};
+			mine.room = room;
+			mine.onUpdate = (eu) => {
+				if (!ha.Active /* || timeAlive > limit.SecAsFrames */) {
+					mine.Destroy();
+					mine._0.Stop();
 					return;
 				}
-			}
-			__logger.DbgVerbose($"{ha.name}: Need to create a new soundloop in {rm.abstractRoom.name}! {soundloops.GetHashCode()}");
-			DisembodiedLoopEmitter? newdle = rm.PlayDisembodiedLoop(soundid, vol.F32, pitch.F32, pan.F32);
-			newdle.requireActiveUpkeep = true;
-			newdle.alive = true;
-			newdle.soundStillPlaying = true;
-			soundloops.Set(rm.abstractRoom.name, newdle);
+				bool shouldMakeSound = mine.room.BeingViewed;
+				Action? neededChange = (shouldMakeSound, mine._1) switch {
+					(true, false) => mine._0.Start,
+					(false, true) => mine._0.Stop,
+					_ => null
+				};
+				neededChange?.Invoke();
+				if (neededChange is not null) __logger.LogDebug($"{mine.id} {neededChange.Method.Name}");
+				mine._0.Update();
+				mine._1 = shouldMakeSound;
+			};
+			mine._0.sound = soundid;
+			mine._0.InitSound();
+			room.AddObject(mine);
 		};
 		ha.On_CoreUpdate += (rwg) => {
-			//timer--;
-			//if (timer < 0)
-			//{
-			//	plog.DbgVerbose(soundloops.Keys.Stitch());
-			//	plog.DbgVerbose(soundloops.Values
-			//		.Select(x => $"({x.alive}, {x.soundStillPlaying})")
-			//		.Stitch()
-			//		);
-			//	timer = 40;
-			//}
-			if (ha.Active) timeAlive++;
-			//lazy enum parsing
-			if (sid.Str != lastSid) {
-				sid.GetExtEnum(out soundid);
-			}
-			lastSid = sid.Str;
-			if (!ha.Active) soundloops.Clear();
+			if (!ha.Active) soundPlayers.Clear();
 		};
 	}
 	private static void Make_Sound(Happen ha, ArgSet args) {
