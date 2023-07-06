@@ -25,7 +25,7 @@
 	</PropertyGroup>
 	<!-- Release configuration. Build for release. -->
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DebugType>embedded</DebugType>
+		<DebugType>Portable</DebugType>
 		<TreatWarningsAsErrors>False</TreatWarningsAsErrors>
 		<WarningsAsErrors>$(WarningsAsErrors);NU1605;Nullable;</WarningsAsErrors>
 		<DefineConstants>$(DefineConstants)TRACE;ATMO;REMIX</DefineConstants>
