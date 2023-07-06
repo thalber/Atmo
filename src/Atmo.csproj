@@ -11,8 +11,8 @@
 		<Authors>thalber</Authors>
 		<Description>Rain World mod that acts as a regpack-centric scripting addon for RegionKit.</Description>
 		<Copyright>The Unlicense</Copyright>
-		<FileVersion>0.12</FileVersion>
-		<AssemblyVersion>0.12</AssemblyVersion>
+		<FileVersion>0.13</FileVersion>
+		<AssemblyVersion>0.13</AssemblyVersion>
 		<PackageReadmeFile>../README.md</PackageReadmeFile>
 		<PackageLicenseFile>../LICENSE</PackageLicenseFile>
 	</PropertyGroup>
