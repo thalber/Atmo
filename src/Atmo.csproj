@@ -159,6 +159,7 @@
 		<Message Text="Atmo: Buildcopy from [ $(TargetPath) ] to [ $(RWMods_atmo) ]" Importance="high">
 		</Message>
 		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(RWMods_atmo)/plugins"/>
+		<Copy SourceFiles="$(TargetDir)/Atmo.pdb" DestinationFolder="$(RWMods_atmo)/plugins"/>
 		<Copy SourceFiles="modinfo.json" DestinationFolder="$(RWMods_atmo)"/>
 	</Target>
 
