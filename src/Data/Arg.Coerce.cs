@@ -63,7 +63,6 @@ public sealed partial class Arg {
 		if (parsedAsVec = TryParseVec4(s, out var _v)) {
 			__Coerce_Vec(_v, out _, out i, out f, out b);
 			v = _v;
-
 		}
 		else {
 			if (trueStrings.Contains(s.ToLower())) {

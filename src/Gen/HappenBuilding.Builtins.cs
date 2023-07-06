@@ -562,11 +562,12 @@ public static partial class HappenBuilding {
 		if (args.Count < 1) {
 			__NotifyArgsMissing(Make_Fling, "force");
 		}
+
 		Arg force = args[0],
 			filter = args["filter", "select"] ?? ".*",
 			forceVar = args["variance", "var"] ?? 0f,
 			spread = args["spread", "deviation", "dev"] ?? 0f;
-		__logger.DbgVerbose($"{force}, {filter.Raw} / {filter.Str}, {spread}");
+		__logger.DbgVerbose($"{force} ({force.Raw}) ({force.Vec}), {filter.Raw} / {filter.Str}, {spread}");
 		Dictionary<int, VT<float, float>> variance = new();
 		ha.On_RealUpdate += (rm) => {
 			foreach (UpdatableAndDeletable? uad in rm.updateList) {
@@ -575,9 +576,10 @@ public static partial class HappenBuilding {
 					string? crittype = (obj as Creature)?.Template.type.ToString();
 					if
 					(
-					TXT.Regex.IsMatch(objtype, filter.Str, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+						TXT.Regex.IsMatch(objtype, filter.Str, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
 					||
-					(crittype is not null && TXT.Regex.IsMatch(crittype, filter.Str, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+					(
+						crittype is not null && TXT.Regex.IsMatch(crittype, filter.Str, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
 					) {
 						VT<float, float> cvar = variance.EnsureAndGet
 						(obj.GetHashCode(), () => new(
@@ -587,16 +589,18 @@ public static partial class HappenBuilding {
 							"force",
 							"angle")
 						);
-
 						foreach (BodyChunk ch in obj.bodyChunks) {
-							ch.vel += RotateAroundOrigo((Vector2)(force.Vec * cvar.a), cvar.b);
+							ch.vel += (Vector2)force.Vec;//RotateAroundOrigo((Vector2)(force.Vec * cvar.a), cvar.b);
 						}
 					}
 				}
 			}
 		};
 		ha.On_CoreUpdate += (rwg) => {
-			if (!ha.Active) variance.Clear();
+			if (!ha.Active) {
+				__logger.LogWarning("Clearing variance");
+				variance.Clear();
+			}
 		};
 	}
 	private static void Make_SoundLoop(Happen ha, ArgSet args) {
@@ -695,8 +699,8 @@ public static partial class HappenBuilding {
 				}
 				bool shouldMakeSound = mine.room.BeingViewed;
 				Action? neededChange = (shouldMakeSound, mine._1) switch {
-					(true, false) => mine._0.Start,
-					(false, true) => mine._0.Stop,
+					(true, false) => null,//mine._0.Start,
+					(false, true) => null,//mine._0.Stop,
 					_ => null
 				};
 				neededChange?.Invoke();

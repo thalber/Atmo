@@ -403,6 +403,7 @@ public static partial class Utils {
 		string[] spl;
 		Vector4 vecres = default;
 		bool vecparsed = false;
+		
 		if ((spl = TXT.Regex.Split(str, "\\s*;\\s*")).Length is 2 or 3 or 4) {
 			vecparsed = true;
 			for (int i = 0; i < spl.Length; i++) {
@@ -410,6 +411,7 @@ public static partial class Utils {
 				vecres[i] = val;
 			}
 		}
+		__logger.LogDebug($"{str} is vector : {vecparsed}");
 		vec = vecres;
 		return vecparsed;
 	}
