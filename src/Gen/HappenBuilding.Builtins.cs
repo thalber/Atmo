@@ -677,7 +677,7 @@ public static partial class HappenBuilding {
 		// 	if (!ha.Active) activePlayers.Clear();
 		// };
 		ha.On_RealUpdate += (room) => {
-			var mine = (RoomSoundPlayer)room.updateList.FirstOrDefault(x => x is RoomSoundPlayer player && soundPlayers.Contains(player.id));
+			RoomSoundPlayer mine = (RoomSoundPlayer)room.updateList.FirstOrDefault(x => x is RoomSoundPlayer player && soundPlayers.Contains(player.id));
 			if (mine is not null) {
 				return;
 			}
@@ -707,6 +707,9 @@ public static partial class HappenBuilding {
 				if (neededChange is not null) __logger.LogDebug($"{mine.id} {neededChange.Method.Name}");
 				mine._0.Update();
 				mine._1 = shouldMakeSound;
+			};
+			mine.onInit = () => {
+				__logger.DbgVerbose($"playing sound {sid} in room {mine.room?.abstractRoom.name}");
 			};
 			mine._0.sound = soundid;
 			mine._0.InitSound();
@@ -802,6 +805,7 @@ public static partial class HappenBuilding {
 		Arg target = args[0];
 		//int.TryParse(args.AtOr(0, "0").Str, out var target);
 		ha.On_Init += (w) => {
+			__logger.DbgVerbose($"Force setting rain timer to {target.SecAsFrames} frames ({target.F32} seconds)");
 			w.rainCycle.timer = target.SecAsFrames;
 		};
 	}
@@ -815,12 +819,14 @@ public static partial class HappenBuilding {
 			DeathPersistentSaveData? dpsd = w.game?.GetStorySession?.saveState?.deathPersistentSaveData;
 			if (dpsd is null || w.game is null) return;
 			Arg ts = args[0];
+			
 			int karma = dpsd.karma;
 			if (ts.Name is "add" or "+") karma += ts.I32;
 			else if (ts.Name is "sub" or "substract" or "-") karma -= ts.I32;
 			else karma = ts.I32 - 1;
 			karma = Clamp(karma, 0, 9);
 			dpsd.karma = karma;
+			__logger.DbgVerbose($"Setting karma to {ts} (result: {dpsd.karma})");
 			foreach (RoomCamera cam in w.game.cameras) { cam?.hud.karmaMeter?.UpdateGraphic(); }
 		};
 	}
@@ -834,7 +840,8 @@ public static partial class HappenBuilding {
 			else if (ts.Name is "sub" or "-") cap -= ts.I32;
 			else cap = ts.I32 - 1;
 			cap = Clamp(cap, 4, 9);
-			dpsd.karma = cap;
+			dpsd.karmaCap = cap;
+			__logger.DbgVerbose($"Setting max karma to {ts} (result: {dpsd.karmaCap})");
 			foreach (RoomCamera? cam in w.game.cameras) { cam?.hud.karmaMeter?.UpdateGraphic(); }
 		};
 	}
@@ -875,7 +882,7 @@ public static partial class HappenBuilding {
 				if (cam.room.abstractRoom.name != lastRoomPerCam[i]) {
 					if (palA is not null) {
 						cam.ChangeMainPalette(palA.I32);
-						__logger.DbgVerbose($"changing palette to {palA.I32}");
+						__logger.DbgVerbose($"changing palette in {rm.abstractRoom.name} to {palA.I32}");
 					}
 				}
 			}

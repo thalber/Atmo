@@ -8,6 +8,11 @@ public class EventfulUAD : UpdatableAndDeletable, IDrawable {
 	/// This is used to distinguish eventfuls between each other.
 	/// </summary>
 	public Guid id = Guid.NewGuid();
+	private bool _initRan = false;
+	/// <summary>
+	/// Code that should run on first update only.
+	/// </summary>
+	public Action? onInit;
 	/// <summary>
 	/// Code that should run every update.
 	/// </summary>
@@ -52,10 +57,15 @@ public class EventfulUAD : UpdatableAndDeletable, IDrawable {
 		base.Update(eu);
 		try {
 			onUpdate?.Invoke(eu);
+			if (!_initRan) onInit?.Invoke();
 		}
 		catch (Exception ex) {
 			__ReportError(this, Update, ex);
 		}
+		finally {
+			_initRan = true;
+		}
+
 	}
 	/// <inheritdoc/>
 	public override void PausedUpdate() {
@@ -143,7 +153,7 @@ public class EventfulUAD : UpdatableAndDeletable, IDrawable {
 	/// <inheritdoc/>
 	public class Extra<T0, T1> : EventfulUAD {
 		/// <inheritdoc/>
-		public Extra(T0 item0, T1 item1){
+		public Extra(T0 item0, T1 item1) {
 			_0 = item0;
 			_1 = item1;
 		}
@@ -164,7 +174,7 @@ public class EventfulUAD : UpdatableAndDeletable, IDrawable {
 	/// <inheritdoc/>
 	public class Extra<T0, T1, T2> : EventfulUAD {
 		/// <inheritdoc/>
-		public Extra(T0 item0, T1 item1, T2 item2){
+		public Extra(T0 item0, T1 item1, T2 item2) {
 			_0 = item0;
 			_1 = item1;
 			_2 = item2;
@@ -182,7 +192,7 @@ public class EventfulUAD : UpdatableAndDeletable, IDrawable {
 		/// </summary>
 		public T2 _2;
 		/// <inheritdoc/>
-		public void Deconstruct(out T0 i0, out T1 i1, out T2 i2){
+		public void Deconstruct(out T0 i0, out T1 i1, out T2 i2) {
 			i0 = _0;
 			i1 = _1;
 			i2 = _2;
