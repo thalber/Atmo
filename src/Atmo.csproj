@@ -11,21 +11,21 @@
 		<Authors>thalber</Authors>
 		<Description>Rain World mod that acts as a regpack-centric scripting addon for RegionKit.</Description>
 		<Copyright>The Unlicense</Copyright>
-		<FileVersion>0.12</FileVersion>
-		<AssemblyVersion>0.12</AssemblyVersion>
+		<FileVersion>0.13</FileVersion>
+		<AssemblyVersion>0.13</AssemblyVersion>
 		<PackageReadmeFile>../README.md</PackageReadmeFile>
 		<PackageLicenseFile>../LICENSE</PackageLicenseFile>
 	</PropertyGroup>
 	<!-- Debug configuration. Build for release. -->
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DebugType>embedded</DebugType>
+		<DebugType>Portable</DebugType>
 		<TreatWarningsAsErrors>False</TreatWarningsAsErrors>
 		<WarningsAsErrors>$(WarningsAsErrors);NU1605;Nullable;</WarningsAsErrors>
 		<DefineConstants>$(DefineConstants)TRACE;ATMO;REMIX</DefineConstants>
 	</PropertyGroup>
 	<!-- Release configuration. Build for release. -->
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DebugType>embedded</DebugType>
+		<DebugType>Portable</DebugType>
 		<TreatWarningsAsErrors>False</TreatWarningsAsErrors>
 		<WarningsAsErrors>$(WarningsAsErrors);NU1605;Nullable;</WarningsAsErrors>
 		<DefineConstants>$(DefineConstants)TRACE;ATMO;REMIX</DefineConstants>
@@ -159,6 +159,7 @@
 		<Message Text="Atmo: Buildcopy from [ $(TargetPath) ] to [ $(RWMods_atmo) ]" Importance="high">
 		</Message>
 		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(RWMods_atmo)/plugins"/>
+		<Copy SourceFiles="$(TargetDir)/Atmo.pdb" DestinationFolder="$(RWMods_atmo)/plugins"/>
 		<Copy SourceFiles="modinfo.json" DestinationFolder="$(RWMods_atmo)"/>
 	</Target>
 

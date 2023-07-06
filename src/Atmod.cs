@@ -19,7 +19,7 @@ public sealed partial class Atmod : BaseUnityPlugin {
 	/// <summary>
 	/// Mod version
 	/// </summary>
-	public const string Ver = "0.12";
+	public const string Ver = "0.13";
 	/// <summary>
 	/// Mod UID
 	/// </summary>
@@ -127,7 +127,7 @@ public sealed partial class Atmod : BaseUnityPlugin {
 			DBG.Stopwatch sw = new();
 			bool verbose = log_verbose?.Value ?? false;
 			sw.Start();
-			cleanup_logger.LogMessage("Spooling cleanup thread.");
+			cleanup_logger.LogMessage("Spooling cleanup thread.\nNote: errors logged here are nonconsequential and can be ignored.");
 			System.Threading.ThreadPool.QueueUserWorkItem((_) => {
 				static string aggregator(string x, string y) {
 					return $"{x}\n\t{y}";
@@ -149,7 +149,7 @@ public sealed partial class Atmod : BaseUnityPlugin {
 				}
 				sw.Stop();
 				cleanup_logger.LogDebug($"Finished statics cleanup: {sw.Elapsed}.");
-				if (tlex is not null){
+				if (tlex is not null) {
 					cleanup_logger.LogWarning($"TypeLoadExceptions occured: {tlex.LoaderExceptions.Select(x => x.ToString()).Stitch(aggregator)}");
 				}
 				if (verbose) {

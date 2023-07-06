@@ -8,6 +8,11 @@ public class EventfulUAD : UpdatableAndDeletable, IDrawable {
 	/// This is used to distinguish eventfuls between each other.
 	/// </summary>
 	public Guid id = Guid.NewGuid();
+	private bool _initRan = false;
+	/// <summary>
+	/// Code that should run on first update only.
+	/// </summary>
+	public Action? onInit;
 	/// <summary>
 	/// Code that should run every update.
 	/// </summary>
@@ -52,10 +57,15 @@ public class EventfulUAD : UpdatableAndDeletable, IDrawable {
 		base.Update(eu);
 		try {
 			onUpdate?.Invoke(eu);
+			if (!_initRan) onInit?.Invoke();
 		}
 		catch (Exception ex) {
 			__ReportError(this, Update, ex);
 		}
+		finally {
+			_initRan = true;
+		}
+
 	}
 	/// <inheritdoc/>
 	public override void PausedUpdate() {
@@ -123,36 +133,69 @@ public class EventfulUAD : UpdatableAndDeletable, IDrawable {
 		__logger.LogError($"EventfulUAD {uad.id}: error on {where.Method.Name}: {err}");
 	}
 	/// <inheritdoc/>
-	public class Extra<T> : EventfulUAD{
+	public class Extra<T> : EventfulUAD {
+		/// <summary>
+		/// Creates a new instance with specified contents.
+		/// </summary>
+		public Extra(T item) {
+			_0 = item;
+		}
+
 		/// <summary>
 		/// First extra item.
 		/// </summary>
-		public T? _0;
+		public T _0;
+		/// <inheritdoc/>
+		public void Deconstruct(out T? i0) {
+			i0 = this._0;
+		}
 	}
 	/// <inheritdoc/>
-	public class Extra<T1, T2> : EventfulUAD{
+	public class Extra<T0, T1> : EventfulUAD {
+		/// <inheritdoc/>
+		public Extra(T0 item0, T1 item1) {
+			_0 = item0;
+			_1 = item1;
+		}
+
 		/// <summary>
 		/// First extra item.
 		/// </summary>
-		public T1? _0;
+		public T0 _0;
 		/// <summary>
 		/// Second extra item.
 		/// </summary>
-		public T2? _1;
+		public T1 _1;/// <inheritdoc/>
+		public void Deconstruct(out T0? i0, out T1 i1) {
+			i0 = _0;
+			i1 = _1;
+		}
 	}
 	/// <inheritdoc/>
-	public class Extra<T1, T2, T3> : EventfulUAD{
+	public class Extra<T0, T1, T2> : EventfulUAD {
+		/// <inheritdoc/>
+		public Extra(T0 item0, T1 item1, T2 item2) {
+			_0 = item0;
+			_1 = item1;
+			_2 = item2;
+		}
 		/// <summary>
 		/// First extra item.
 		/// </summary>
-		public T1? _0;
+		public T0 _0;
 		/// <summary>
 		/// Second extra item.
 		/// </summary>
-		public T2? _1;
+		public T1 _1;
 		/// <summary>
 		/// Third extra item.
 		/// </summary>
-		public T3? _2;
+		public T2 _2;
+		/// <inheritdoc/>
+		public void Deconstruct(out T0 i0, out T1 i1, out T2 i2) {
+			i0 = _0;
+			i1 = _1;
+			i2 = _2;
+		}
 	}
 }

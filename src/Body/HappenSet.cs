@@ -74,10 +74,12 @@ public sealed class HappenSet {
 		}
 		foreach ((string? sub, List<string>? rooms) in subContents) {
 			InsertGroup(sub, rooms);
-			//__logger.DbgVerbose($"{sub} :: {rooms.Stitch()}");
 		}
 		foreach (var g in RoomsToGroups.EnumerateRight()) {
 			__logger.DbgVerbose($"group {g} contains: {RoomsToGroups.IndexFromRight(g).Stitch()}");
+		}
+		foreach (var ha in AllHappens) {
+			__logger.DbgVerbose($"happen {ha} works in rooms {GetRoomsForHappen(ha).Stitch()}");
 		}
 	}
 	/// <summary>
