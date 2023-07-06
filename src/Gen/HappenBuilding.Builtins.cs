@@ -598,7 +598,7 @@ public static partial class HappenBuilding {
 		};
 		ha.On_CoreUpdate += (rwg) => {
 			if (!ha.Active) {
-				__logger.LogWarning("Clearing variance");
+				if (variance.Count is not 0) __logger.LogWarning("Clearing variance");
 				variance.Clear();
 			}
 		};
