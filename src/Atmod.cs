@@ -16,10 +16,23 @@ namespace Atmo;
 [BepInPlugin(GUID: Id, Name: DName, Version: Ver)]
 public sealed partial class Atmod : BaseUnityPlugin {
 	#region field/const/prop
+	public const string LINKS_MESSAGE = """
+	Welcome new (or old) Atmo user!
+
+	This file shows up once. After that you can find it next to the game's executable.
+
+	You're seeing this because Steam's scam screening flagged the mod's GH page for whatever reason, so I can't put the link in mod description.
+
+	GitHub main page, with source code and instructions - https://github.com/thalber/Atmo
+
+	For bug reports and feature requests, contact me on GitHub or Rain World main Discord server: https://discord.gg/rainworld
+
+	
+	""";
 	/// <summary>
 	/// Mod version
 	/// </summary>
-	public const string Ver = "0.13";
+	public const string Ver = "0.14";
 	/// <summary>
 	/// Mod UID
 	/// </summary>
@@ -57,7 +70,9 @@ public sealed partial class Atmod : BaseUnityPlugin {
 	/// publicized logger
 	/// </summary>
 	internal static LOG.ManualLogSource __logger => inst.Logger;
-	internal static CFG.ConfigEntry<bool>? log_verbose;
+	internal static CFG.ConfigEntry<bool>? __log_verbose;
+	internal static CFG.ConfigEntry<bool>? __create_links_file;
+	internal static CFG.ConfigEntry<bool>? __open_links_file;
 	private bool _setupRan = false;
 	private bool _dying = false;
 	/// <summary>
@@ -73,14 +88,17 @@ public sealed partial class Atmod : BaseUnityPlugin {
 	/// Applies hooks and sets <see cref="inst"/>.
 	/// </summary>
 	public void OnEnable() {
-		const string CFG_LOGGING = "logging";
+		const string
+			CFG_LOGGING = "logging",
+			CFG_MISC = "misc";
 		inst = this;
-		log_verbose = Config.Bind(section: CFG_LOGGING, key: "verbose", defaultValue: true, description: "Enable more verbose logging. Can create clutter.");
+
+
 		Logger.LogWarning($"Atmo booting... {THR.Thread.CurrentThread.ManagedThreadId}");
 		try {
-			Arg a = 0;
-			a.ToDateTime(null!);
-			//a.Except()
+			__log_verbose = Config.Bind(section: CFG_LOGGING, key: "verbose", defaultValue: true, description: "Enable more verbose logging. Can create clutter.");
+			__create_links_file = Config.Bind(CFG_MISC, key: "create_links_file", true, "Create a file with links to the mod's github page");
+			__open_links_file = Config.Bind(CFG_MISC, "open_links_file", true, "Open the links file when the game runs");
 			On.AbstractRoom.Update += RunHappensAbstUpd;
 			On.RainWorldGame.Update += DoBodyUpdates;
 			On.Room.Update += RunHappensRealUpd;
@@ -88,6 +106,16 @@ public sealed partial class Atmod : BaseUnityPlugin {
 			On.OverWorld.LoadFirstWorld += SetTempSSN;
 			VarRegistry.__Init();
 			HappenBuilding.__InitBuiltins();
+			if (__create_links_file.Value) {
+				string path = IO.Path.Combine(IO.Directory.GetCurrentDirectory(), "ATMO_LINKS.txt");
+				IO.File.WriteAllText(path, LINKS_MESSAGE);
+				if (__open_links_file.Value) {
+					System.Diagnostics.Process proc = System.Diagnostics.Process.Start(path);
+					
+				}
+				__open_links_file.Value = false;
+			}
+			
 		}
 		catch (Exception ex) {
 			Logger.LogFatal($"Error on enable!\n{ex}");
@@ -125,7 +153,7 @@ public sealed partial class Atmod : BaseUnityPlugin {
 			LOG.ManualLogSource? cleanup_logger =
 				LOG.Logger.CreateLogSource("Atmo_Purge");
 			DBG.Stopwatch sw = new();
-			bool verbose = log_verbose?.Value ?? false;
+			bool verbose = __log_verbose?.Value ?? false;
 			sw.Start();
 			cleanup_logger.LogMessage("Spooling cleanup thread.\nNote: errors logged here are nonconsequential and can be ignored.");
 			System.Threading.ThreadPool.QueueUserWorkItem((_) => {
@@ -174,7 +202,7 @@ public sealed partial class Atmod : BaseUnityPlugin {
 		if (_dying) return;
 		RW ??= CRW;
 		if (!_setupRan && RW is not null) {
-			//maybe put something here
+
 			_setupRan = true;
 		}
 

@@ -573,7 +573,7 @@ public static partial class Utils {
 		this LOG.ManualLogSource logger,
 		object data) {
 		BangBang(logger, nameof(logger));
-		if (log_verbose?.Value ?? false) logger.LogDebug(data);
+		if (__log_verbose?.Value ?? false) logger.LogDebug(data);
 	}
 	internal static void LogFrameTime(
 		List<TimeSpan> realup_times,

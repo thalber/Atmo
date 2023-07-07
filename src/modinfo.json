@@ -1,9 +1,9 @@
 {
 	"id": "atmo",
 	"name": "atmo",
-	"version": "0.13",
+	"version": "0.14",
 	"authors": "thalber",
-	"description": "Asset-driven region scripting layer.<LINE>Source code and instructions can be found here: https://github.com/thalber/Atmo",
+	"description": "Asset-driven region scripting layer.<LINE>NOTE: I had to remove GitHub link because steam scam screening flagged it >:( Launching the game once will now create a file called \"ATMO_LINKS.md\" in the game's folder. It'll show you where to see source code and instructions on using the mod. If you would want that file to not be created, there's an option for it in \"[rain world]/BepInEx/config/thalber.atmod.cfg\"",
 	"requirements": [],
 	"requirements_names": [],
 	"checksum_override_version": false

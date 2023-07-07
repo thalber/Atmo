@@ -1,3 +1,4 @@
 {
-    "omnisharp.useModernNet": false
+    "omnisharp.useModernNet": true,
+    "files.eol": "\r\n"
 }
