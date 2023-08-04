@@ -409,6 +409,7 @@ public static partial class HappenBuilding {
 		AddNamedAction(new[] { "lightning" }, Make_Lightning);
 		AddNamedAction(new[] { "flash" }, Make_Flash);
 		//todo: document all actions below:
+		AddNamedAction(new[] { "soundlooppers" }, Make_SoundLoopPersistent);
 		//do not document:
 	}
 	private static void Make_Flash(Happen ha, ArgSet args) {
@@ -600,6 +601,68 @@ public static partial class HappenBuilding {
 			if (!ha.Active) {
 				if (variance.Count is not 0) __logger.LogWarning("Clearing variance");
 				variance.Clear();
+			}
+		};
+	}
+
+	private static void Make_SoundLoopPersistent(Happen ha, ArgSet args) {
+		if (args.Count == 0) {
+			__NotifyArgsMissing(Make_SoundLoopPersistent, "soundid");
+			return;
+		}
+		if (!SoundID.TryParse(typeof(SoundID), args[0].Str, true, out ExtEnumBase r_soundid)) {
+			__NotifyArgsMissing(Make_SoundLoopPersistent, "soundid");
+			return;
+		}
+		SoundID? soundid = (SoundID)r_soundid;
+		Arg
+			sid = args[0],
+			vol = args["vol", "volume"] ?? 1f,
+			pitch = args["pitch"] ?? 1f,
+			pan = args["pan"] ?? 0f,
+			limit = args["lim", "limit"] ?? float.PositiveInfinity;
+		//so basically
+		//you need to:
+		//- keep 1 soundloop per camera
+		//- make sure there is only one ever sound loop per camera
+		DisembodiedLoopEmitter getNewEmitter(RoomCamera _cam) {
+			sid.GetExtEnum(out SoundID? soundID);
+			DisembodiedLoopEmitter disembodiedEmitter = _cam.room.PlayDisembodiedLoop(soundID, vol.F32, pitch.F32, pan.F32);
+			disembodiedEmitter.requireActiveUpkeep = false;
+			disembodiedEmitter.alive = true;
+			__logger.DbgVerbose($"Creating new persistent loop {_cam.room.abstractRoom.name} {soundID}");
+			return disembodiedEmitter;
+		}
+
+		System.Runtime.CompilerServices.ConditionalWeakTable<RoomCamera, DisembodiedLoopEmitter> soundEmitters = new();
+		ha.On_RealUpdate += (room) => {
+
+			for (int i = 0; i < room.game.cameras.Length; i++) {
+				RoomCamera cam = room.game.cameras[i];
+				if (cam.room == room) {
+					DisembodiedLoopEmitter newEmitter = soundEmitters.GetValue(cam, getNewEmitter);
+					newEmitter.soundStillPlaying = true;
+					newEmitter.alive = true;
+					newEmitter.slatedForDeletetion = false;
+					if (newEmitter.room != room) {
+						__logger.DbgVerbose($"switching persistent soundloop for cam {i} from {newEmitter?.room?.abstractRoom.name} to {room.abstractRoom.name}");
+						//newEmitter.RemoveFromRoom();
+						room.AddObject(newEmitter);
+					}
+				}
+			}
+		};
+		ha.On_CoreUpdate += (game) => {
+			foreach (RoomCamera cam in game.cameras) {
+				DisembodiedLoopEmitter emitter = soundEmitters.GetValue(cam, getNewEmitter);
+				emitter.soundStillPlaying = true;
+				emitter.alive = true;
+				emitter.slatedForDeletetion = false;
+				//if (!cam.virtualMicrophone.soundObjects.Contains(emitter.currentSoundObject)) cam.virtualMicrophone.soundObjects.Add(emitter.currentSoundObject);
+				if (emitter.currentSoundObject is VirtualMicrophone.SoundObject so) so.loop = true;
+				emitter.volume = ha.Active ? vol.F32 : 0f;
+				emitter.pitch = pitch.F32;
+				emitter.pan = pan.F32;
 			}
 		};
 	}
@@ -819,7 +882,7 @@ public static partial class HappenBuilding {
 			DeathPersistentSaveData? dpsd = w.game?.GetStorySession?.saveState?.deathPersistentSaveData;
 			if (dpsd is null || w.game is null) return;
 			Arg ts = args[0];
-			
+
 			int karma = dpsd.karma;
 			if (ts.Name is "add" or "+") karma += ts.I32;
 			else if (ts.Name is "sub" or "substract" or "-") karma -= ts.I32;
