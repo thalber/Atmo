@@ -755,7 +755,7 @@ public static partial class HappenBuilding {
 			};
 			mine.room = room;
 			mine.onUpdate = (eu) => {
-				if (!ha.Active /* || timeAlive > limit.SecAsFrames */) {
+				if (!ha.Active || timeAlive > limit.SecAsFrames ) {
 					mine.Destroy();
 					mine._0.Stop();
 					return;
