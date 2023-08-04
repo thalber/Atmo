@@ -755,7 +755,7 @@ public static partial class HappenBuilding {
 			};
 			mine.room = room;
 			mine.onUpdate = (eu) => {
-				if (!ha.Active || timeAlive > limit.SecAsFrames ) {
+				if (!ha.Active || timeAlive > limit.SecAsFrames) {
 					mine.Destroy();
 					mine._0.Stop();
 					return;
@@ -997,6 +997,7 @@ public static partial class HappenBuilding {
 		AddNamedMetafun(new[] { "SCREENRES", "RESOLUTION" }, MMake_ScreenRes);
 		AddNamedMetafun(new[] { "OWNSAPP", "OWNSGAME" }, MMake_AppFound);
 		//todo: document metafuncs below:
+		AddNamedMetafun(new[] { "SHARPRAND", "SHARPRANDOM" }, MMake_SharpRandom);
 		AddNamedMetafun(new[] { "LISTDIRECTORY", "ASSETDIR" }, MMake_ListDirectory);
 		AddNamedMetafun(new[] { "RESOLVEFILEPATH", "ASSETPATH" }, MMake_ResolveFilepath);
 		//do not document:
@@ -1144,6 +1145,22 @@ public static partial class HappenBuilding {
 		};
 
 	}
+	private static IArgPayload? MMake_SharpRandom(string text, int ss, SlugcatStats.Name ch) {
+		ArgSet args = new(text.Split(' '));
+		(Arg min, Arg max) bounds = args switch {
+			[Arg a, Arg b] => (a, b),
+			[Arg a] => (0f, a),
+			_ => (0f, 1f)
+		};
+		float getValue() => UnityEngine.Mathf.Lerp(bounds.min.F32, bounds.max.F32, UnityEngine.Random.value);
+		return new ByCallbackGetOnly() {
+			getF32 = getValue,
+			getI32 = () => (int)getValue(),
+			getStr = () => getValue().ToString(),
+			getVec = () => new(getValue(), 0, 0, 0)
+		};
+	}
+
 	#endregion
 	private static void __NotifyArgsMissing(Delegate source, params string[] args) {
 		__logger.LogWarning($"{nameof(HappenBuilding)}.{source.Method.Name}: Missing argument(s): {args.Stitch()}");
