@@ -6,6 +6,7 @@ using static Atmo.Data.VarRegistry;
 using static UnityEngine.Mathf;
 using RoomFlasher = Atmo.Helpers.EventfulUAD.Extra<float, float, bool>;
 using RoomSoundPlayer = Atmo.Helpers.EventfulUAD.Extra<DisembodiedDynamicSoundLoop, System.Boolean>;
+using PersistentSoundPlayer = Atmo.Helpers.EventfulUAD.Extra<(DisembodiedLoopEmitter loop, System.Guid id, bool alive)>;
 
 namespace Atmo.Gen;
 public static partial class HappenBuilding {
@@ -422,18 +423,18 @@ public static partial class HappenBuilding {
 		//fields are:
 		//currentpow, oldpow, alive
 		ha.On_RealUpdate += (room) => {
-			var mine = (RoomFlasher)room.updateList.FirstOrDefault(x => x is RoomFlasher flasher && flashers.Contains(flasher.id));
-			if (mine is null) {
-				mine = new(1f, 1f, true);
-				__logger.DbgVerbose("Creating new room flasher " + mine.id);
-				flashers.Add(mine.id);
-				mine.onUpdate = (_) => {
-					mine._1 = mine._0;
-					if (!mine._2) mine._0 = Clamp(LerpAndTick(mine._0, 0f, lerp.F32, step.F32), 0f, 1f);
-					mine._2 = false;
-					if (mine._0 == 0f) mine.Destroy();
+			var myFlasher = (RoomFlasher)room.updateList.FirstOrDefault(x => x is RoomFlasher flasher && flashers.Contains(flasher.id));
+			if (myFlasher is null) {
+				myFlasher = new(1f, 1f, true);
+				__logger.DbgVerbose("Creating new room flasher " + myFlasher.id);
+				flashers.Add(myFlasher.id);
+				myFlasher.onUpdate = (_) => {
+					myFlasher._1 = myFlasher._0;
+					if (!myFlasher._2) myFlasher._0 = Clamp(LerpAndTick(myFlasher._0, 0f, lerp.F32, step.F32), 0f, 1f);
+					myFlasher._2 = false;
+					if (myFlasher._0 == 0f) myFlasher.Destroy();
 				};
-				mine.onInitSprites = (leaser, cam) => {
+				myFlasher.onInitSprites = (leaser, cam) => {
 					leaser.sprites = new FSprite[1];
 					leaser.sprites[0] = new FSprite("pixel", true) {
 						scaleX = 1366f,
@@ -442,24 +443,24 @@ public static partial class HappenBuilding {
 						anchorY = 0f,
 						color = Color.white
 					};
-					mine.AddToContainer(leaser, cam, null);
+					myFlasher.AddToContainer(leaser, cam, null);
 				};
-				mine.onAddToContainer = (leaser, cam, cont) => {
+				myFlasher.onAddToContainer = (leaser, cam, cont) => {
 					leaser.sprites[0].RemoveFromContainer();
 					//todo: u sure it should be HUD or HUD2?
 					cont ??= cam.ReturnFContainer("HUD");
 					cont.AddChild(leaser.sprites[0]);
 					//leaser.sprites[0].addT
 				};
-				mine.onDestroy = () => { flashers.Remove(mine.id); };
-				mine.onDraw = (leaser, cam, ts, cpos) => {
-					leaser.sprites[0].alpha = Lerp(mine._1, mine._0, ts) * maxopacity.F32;
+				myFlasher.onDestroy = () => { flashers.Remove(myFlasher.id); };
+				myFlasher.onDraw = (leaser, cam, ts, cpos) => {
+					leaser.sprites[0].alpha = Lerp(myFlasher._1, myFlasher._0, ts) * maxopacity.F32;
 				};
-				mine._0 = 1f;
-				mine._1 = 1f;
-				room.AddObject(mine);
+				myFlasher._0 = 1f;
+				myFlasher._1 = 1f;
+				room.AddObject(myFlasher);
 			}
-			mine._0 = 1f;
+			myFlasher._0 = 1f;
 		};
 	}
 	private static void Make_Lightning(Happen ha, ArgSet args) {
@@ -625,44 +626,60 @@ public static partial class HappenBuilding {
 		//you need to:
 		//- keep 1 soundloop per camera
 		//- make sure there is only one ever sound loop per camera
-		DisembodiedLoopEmitter getNewEmitter(RoomCamera _cam) {
+		System.Runtime.CompilerServices.ConditionalWeakTable<RoomCamera, PersistentSoundPlayer> soundPlayers = new();
+		PersistentSoundPlayer getNewSoundPlayer(RoomCamera _cam) {
 			sid.GetExtEnum(out SoundID? soundID);
 			DisembodiedLoopEmitter disembodiedEmitter = _cam.room.PlayDisembodiedLoop(soundID, vol.F32, pitch.F32, pan.F32);
 			disembodiedEmitter.requireActiveUpkeep = false;
 			disembodiedEmitter.alive = true;
 			__logger.DbgVerbose($"Creating new persistent loop {_cam.room.abstractRoom.name} {soundID}");
-			return disembodiedEmitter;
+			PersistentSoundPlayer persistentPlayer = new((disembodiedEmitter, Guid.NewGuid(), true));
+			persistentPlayer.onDestroy += () => {
+				persistentPlayer._0.loop.Destroy();
+				//soundPlayers.Remove(persistentPlayer._0.id)
+			};
+			persistentPlayer.onUpdate += (eu) => {
+				if (!persistentPlayer._0.alive) persistentPlayer.Destroy();
+				persistentPlayer._0.alive = false;
+			};
+
+			return persistentPlayer;
+			//return disembodiedEmitter;
 		}
 
-		System.Runtime.CompilerServices.ConditionalWeakTable<RoomCamera, DisembodiedLoopEmitter> soundEmitters = new();
+
 		ha.On_RealUpdate += (room) => {
 
 			for (int i = 0; i < room.game.cameras.Length; i++) {
 				RoomCamera cam = room.game.cameras[i];
-				if (cam.room == room) {
-					DisembodiedLoopEmitter newEmitter = soundEmitters.GetValue(cam, getNewEmitter);
-					newEmitter.soundStillPlaying = true;
-					newEmitter.alive = true;
-					newEmitter.slatedForDeletetion = false;
-					if (newEmitter.room != room) {
-						__logger.DbgVerbose($"switching persistent soundloop for cam {i} from {newEmitter?.room?.abstractRoom.name} to {room.abstractRoom.name}");
-						//newEmitter.RemoveFromRoom();
-						room.AddObject(newEmitter);
-					}
+				if (cam.room != room) {
+					continue;
+				}
+				PersistentSoundPlayer soundPlayer = soundPlayers.GetValue(cam, getNewSoundPlayer);
+				// soundPlayer._0.loop.soundStillPlaying = true;
+				// soundPlayer._0.loop.alive = true;
+				// soundPlayer.slatedForDeletetion = false;
+				if (soundPlayer.room != room) {
+					__logger.DbgVerbose($"switching persistent soundloop for cam {i} from {soundPlayer.room?.abstractRoom.name} to {room.abstractRoom.name}");
+					//soundPlayer?.RemoveFromRoom();
+					room.AddObject(soundPlayer);
+					soundPlayer.room = room;
 				}
 			}
 		};
 		ha.On_CoreUpdate += (game) => {
 			foreach (RoomCamera cam in game.cameras) {
-				DisembodiedLoopEmitter emitter = soundEmitters.GetValue(cam, getNewEmitter);
-				emitter.soundStillPlaying = true;
-				emitter.alive = true;
-				emitter.slatedForDeletetion = false;
-				//if (!cam.virtualMicrophone.soundObjects.Contains(emitter.currentSoundObject)) cam.virtualMicrophone.soundObjects.Add(emitter.currentSoundObject);
-				if (emitter.currentSoundObject is VirtualMicrophone.SoundObject so) so.loop = true;
-				emitter.volume = ha.Active ? vol.F32 : 0f;
-				emitter.pitch = pitch.F32;
-				emitter.pan = pan.F32;
+				if (!soundPlayers.TryGetValue(cam, out var existingplayer) || existingplayer is null) continue;
+				if (!ha.AffectsRoom(existingplayer.room?.abstractRoom) || !ha.Active) {
+					existingplayer.Destroy();
+					soundPlayers.Remove(cam);
+				}
+				else {
+					existingplayer._0.alive = true;
+					existingplayer._0.loop.volume = ha.Active ? vol.F32 : 0f;
+					existingplayer._0.loop.pitch = pitch.F32;
+					existingplayer._0.loop.pan = pan.F32;
+				}
 			}
 		};
 	}
@@ -1152,7 +1169,7 @@ public static partial class HappenBuilding {
 			[Arg a] => (0f, a),
 			_ => (0f, 1f)
 		};
-		float getValue() => UnityEngine.Mathf.Lerp(bounds.min.F32, bounds.max.F32, UnityEngine.Random.value);
+		Func<float> getValue = () => UnityEngine.Mathf.Lerp(bounds.min.F32, bounds.max.F32, UnityEngine.Random.value);
 		return new ByCallbackGetOnly() {
 			getF32 = getValue,
 			getI32 = () => (int)getValue(),

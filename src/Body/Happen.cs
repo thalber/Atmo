@@ -258,6 +258,7 @@ public sealed class Happen : IEquatable<Happen>, IComparable<Happen> {
 	/// </summary>
 	public event V0_lc_CoreUpdate? On_CoreUpdate;
 	#endregion
+	public bool AffectsRoom(AbstractRoom? room) => room is not null ? this.Set.GetRoomsForHappen(this).Contains(room.name) : false;
 	/// <summary>
 	/// Returns a performance report struct.
 	/// </summary>
