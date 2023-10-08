@@ -1,9 +1,9 @@
 ﻿//off until slime ports devconsole
 
-using DC = DevConsole;
-using CMD = DevConsole.Commands;
-using DCLI = DevConsole.GameConsole;
 using Atmo.API;
+using CMD = DevConsole.Commands;
+using DC = DevConsole;
+using DCLI = DevConsole.GameConsole;
 
 namespace Atmo;
 

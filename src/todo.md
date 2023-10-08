@@ -2,6 +2,7 @@
 - World state specvars ($cycletime, $karma etc) (currently readonly)
 - Actions for abstract world (creature spawns, object creation, lineages)
 - Publicize and refine gen code
+- Add an option to do soundloop(pers) X times
 
 ## Delayed
 - Placed triggers : can't compile RK

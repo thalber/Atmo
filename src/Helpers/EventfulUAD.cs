@@ -1,4 +1,4 @@
-namespace Atmo.Helpers;
+﻿namespace Atmo.Helpers;
 
 /// <summary>
 /// A composable UAD subclass.

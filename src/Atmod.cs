@@ -111,11 +111,11 @@ public sealed partial class Atmod : BaseUnityPlugin {
 				IO.File.WriteAllText(path, LINKS_MESSAGE);
 				if (__open_links_file.Value) {
 					System.Diagnostics.Process proc = System.Diagnostics.Process.Start(path);
-					
+
 				}
 				__open_links_file.Value = false;
 			}
-			
+
 		}
 		catch (Exception ex) {
 			Logger.LogFatal($"Error on enable!\n{ex}");

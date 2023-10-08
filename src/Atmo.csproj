@@ -134,6 +134,10 @@
 			<HintPath>lib/UnityEngine.CoreModule.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
+		<Reference Include="UnityEngine.AudioModule">
+			<HintPath>lib/UnityEngine.AudioModule.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
 		<Reference Include="UnityEngine.UnityWebRequestWWWModule">
 			<HintPath>lib/UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
 			<Private>False</Private>
